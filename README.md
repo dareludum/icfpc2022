@@ -2,3 +2,4 @@
 
 Team members:
   - Dmitry Polyanitsa (coffeecup.winner@gmail.com)
+  - Victor Collod
