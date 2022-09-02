@@ -16,10 +16,10 @@ impl Rect {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8,
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
 }
 
 impl Color {
@@ -45,25 +45,41 @@ impl From<&Rgba<u8>> for Color {
     }
 }
 
-pub type BlockId = Vec<u32>;
+pub type BlockId = String;
+
+pub struct SimpleBlock { id: BlockId, r: Rect, c: Color }
+
+impl SimpleBlock {
+    pub fn new(id: BlockId, r: Rect, c: Color) -> Self {
+        SimpleBlock { id, r, c }
+    }
+}
+
+pub struct ComplexBlock { id: BlockId, r: Rect, bs: Vec<SimpleBlock> }
+
+impl ComplexBlock {
+    pub fn new(id: BlockId, r: Rect, bs: Vec<SimpleBlock>) -> Self {
+        ComplexBlock { id, r, bs }
+    }
+}
 
 pub enum Block {
-    SimpleBlock(BlockId, Rect, Color),
-    ComplexBlock(BlockId, Rect, Vec<Block>),
+    Simple(SimpleBlock),
+    Complex(ComplexBlock),
 }
 
 impl Block {
     pub fn id(&self) -> &BlockId {
         match self {
-            Block::SimpleBlock(id, _, _) => id,
-            Block::ComplexBlock(id, _, _) => id,
+            Block::Simple(b) => &b.id,
+            Block::Complex(b) => &b.id,
         }
     }
 
     pub fn rect(&self) -> &Rect {
         match self {
-            Block::SimpleBlock(_, rect, _) => rect,
-            Block::ComplexBlock(_, rect, _) => rect,
+            Block::Simple(b) => &b.r,
+            Block::Complex(b) => &b.r,
         }
     }
 
