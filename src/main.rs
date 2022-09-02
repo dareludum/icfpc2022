@@ -49,9 +49,9 @@ fn main() -> std::io::Result<()> {
                     .result
                     .write_to_file(&solution_dir.join(&solution_painting_filename));
 
-                let score = painting.calculate_score(&solution.result) as u32;
-                let total = score + solution.cost.0;
-                println!("  {}: {} ({} + {})", solver.name(), total, score, solution.cost.0);
+                let score = painting.calculate_score(&solution.result);
+                let total = score + solution.cost;
+                println!("  {}: {} ({} + {})", solver.name(), total.0, score.0, solution.cost.0);
             }
         }
     } else {

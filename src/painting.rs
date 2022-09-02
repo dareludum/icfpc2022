@@ -1,4 +1,5 @@
 use crate::block::Color;
+use crate::moves::Cost;
 use image::RgbaImage;
 use std::fs::File;
 use std::io::BufReader;
@@ -38,7 +39,7 @@ impl Painting {
         self.image.put_pixel(x, y, color.into());
     }
 
-    pub fn calculate_score(&self, target: &Painting) -> f32 {
+    pub fn calculate_score(&self, target: &Painting) -> Cost {
         if target.width() != self.width() || target.height() != self.height() {
             panic!("comparing two images different in size");
         }
@@ -48,15 +49,16 @@ impl Painting {
             .image
             .pixels()
             .zip(target.image.pixels())
-            .map(|(ours, theirs)| {
-                // compute the pixel difference score
-                let component_pairs = ours.0.as_ref().iter().zip(theirs.0);
-                component_pairs
-                    .map(|(a, b)| (a.abs_diff(b) as f32).powi(2))
-                    .sum::<f32>()
+            .map(|(p0, p1)| {
+                let mut pixel_score = 0f64;
+                pixel_score += (p0.0[0].abs_diff(p1.0[0]) as f64).powi(2);
+                pixel_score += (p0.0[1].abs_diff(p1.0[1]) as f64).powi(2);
+                pixel_score += (p0.0[2].abs_diff(p1.0[2]) as f64).powi(2);
+                pixel_score += (p0.0[3].abs_diff(p1.0[3]) as f64).powi(2);
+                pixel_score.sqrt()
             })
-            .sum::<f32>();
-        return image_score * 0.005;
+            .sum::<f64>();
+        return Cost((image_score * 0.005) as u64);
     }
 
     pub fn write_to_file(&self, path: &std::path::Path) {
