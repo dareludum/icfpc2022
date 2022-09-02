@@ -151,7 +151,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                             Orientation::Vertical,
                             (mx - SLN.0) as u32,
                         );
-                        let _cost = mov.apply(&mut canvas).unwrap();
+                        let _cost = mov.apply(&mut canvas);
                         b_id = None;
                     }
                     Tool::CutHorz => {}
