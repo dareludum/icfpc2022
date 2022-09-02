@@ -14,7 +14,7 @@ impl Canvas {
             BlockId::from("0"),
             Block::Simple(SimpleBlock::new(
                 BlockId::from("0"),
-                Rect::new(Point::new(0, 0), Point::new(w, h)),
+                Rect::from_dimensions(Point::new(0, 0), w, h),
                 Color::new(255, 255, 255, 255),
             )),
         );
