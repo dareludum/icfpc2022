@@ -159,7 +159,16 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         b_id = None;
                         moves.push((mov, cost));
                     }
-                    Tool::CutHorz => {}
+                    Tool::CutHorz => {
+                        let mov = Move::LineCut(
+                            b_id.unwrap(),
+                            Orientation::Horizontal,
+                            (my - SLN.1) as u32,
+                        );
+                        let cost = mov.apply(&mut canvas);
+                        b_id = None;
+                        moves.push((mov, cost));
+                    }
                     Tool::CutCross => {}
                     Tool::Color => {}
                     Tool::Swap => {}
