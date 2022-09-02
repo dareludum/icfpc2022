@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::block::{Block, BlockId, Color, Rect, SimpleBlock};
+use crate::block::{Block, BlockId, Color, Point, Rect, SimpleBlock};
 
 pub struct Canvas {
     pub area: u32,
@@ -14,7 +14,7 @@ impl Canvas {
             BlockId::from("0"),
             Block::Simple(SimpleBlock::new(
                 BlockId::from("0"),
-                Rect::new(0, 0, w, h),
+                Rect::new(Point::new(0, 0), Point::new(w, h)),
                 Color::new(255, 255, 255, 255),
             )),
         );
@@ -53,6 +53,10 @@ impl Canvas {
 
     pub fn get_block(&self, block: &BlockId) -> Option<&Block> {
         self.blocks.get(block)
+    }
+
+    pub fn put_block(&mut self, block: Block) {
+        self.blocks.insert(block.id().clone(), block);
     }
 
     pub fn get_block_mut(&mut self, block: &BlockId) -> Option<&mut Block> {

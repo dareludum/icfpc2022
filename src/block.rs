@@ -1,28 +1,40 @@
 use image::Rgba;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Rect {
+pub struct Point {
     pub x: u32,
     pub y: u32,
-    pub w: u32,
-    pub h: u32,
+}
+
+impl Point {
+    pub fn new(x: u32, y: u32) -> Self {
+        Self { x, y }
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Rect {
+    pub bottom_left: Point,
+    pub top_right: Point,
 }
 
 impl Rect {
-    pub fn new(x: u32, y: u32, w: u32, h: u32) -> Self {
-        Rect { x, y, w, h }
+    pub fn new(bottom_left: Point, top_right: Point) -> Self {
+        Rect { bottom_left, top_right }
     }
 
     pub fn width(&self) -> u32 {
-        self.w
+        self.top_right.x - self.bottom_left.x
     }
 
     pub fn height(&self) -> u32 {
-        self.h
+        self.top_right.y - self.bottom_left.y
     }
 
     pub fn contains(&self, x: u32, y: u32) -> bool {
-        self.x <= x && x < self.x + self.width() && self.y <= y && y < self.y + self.height()
+        x >= self.bottom_left.x && x < self.top_right.x &&
+        y >= self.bottom_left.y && y < self.top_right.y
     }
 }
 
