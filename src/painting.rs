@@ -40,10 +40,13 @@ impl Painting {
             panic!("comparing two images different in size");
         }
 
-        self.image.pixels().zip(target.image.pixels())
+        // compute the image difference score
+        let image_score = self.image.pixels().zip(target.image.pixels())
             .map(|(ours, theirs)| {
+                // compute the pixel difference score
                 let component_pairs = ours.0.as_ref().iter().zip(theirs.0);
                 component_pairs.map(|(a, b)| (a.abs_diff(b) as f32).powi(2)).sum::<f32>()
-            }).sum::<f32>()
+            }).sum::<f32>();
+        return image_score * 0.005
     }
 }
