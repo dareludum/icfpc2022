@@ -10,6 +10,8 @@ use crate::{
 #[derive(Debug)]
 pub struct Canvas {
     pub area: u32,
+    width: u32,
+    height: u32,
     blocks: HashMap<BlockId, Block>,
 }
 
@@ -25,6 +27,8 @@ impl Canvas {
             )),
         );
         Canvas {
+            width: w,
+            height: h,
             area: w * h,
             blocks,
         }
@@ -77,7 +81,7 @@ impl Canvas {
     }
 
     pub fn render(&self) -> Painting {
-        let mut img = RgbaImage::new(self.area, self.area);
+        let mut img = RgbaImage::new(self.width, self.height);
 
         for (_, block) in self.blocks.iter() {
             match block {
@@ -102,8 +106,8 @@ fn render_simple_block(img: &mut RgbaImage, block: &SimpleBlock) {
         ..
     } = block;
 
-    for x in bottom_left.x..=top_right.x {
-        for y in bottom_left.y..=top_right.y {
+    for x in bottom_left.x..top_right.x {
+        for y in bottom_left.y..top_right.y {
             img.put_pixel(x, y, Rgba([*r, *g, *b, *a]))
         }
     }

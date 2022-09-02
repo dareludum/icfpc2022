@@ -3,6 +3,7 @@ use image::RgbaImage;
 use std::fs::File;
 use std::io::BufReader;
 
+#[derive(Debug)]
 pub struct Painting {
     pub image: RgbaImage,
 }
