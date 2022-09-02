@@ -1,6 +1,8 @@
+use std::{fs, path::Path};
+
 use crate::{block::Color, moves::Move};
 
-fn to_isl(mov: Move) -> String {
+fn to_isl(mov: &Move) -> String {
     match mov {
         Move::LineCut(bid, orientation, lnum) => {
             format!("cut[{bid}][{orientation}][{lnum}]")
@@ -14,7 +16,7 @@ fn to_isl(mov: Move) -> String {
     }
 }
 
-pub fn generate_isl(moves: Vec<Move>) -> String {
+pub fn generate_isl(moves: &Vec<Move>) -> String {
     let mut isl = String::new();
 
     for mov in moves {
@@ -23,6 +25,10 @@ pub fn generate_isl(moves: Vec<Move>) -> String {
     }
 
     isl
+}
+
+pub fn write_to_file(path: &Path, moves: &Vec<Move>) {
+    fs::write(path, generate_isl(moves)).expect("error writing ISL to file");
 }
 
 #[cfg(test)]
