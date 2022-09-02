@@ -3,7 +3,7 @@ use raylib::prelude::*;
 use crate::{
     block::{Point, Rect},
     canvas::Canvas,
-    moves::{Move, Orientation},
+    moves::{Cost, Move, Orientation},
     painting::Painting,
 };
 
@@ -41,6 +41,7 @@ type Offset = (i32, i32);
 pub fn gui_main(problem_path: &std::path::Path) {
     let painting = Painting::load(problem_path);
     let mut canvas = Canvas::new(painting.width(), painting.height());
+    let mut moves = vec![];
 
     let (mut rl, thread) = raylib::init()
         .size(1000, 600)
@@ -151,8 +152,9 @@ pub fn gui_main(problem_path: &std::path::Path) {
                             Orientation::Vertical,
                             (mx - SLN.0) as u32,
                         );
-                        let _cost = mov.apply(&mut canvas);
+                        let cost = mov.apply(&mut canvas);
                         b_id = None;
+                        moves.push((mov, cost));
                     }
                     Tool::CutHorz => {}
                     Tool::CutCross => {}
