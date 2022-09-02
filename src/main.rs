@@ -1,17 +1,16 @@
+use gui::gui_main;
 use raylib::prelude::*;
 
 mod block;
 mod canvas;
+mod gui;
 mod moves;
 mod painting;
 
 fn main() {
-    let (mut rl, thread) = raylib::init().size(640, 480).title("Hello, World").build();
-
-    while !rl.window_should_close() {
-        let mut d = rl.begin_drawing(&thread);
-
-        d.clear_background(Color::WHITE);
-        d.draw_text("Hello, world!", 12, 12, 20, Color::BLACK);
-    }
+    let problem = match std::env::args().nth(1) {
+        Some(path) => path,
+        None => "./problems/3.png".to_owned(),
+    };
+    gui_main(&std::path::PathBuf::from(problem));
 }
