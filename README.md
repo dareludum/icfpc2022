@@ -1,4 +1,4 @@
-# ICFPC2022 code repository for the team $pending
+# ICFPC2022 code repository for the team "dare ludum"
 
 Team members:
   - Dmitry Polyanitsa (coffeecup.winner@gmail.com)
