@@ -35,11 +35,11 @@ impl Rect {
     }
 
     pub fn width(&self) -> u32 {
-        self.top_right.x - self.bottom_left.x
+        self.top_right.x - self.bottom_left.x + 1
     }
 
     pub fn height(&self) -> u32 {
-        self.top_right.y - self.bottom_left.y
+        self.top_right.y - self.bottom_left.y + 1
     }
 
     pub fn contains(&self, x: u32, y: u32) -> bool {
