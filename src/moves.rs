@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
-    block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
+    block::{BlockId, Block, Color, ComplexBlock, Point, Rect, SimpleBlock},
     canvas::Canvas,
 };
 
@@ -128,8 +128,8 @@ impl Move {
                         continue;
                     }
                     let (left_r, right_r) = child.r.vertical_cut(cut_offset_x);
-                    left_blocks.push(child.complex_split(left_r));
-                    right_blocks.push(child.complex_split(right_r));
+                    left_blocks.push(child.complex_split("left", left_r));
+                    right_blocks.push(child.complex_split("right", right_r));
                 }
 
                 let (left_r, right_r) = complex.r.vertical_cut(cut_offset_x);
@@ -177,8 +177,8 @@ impl Move {
                         continue;
                     }
                     let (bottom_r, top_r) = child.r.horizontal_cut(cut_offset_y);
-                    bottom_blocks.push(child.complex_split(bottom_r));
-                    top_blocks.push(child.complex_split(top_r));
+                    bottom_blocks.push(child.complex_split("bottom", bottom_r));
+                    top_blocks.push(child.complex_split("top", top_r));
                 }
 
                 let (bottom_r, top_r) = complex.r.horizontal_cut(cut_offset_y);
@@ -194,6 +194,7 @@ impl Move {
     }
 
     fn point_cut(&self, canvas: &mut Canvas, block_id: &BlockId, cut_x: u32, cut_y: u32) -> Cost {
+        let cut_point = Point::new(cut_x, cut_y);
         let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
 
@@ -221,7 +222,177 @@ impl Move {
             Block::Complex(complex) => complex,
         };
 
-        todo!()
+        let mut bottom_left_blocks: Vec<SimpleBlock> = vec![];
+        let mut bottom_right_blocks: Vec<SimpleBlock> = vec![];
+        let mut top_right_blocks: Vec<SimpleBlock> = vec![];
+        let mut top_left_blocks: Vec<SimpleBlock> = vec![];
+        for child in complex_block.bs {
+            /*
+             * __________________________
+             * |        |       |       |
+             * |   1    |   2   |   3   |
+             * |________|_______|_______|
+             * |        |       |       |
+             * |   4    |   5   |  6    |
+             * |________|_______|_______|
+             * |        |       |       |
+             * |   7    |   8   |   9   |
+             * |________|_______|_______|
+             */
+            // Case 2
+            if child.r.bottom_left.x >= cut_x && child.r.bottom_left.y >= cut_y {
+                top_right_blocks.push(child);
+                continue;
+            }
+            // Case 7
+            if child.r.top_right.x <= cut_x && child.r.top_right.y <= cut_y {
+                bottom_left_blocks.push(child);
+                continue;
+            }
+            // Case 1
+            if child.r.top_right.x <= cut_x && child.r.bottom_left.y >= cut_y {
+                top_left_blocks.push(child);
+                continue;
+            }
+            // Case 9
+            if child.r.bottom_left.x >= cut_x && child.r.top_right.y <= cut_y {
+                bottom_right_blocks.push(child);
+                continue;
+            }
+            // Case 5
+            if child.r.contains(cut_x, cut_y) {
+                let (bl, br, tr, tl) = child.r.cross_cut(cut_x, cut_y);
+                bottom_left_blocks.push(child.complex_split("bl_child", bl));
+                bottom_right_blocks.push(child.complex_split("br_child", br));
+                top_right_blocks.push(child.complex_split("tr_child", tr));
+                top_left_blocks.push(child.complex_split("tl_child", tl));
+                continue;
+            }
+
+            // Case 2
+            if child.r.bottom_left.x <= cut_x
+                && cut_x <= child.r.top_right.x
+                && cut_y < child.r.bottom_left.y
+            {
+                top_left_blocks.push(SimpleBlock::new(
+                    "case2_tl_child".into(),
+                    Rect::new(
+                        child.r.bottom_left,
+                        Point::new(cut_x, child.r.top_right.y),
+                    ),
+                    child.c,
+                ));
+                top_right_blocks.push(SimpleBlock::new(
+                    "case2_tr_child".into(),
+                    Rect::new(
+                        Point::new(cut_x, child.r.bottom_left.y),
+                        child.r.top_right,
+                    ),
+                    child.c,
+                ));
+                continue;
+            }
+            // Case 8
+            if child.r.bottom_left.x <= cut_x
+                && cut_x <= child.r.top_right.x
+                && cut_y > child.r.top_right.y
+            {
+                bottom_left_blocks.push(SimpleBlock::new(
+                    "case8_bl_child".into(),
+                    Rect::new(
+                        child.r.bottom_left,
+                        Point::new(cut_x, child.r.top_right.y),
+                    ),
+                    child.c,
+                ));
+                bottom_right_blocks.push(SimpleBlock::new(
+                    "case8_br_child".into(),
+                    Rect::new(
+                        Point::new(cut_x, child.r.bottom_left.y),
+                        child.r.top_right,
+                    ),
+                    child.c,
+                ));
+                continue;
+            }
+            // Case 4
+            if child.r.bottom_left.y <= cut_y
+                && cut_y <= child.r.top_right.y
+                && cut_x < child.r.bottom_left.x
+            {
+                bottom_right_blocks.push(SimpleBlock::new(
+                    "case4_br_child".into(),
+                    Rect::new(
+                        child.r.bottom_left,
+                        Point::new(child.r.top_right.x, cut_y),
+                    ),
+                    child.c,
+                ));
+                top_right_blocks.push(SimpleBlock::new(
+                    "case4_tr_child".into(),
+                    Rect::new(
+                        Point::new(child.r.bottom_left.x, cut_y),
+                        child.r.top_right,
+                    ),
+                    child.c,
+                ));
+                continue;
+            }
+            // Case 6
+            if child.r.bottom_left.y <= cut_y
+                && cut_y <= child.r.top_right.y
+                && cut_x > child.r.top_right.x
+            {
+                bottom_left_blocks.push(SimpleBlock::new(
+                    "case6_bl_child".into(),
+                    Rect::new(
+                        child.r.bottom_left,
+                        Point::new(child.r.top_right.x, cut_y),
+                    ),
+                    child.c,
+                ));
+                top_left_blocks.push(SimpleBlock::new(
+                    "case6_br_child".into(),
+                    Rect::new(
+                        Point::new(child.r.bottom_left.x, cut_y),
+                        child.r.top_right,
+                    ),
+                    child.c,
+                ));
+                continue;
+            }
+        }
+        let bottom_left_block = ComplexBlock::new(
+            block_id.to_owned() + ".0",
+            Rect::new(complex_block.r.bottom_left, cut_point),
+            bottom_left_blocks,
+        );
+        let bottom_right_block = ComplexBlock::new(
+            block_id.to_owned() + ".1",
+            Rect::new(
+                Point::new(cut_x, complex_block.r.bottom_left.y),
+                Point::new(complex_block.r.top_right.x, cut_y),
+            ),
+            bottom_right_blocks,
+        );
+        let top_right_block = ComplexBlock::new(
+            block_id.to_owned() + ".2",
+            Rect::new(cut_point, complex_block.r.top_right),
+            top_right_blocks,
+        );
+        let top_left_block = ComplexBlock::new(
+            block_id.to_owned() + ".3",
+            Rect::new(
+                Point::new(complex_block.r.bottom_left.x, cut_y),
+                Point::new(cut_x, complex_block.r.top_right.y),
+            ),
+            top_left_blocks,
+        );
+        canvas.put_block(bottom_left_block.into());
+        canvas.put_block(bottom_right_block.into());
+        canvas.put_block(top_right_block.into());
+        canvas.put_block(top_left_block.into());
+        cost
     }
 
     fn swap(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {

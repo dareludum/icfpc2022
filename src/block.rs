@@ -132,8 +132,8 @@ impl SimpleBlock {
     }
 
     /// Called when splitting a complex block
-    pub fn complex_split(&self, r: Rect) -> Self {
-        Self::new("child".to_owned(), r, self.c)
+    pub fn complex_split(&self, name: &'static str, r: Rect) -> Self {
+        Self::new(name.to_owned(), r, self.c)
     }
 }
 
