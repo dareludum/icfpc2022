@@ -396,8 +396,62 @@ impl Move {
         cost
     }
 
-    fn merge(&self, canvas: &mut Canvas, block0: &BlockId, block_a: &BlockId) -> Cost {
-        todo!()
+    fn merge(&self, canvas: &mut Canvas, block_a_id: &BlockId, block_b_id: &BlockId) -> Cost {
+        let mut block_a = canvas.remove_move_block(block_a_id);
+        let mut block_b = canvas.remove_move_block(block_b_id);
+        let cost = self.compute_cost(std::cmp::max(block_a.size(), block_b.size()), canvas.area);
+        let a_bottom_left = block_a.rect().bottom_left;
+        let b_bottom_left = block_b.rect().bottom_left;
+        let a_top_right = block_a.rect().top_right;
+        let b_top_right = block_b.rect().top_right;
+
+        // vertical merge
+        if (a_bottom_left.y == b_top_right.y || a_top_right.y == b_bottom_left.y)
+            && a_bottom_left.x == b_bottom_left.x
+            && a_top_right.x == b_top_right.x
+        {
+            let (new_bottom_left, new_top_right) = if (a_bottom_left.y < b_bottom_left.y) {
+                (a_bottom_left, b_top_right)
+            } else {
+                (b_bottom_left, a_top_right)
+            };
+            let mut children: Vec<SimpleBlock> = vec![];
+            children.extend(block_a.take_children().into_iter());
+            children.extend(block_b.take_children().into_iter());
+            let new_id = canvas.new_root_id();
+            canvas.put_block(
+                ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children)
+                    .into(),
+            );
+            return cost;
+        }
+
+        // horizontal merge
+        if (a_bottom_left.x == a_top_right.x || a_top_right.x == b_bottom_left.x)
+            && a_bottom_left.y == b_bottom_left.y
+            && a_top_right.y == b_top_right.y
+        {
+            let (new_bottom_left, new_top_right) = if a_bottom_left.x < b_bottom_left.x {
+                (a_bottom_left, b_top_right)
+            } else {
+                (b_bottom_left, a_top_right)
+            };
+
+            let mut children: Vec<SimpleBlock> = vec![];
+            children.extend(block_a.take_children().into_iter());
+            children.extend(block_b.take_children().into_iter());
+            let new_id = canvas.new_root_id();
+            canvas.put_block(
+                ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children)
+                    .into(),
+            );
+            return cost;
+        }
+
+        panic!(
+            "Blocks [{}] and [{}] are not mergable",
+            block_a_id, block_b_id
+        );
     }
 }
 

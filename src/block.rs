@@ -190,6 +190,13 @@ impl Block {
         }
     }
 
+    pub fn take_children(self) -> Vec<SimpleBlock> {
+        match self {
+            Block::Simple(b) => vec![b],
+            Block::Complex(b) => b.bs,
+        }
+    }
+
     pub fn size(&self) -> u32 {
         self.rect().width() * self.rect().height()
     }

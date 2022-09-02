@@ -13,9 +13,16 @@ pub struct Canvas {
     width: u32,
     height: u32,
     blocks: HashMap<BlockId, Block>,
+    roots_count: u32,
 }
 
 impl Canvas {
+    pub fn new_root_id(&mut self) -> String {
+        let res = self.roots_count;
+        self.roots_count += 1;
+        res.to_string()
+    }
+
     pub fn new(w: u32, h: u32) -> Self {
         let mut blocks = HashMap::new();
         blocks.insert(
@@ -31,6 +38,7 @@ impl Canvas {
             height: h,
             area: w * h,
             blocks,
+            roots_count: 1,
         }
     }
 
