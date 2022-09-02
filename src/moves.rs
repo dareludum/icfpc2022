@@ -427,7 +427,7 @@ impl Move {
         }
 
         // horizontal merge
-        if (a_bottom_left.x == a_top_right.x || a_top_right.x == b_bottom_left.x)
+        if (b_top_right.x == a_bottom_left.x || a_top_right.x == b_bottom_left.x)
             && a_bottom_left.y == b_bottom_left.y
             && a_top_right.y == b_top_right.y
         {
