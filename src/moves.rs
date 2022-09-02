@@ -35,7 +35,7 @@ impl Display for Orientation {
 }
 
 impl Move {
-    pub fn apply(&self, canvas: &mut Canvas) -> Result<Cost, MoveError> {
+    pub fn apply(&self, canvas: &mut Canvas) -> Cost {
         match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 self.line_cut(canvas, block, orientation, offset)
@@ -66,22 +66,22 @@ impl Move {
         canvas: &mut Canvas,
         block_id: &BlockId,
         new_color: Color,
-    ) -> Result<Cost, MoveError> {
+    ) -> Cost {
         let canvas_area = canvas.area;
-        let block = canvas.get_move_block_mut(block_id)?;
+        let block = canvas.get_move_block_mut(block_id);
         let cost = self.compute_cost(block.size(), canvas_area);
         let (block_id, rect) = match block {
             // if the block is simple, change its color
             Block::Simple(ref mut simple) => {
                 simple.c = new_color;
-                return Ok(cost);
+                return cost;
             }
             // if its complex, turn it into a simple block
             Block::Complex(ref mut complex) => (complex.id.clone(), complex.r.clone()),
         };
 
         *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));
-        return Ok(cost);
+        cost
     }
 
     fn line_cut(
@@ -90,7 +90,7 @@ impl Move {
         block: &BlockId,
         orientation: Orientation,
         offset: u32,
-    ) -> Result<Cost, MoveError> {
+    ) -> Cost {
         match orientation {
             Orientation::Horizontal => self.horizontal_cut(canvas, block, offset),
             Orientation::Vertical => self.vertical_cut(canvas, block, offset),
@@ -102,17 +102,17 @@ impl Move {
         canvas: &mut Canvas,
         block_id: &BlockId,
         line_number: u32,
-    ) -> Result<Cost, MoveError> {
-        let block = canvas.remove_move_block(block_id)?;
+    ) -> Cost {
+        let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
         if !(block.rect().bottom_left.x <= line_number && line_number <= block.rect().top_right.x) {
-            return Err(MoveError(format!(
+            panic!(
                 "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
                 block_id,
                 block.rect().bottom_left,
                 block.rect().top_right,
                 line_number
-            )));
+            );
         }
 
         match block {
@@ -183,10 +183,9 @@ impl Move {
                     )
                     .into(),
                 );
-                return Ok(cost);
             }
         }
-        return Ok(cost);
+        cost
     }
 
     fn horizontal_cut(
@@ -194,7 +193,7 @@ impl Move {
         canvas: &mut Canvas,
         block: &BlockId,
         offset: u32,
-    ) -> Result<Cost, MoveError> {
+    ) -> Cost {
         todo!()
     }
 
@@ -204,7 +203,7 @@ impl Move {
         block: &BlockId,
         offset_x: u32,
         offset_y: u32,
-    ) -> Result<Cost, MoveError> {
+    ) -> Cost {
         todo!()
     }
 
@@ -213,7 +212,7 @@ impl Move {
         canvas: &mut Canvas,
         block0: &BlockId,
         block1: &BlockId,
-    ) -> Result<Cost, MoveError> {
+    ) -> Cost {
         // assert!(block0.rect() == block1.rect());
         // std::mem::swap(block0, block1);
         // Move::Swap(block1.id().clone(), block0.id().clone())
@@ -225,30 +224,30 @@ impl Move {
         canvas: &mut Canvas,
         block0: &BlockId,
         block1: &BlockId,
-    ) -> Result<Cost, MoveError> {
+    ) -> Cost {
         todo!()
     }
 }
 
 impl Canvas {
-    fn get_move_block(&self, block_id: &BlockId) -> Result<&Block, MoveError> {
+    fn get_move_block(&self, block_id: &BlockId) -> &Block {
         match self.get_block(block_id) {
-            Some(block) => Ok(block),
-            None => Err(MoveError(format!("missing block: {}", block_id))),
+            Some(block) => block,
+            None => panic!("missing block: {}", block_id),
         }
     }
 
-    fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
+    fn get_move_block_mut(&mut self, block_id: &BlockId) -> &mut Block {
         match self.get_block_mut(block_id) {
-            Some(block) => Ok(block),
-            None => Err(MoveError(format!("missing block: {}", block_id))),
+            Some(block) => block,
+            None => panic!("missing block: {}", block_id),
         }
     }
 
-    fn remove_move_block(&mut self, block_id: &BlockId) -> Result<Block, MoveError> {
+    fn remove_move_block(&mut self, block_id: &BlockId) -> Block {
         match self.remove_block(block_id) {
-            Some(block) => Ok(block),
-            None => Err(MoveError(format!("missing block: {}", block_id))),
+            Some(block) => block,
+            None => panic!("missing block: {}", block_id),
         }
     }
 }
