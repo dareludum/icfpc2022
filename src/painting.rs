@@ -1,27 +1,49 @@
 use crate::block::Color;
+use image::RgbaImage;
+use std::fs::File;
+use std::io::BufReader;
 
 pub struct Painting {
-
+   image: RgbaImage,
 }
 
 impl Painting {
     pub fn load(path: &std::path::Path) -> Self {
-        todo!()
+        let file = match File::open(&path) {
+            Err(why) => panic!("couldn't open {:?}: {}", path, why),
+            Ok(file) => file,
+        };
+        let mut reader = BufReader::new(file);
+        let dyn_img = image::load(&mut reader, image::ImageFormat::PNG)
+            .expect("image loading failed");
+        return Painting { image: dyn_img.into_rgba() }
     }
 
     pub fn width(&self) -> u32 {
-        todo!()
+        return self.image.width();
     }
 
     pub fn height(&self) -> u32 {
-        todo!()
+        return self.image.height()
     }
 
     pub fn get_color(&self, x: u32, y: u32) -> Color {
-        todo!()
+        self.image.get_pixel(x, y).into()
     }
 
-    pub fn calculate_score(&self, target: &Painting) -> u32 {
-        todo!()
+    pub fn set_color(&mut self, x: u32, y: u32, color: &Color) {
+        self.image.put_pixel(x, y, color.into());
+    }
+
+    pub fn calculate_score(&self, target: &Painting) -> f32 {
+        if target.width() != self.width() || target.height() != self.height() {
+            panic!("comparing two images different in size");
+        }
+
+        self.image.pixels().zip(target.image.pixels())
+            .map(|(ours, theirs)| {
+                let component_pairs = ours.0.as_ref().iter().zip(theirs.0);
+                component_pairs.map(|(a, b)| (a.abs_diff(b) as f32).powi(2)).sum::<f32>()
+            }).sum::<f32>()
     }
 }

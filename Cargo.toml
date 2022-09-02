@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 raylib = { version = "3.7", git = "https://github.com/deltaphc/raylib-rs"}
+image = { version = "0.22.4", default-features = false, features = ["png"] }
 
 [features]
 wayland = ["raylib/wayland"]
