@@ -65,6 +65,6 @@ merge[1][2]
 swap[3.0.0][0.0.1]
 ";
 
-        assert_eq!(generate_isl(moves), expected);
+        assert_eq!(generate_isl(&moves), expected);
     }
 }
