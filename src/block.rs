@@ -16,3 +16,5 @@ pub enum Block {
     SimpleBlock(Rectangle, Color),
     ComplexBlock(Rectangle, Vec<Block>),
 }
+
+pub type BlockId = Vec<u32>;
