@@ -61,12 +61,7 @@ impl Move {
         Cost((self.base_cost() as f32 * (canvas_area as f32 / block_area as f32)).round() as u32)
     }
 
-    fn color(
-        &self,
-        canvas: &mut Canvas,
-        block_id: &BlockId,
-        new_color: Color,
-    ) -> Cost {
+    fn color(&self, canvas: &mut Canvas, block_id: &BlockId, new_color: Color) -> Cost {
         let canvas_area = canvas.area;
         let block = canvas.get_move_block_mut(block_id);
         let cost = self.compute_cost(block.size(), canvas_area);
@@ -97,12 +92,7 @@ impl Move {
         }
     }
 
-    fn vertical_cut(
-        &self,
-        canvas: &mut Canvas,
-        block_id: &BlockId,
-        line_number: u32,
-    ) -> Cost {
+    fn vertical_cut(&self, canvas: &mut Canvas, block_id: &BlockId, line_number: u32) -> Cost {
         let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
         if !(block.rect().bottom_left.x <= line_number && line_number <= block.rect().top_right.x) {
@@ -117,28 +107,9 @@ impl Move {
 
         match block {
             Block::Simple(simple) => {
-                canvas.put_block(
-                    simple
-                        .split(
-                            0,
-                            Rect::new(
-                                simple.r.bottom_left,
-                                Point::new(line_number, simple.r.top_right.y),
-                            ),
-                        )
-                        .into(),
-                );
-                canvas.put_block(
-                    simple
-                        .split(
-                            0,
-                            Rect::new(
-                                Point::new(line_number, simple.r.bottom_left.y),
-                                simple.r.top_right,
-                            ),
-                        )
-                        .into(),
-                );
+                let (left_r, right_r) = simple.r.vertical_cut(line_number);
+                canvas.put_block(simple.split(0, left_r).into());
+                canvas.put_block(simple.split(1, right_r).into());
             }
             Block::Complex(complex) => {
                 let mut left_blocks: Vec<SimpleBlock> = vec![];
@@ -152,48 +123,24 @@ impl Move {
                         left_blocks.push(child);
                         continue;
                     }
-                    left_blocks.push(child.complex_split(Rect::new(
-                        child.r.bottom_left,
-                        Point::new(line_number, child.r.top_right.y),
-                    )));
-                    right_blocks.push(child.complex_split(Rect::new(
-                        Point::new(line_number, child.r.bottom_left.y),
-                        child.r.top_right,
-                    )));
+                    let (left_r, right_r) = child.r.vertical_cut(line_number);
+                    left_blocks.push(child.complex_split(left_r));
+                    right_blocks.push(child.complex_split(right_r));
                 }
+
+                let (left_r, right_r) = complex.r.vertical_cut(line_number);
                 canvas.put_block(
-                    ComplexBlock::new(
-                        block_id.to_owned() + ".0",
-                        Rect::new(
-                            complex.r.bottom_left,
-                            Point::new(line_number, complex.r.top_right.y),
-                        ),
-                        left_blocks,
-                    )
-                    .into(),
+                    ComplexBlock::new(block_id.to_owned() + ".0", left_r, left_blocks).into(),
                 );
                 canvas.put_block(
-                    ComplexBlock::new(
-                        block_id.to_owned() + ".1",
-                        Rect::new(
-                            Point::new(line_number, complex.r.bottom_left.y),
-                            complex.r.top_right,
-                        ),
-                        right_blocks,
-                    )
-                    .into(),
+                    ComplexBlock::new(block_id.to_owned() + ".1", right_r, right_blocks).into(),
                 );
             }
         }
         cost
     }
 
-    fn horizontal_cut(
-        &self,
-        canvas: &mut Canvas,
-        block: &BlockId,
-        offset: u32,
-    ) -> Cost {
+    fn horizontal_cut(&self, canvas: &mut Canvas, block: &BlockId, offset: u32) -> Cost {
         todo!()
     }
 
@@ -207,24 +154,14 @@ impl Move {
         todo!()
     }
 
-    fn swap(
-        &self,
-        canvas: &mut Canvas,
-        block0: &BlockId,
-        block1: &BlockId,
-    ) -> Cost {
+    fn swap(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {
         // assert!(block0.rect() == block1.rect());
         // std::mem::swap(block0, block1);
         // Move::Swap(block1.id().clone(), block0.id().clone())
         todo!()
     }
 
-    fn merge(
-        &self,
-        canvas: &mut Canvas,
-        block0: &BlockId,
-        block1: &BlockId,
-    ) -> Cost {
+    fn merge(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {
         todo!()
     }
 }

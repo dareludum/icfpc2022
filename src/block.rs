@@ -48,6 +48,12 @@ impl Rect {
             && y >= self.bottom_left.y
             && y < self.top_right.y
     }
+
+    pub fn vertical_cut(&self, x: u32) -> (Self, Self) {
+        let left = Rect::new(self.bottom_left, Point::new(x, self.top_right.y));
+        let right = Rect::new(Point::new(x, self.bottom_left.y), self.top_right);
+        (left, right)
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
