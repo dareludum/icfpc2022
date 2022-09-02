@@ -68,7 +68,7 @@ impl Move {
     }
 
     fn compute_cost(&self, block_area: u32, canvas_area: u32) -> Cost {
-        Cost((self.base_cost() as f32 * (canvas_area as f32 / block_area as f32)).round() as u64)
+        Cost((self.base_cost() as f64 * (canvas_area as f64 / block_area as f64)).round() as u64)
     }
 
     fn color(
