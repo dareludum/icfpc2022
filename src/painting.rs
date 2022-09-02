@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::BufReader;
 
 pub struct Painting {
-    image: RgbaImage,
+    pub image: RgbaImage,
 }
 
 impl Painting {

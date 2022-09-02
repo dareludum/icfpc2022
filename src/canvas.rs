@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::block::{Block, BlockId, Color, Point, Rect, SimpleBlock};
+use image::{Rgba, RgbaImage};
+
+use crate::{
+    block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
+    painting::Painting,
+};
 
 #[derive(Debug)]
 pub struct Canvas {
@@ -69,5 +74,37 @@ impl Canvas {
 
     pub fn remove_block(&mut self, block: &BlockId) -> Option<Block> {
         self.blocks.remove(block)
+    }
+
+    pub fn render(&self) -> Painting {
+        let mut img = RgbaImage::new(self.area, self.area);
+
+        for (_, block) in self.blocks.iter() {
+            match block {
+                Block::Simple(simple_block) => render_simple_block(&mut img, &simple_block),
+                Block::Complex(ComplexBlock { bs: blocks, .. }) => {
+                    blocks.iter().for_each(|b| render_simple_block(&mut img, b))
+                }
+            }
+        }
+
+        Painting { image: img }
+    }
+}
+
+fn render_simple_block(img: &mut RgbaImage, block: &SimpleBlock) {
+    let SimpleBlock {
+        r: Rect {
+            bottom_left,
+            top_right,
+        },
+        c: Color { r, g, b, a },
+        ..
+    } = block;
+
+    for x in bottom_left.x..=top_right.x {
+        for y in bottom_left.y..=top_right.y {
+            img.put_pixel(x, y, Rgba([*r, *g, *b, *a]))
+        }
     }
 }
