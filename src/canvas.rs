@@ -48,7 +48,7 @@ impl Canvas {
                 return b.id().clone();
             }
         }
-        panic!("Programmer error: hit test didn't find any blocks");
+        panic!("Programmer error: hit test didn't find any blocks for ({}, {})", x, y);
     }
 
     pub fn get_block(&self, block: &BlockId) -> Option<&Block> {
