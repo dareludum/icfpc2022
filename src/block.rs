@@ -7,7 +7,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn new(x: u32, y: u32) -> Self {
+    pub const fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
 }
@@ -19,11 +19,19 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new(bottom_left: Point, top_right: Point) -> Self {
+    pub const fn new(bottom_left: Point, top_right: Point) -> Self {
         Rect {
             bottom_left,
             top_right,
         }
+    }
+
+    pub fn x(&self) -> u32 {
+        self.bottom_left.x
+    }
+
+    pub fn y(&self) -> u32 {
+        self.bottom_left.y
     }
 
     pub fn width(&self) -> u32 {
