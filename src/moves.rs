@@ -1,4 +1,4 @@
-use crate::block::{BlockId, Color, Block, Rect};
+use crate::block::{Block, BlockId, Color, Rect};
 
 pub enum Orientation {
     Horizontal,
@@ -102,15 +102,13 @@ impl Move {
         // Move::Color(id, new_color)
     }
 
-    pub fn swap(block0: &mut Block, block1: &mut Block) -> Self
-    {
+    pub fn swap(block0: &mut Block, block1: &mut Block) -> Self {
         assert!(block0.rect() == block1.rect());
         std::mem::swap(block0, block1);
         Move::Swap(block1.id().clone(), block0.id().clone())
     }
 
-    pub fn merge(block0: Block, block1: Block) -> (Block, Self)
-    {
+    pub fn merge(block0: Block, block1: Block) -> (Block, Self) {
         todo!()
         // let r0 = block0.rect();
         // let r1 = block1.rect();

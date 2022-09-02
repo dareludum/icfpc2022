@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::block::{Block, Color, Rect, SimpleBlock, BlockId};
+use crate::block::{Block, BlockId, Color, Rect, SimpleBlock};
 
 pub struct Canvas {
     size: u32,
@@ -28,12 +28,12 @@ impl Canvas {
     pub fn blocks_iter(&self) -> Vec<&Block> {
         let mut blocks = vec![];
         // for b in self.blocks {
-            // match b {
-            //     Block::Simple(_, _, _) => {
-            //         blocks.push()
-            //     },
-            //     Block::ComplexBlock(_, _, _) => todo!(),
-            // }
+        // match b {
+        //     Block::Simple(_, _, _) => {
+        //         blocks.push()
+        //     },
+        //     Block::ComplexBlock(_, _, _) => todo!(),
+        // }
         // }
         blocks
     }

@@ -47,7 +47,11 @@ impl From<&Rgba<u8>> for Color {
 
 pub type BlockId = String;
 
-pub struct SimpleBlock { id: BlockId, r: Rect, c: Color }
+pub struct SimpleBlock {
+    pub id: BlockId,
+    pub r: Rect,
+    pub c: Color,
+}
 
 impl SimpleBlock {
     pub fn new(id: BlockId, r: Rect, c: Color) -> Self {
@@ -55,7 +59,11 @@ impl SimpleBlock {
     }
 }
 
-pub struct ComplexBlock { id: BlockId, r: Rect, bs: Vec<SimpleBlock> }
+pub struct ComplexBlock {
+    pub id: BlockId,
+    pub r: Rect,
+    pub bs: Vec<SimpleBlock>,
+}
 
 impl ComplexBlock {
     pub fn new(id: BlockId, r: Rect, bs: Vec<SimpleBlock>) -> Self {
