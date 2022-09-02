@@ -98,7 +98,7 @@ impl Move {
     fn vertical_cut(&self, canvas: &mut Canvas, block_id: &BlockId, cut_offset_x: u32) -> Cost {
         let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
-        if !(block.rect().bottom_left.x <= cut_offset_x && cut_offset_x <= block.rect().top_right.x)
+        if !(block.rect().bottom_left.x <= cut_offset_x && cut_offset_x < block.rect().top_right.x)
         {
             panic!(
                 "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
@@ -147,7 +147,7 @@ impl Move {
     fn horizontal_cut(&self, canvas: &mut Canvas, block_id: &BlockId, cut_offset_y: u32) -> Cost {
         let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
-        if !(block.rect().bottom_left.y <= cut_offset_y && cut_offset_y <= block.rect().top_right.y)
+        if !(block.rect().bottom_left.y <= cut_offset_y && cut_offset_y < block.rect().top_right.y)
         {
             panic!(
                 "Col number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
