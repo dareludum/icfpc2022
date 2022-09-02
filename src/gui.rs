@@ -62,6 +62,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
     let mut tool = Tool::CutVert;
     let mut color = crate::block::Color::new(255, 255, 255, 255);
+    let mut marked_block = None;
 
     const MARGIN: i32 = 20;
     const IMAGE_SIZE: i32 = 400;
@@ -169,17 +170,44 @@ pub fn gui_main(problem_path: &std::path::Path) {
                     (my - SLN.1) as u32,
                 )),
                 Tool::Color => Some(Move::Color(b_id.clone().unwrap(), color)),
-                Tool::Swap => None,
-                Tool::Merge => None,
+                Tool::Swap => {
+                    if let (Some(b0_id), Some(b1_id)) = (b_id.clone(), marked_block.clone()) {
+                        let mov = Move::Swap(b0_id, b1_id);
+                        if mov.is_valid(&canvas) {
+                            // TODO: message
+                            None
+                        } else {
+                            Some(mov)
+                        }
+                    } else {
+                        None
+                    }
+                }
+                Tool::Merge => {
+                    if let (Some(b0_id), Some(b1_id)) = (b_id.clone(), marked_block.clone()) {
+                        let mov = Move::Merge(b0_id, b1_id);
+                        if mov.is_valid(&canvas) {
+                            // TODO: message
+                            None
+                        } else {
+                            Some(mov)
+                        }
+                    } else {
+                        None
+                    }
+                }
             }
         };
 
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
             if SOLUTION_RECT.contains(mx as u32, my as u32) {
                 // TODO refactor army of clones
-                let cost = mov.clone().unwrap().apply(&mut canvas);
-                b_id = None;
-                moves.push((mov.clone().unwrap(), cost));
+                if let Some(mov) = mov.clone() {
+                    let cost = mov.apply(&mut canvas);
+                    b_id = None;
+                    marked_block = None;
+                    moves.push((mov, cost));
+                }
             }
         }
 
@@ -195,8 +223,9 @@ pub fn gui_main(problem_path: &std::path::Path) {
                             my as u32 - SOLUTION_RECT.y(),
                         );
                     }
-                    Tool::Swap => {}
-                    Tool::Merge => {}
+                    Tool::Swap | Tool::Merge => {
+                        marked_block = b_id.clone();
+                    }
                 }
             }
         }
@@ -260,6 +289,16 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 r.height() as i32,
                 Color::GREEN,
             );
+            if let Some(mb) = marked_block.clone() {
+                let mr = canvas.get_block(&mb).unwrap().rect();
+                d.draw_rectangle_lines(
+                    MARGIN + mr.bottom_left.x as i32,
+                    MARGIN + mr.bottom_left.y as i32,
+                    mr.width() as i32,
+                    mr.height() as i32,
+                    Color::PURPLE,
+                );
+            }
             match tool {
                 Tool::CutVert => {
                     draw_notch_vert(&mut d, &SLN, x, r.y() as i32, r.height() as i32, Color::RED);
