@@ -89,22 +89,26 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
     while !rl.window_should_close() {
         // ===== HIT TEST =====
-        let mx = rl.get_mouse_x();
+        let mut mx = rl.get_mouse_x();
         let my = rl.get_mouse_y();
-        let mut b_id =
-            if mx >= MARGIN && mx < MARGIN + IMAGE_SIZE && my >= MARGIN && my < MARGIN + IMAGE_SIZE
-            {
-                match tool {
-                    Tool::CutHorz | Tool::CutVert | Tool::CutCross => {
-                        rl.hide_cursor();
-                    }
-                    _ => {}
+
+        // Hack to force the logical mouse coords to always "be" inside the solution
+        if TARGET_RECT.contains(mx as u32, my as u32) {
+            mx -= IMAGE_SIZE + MARGIN;
+        }
+
+        let mut b_id = if SOLUTION_RECT.contains(mx as u32, my as u32) {
+            match tool {
+                Tool::CutHorz | Tool::CutVert | Tool::CutCross => {
+                    rl.hide_cursor();
                 }
-                Some(canvas.hit_test((mx - MARGIN) as u32, (my - MARGIN) as u32))
-            } else {
-                rl.show_cursor();
-                None
-            };
+                _ => {}
+            }
+            Some(canvas.hit_test((mx - MARGIN) as u32, (my - MARGIN) as u32))
+        } else {
+            rl.show_cursor();
+            None
+        };
 
         // ===== INTERACTION =====
         match rl.get_key_pressed() {
@@ -145,40 +149,41 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
             if SOLUTION_RECT.contains(mx as u32, my as u32) {
-                match tool {
+                let mov = match tool {
                     Tool::CutVert => {
-                        let mov = Move::LineCut(
-                            b_id.unwrap(),
-                            Orientation::Vertical,
-                            (mx - SLN.0) as u32,
-                        );
-                        let cost = mov.apply(&mut canvas);
-                        b_id = None;
-                        moves.push((mov, cost));
+                        Move::LineCut(b_id.unwrap(), Orientation::Vertical, (mx - SLN.0) as u32)
                     }
                     Tool::CutHorz => {
-                        let mov = Move::LineCut(
-                            b_id.unwrap(),
-                            Orientation::Horizontal,
-                            (my - SLN.1) as u32,
-                        );
-                        let cost = mov.apply(&mut canvas);
-                        b_id = None;
-                        moves.push((mov, cost));
+                        Move::LineCut(b_id.unwrap(), Orientation::Horizontal, (my - SLN.1) as u32)
                     }
-                    Tool::CutCross => {}
-                    Tool::Color => {}
-                    Tool::Swap => {}
-                    Tool::Merge => {}
-                }
-            } else if TARGET_RECT.contains(mx as u32, my as u32) {
+                    Tool::CutCross => {
+                        Move::PointCut(b_id.unwrap(), (mx - SLN.0) as u32, (my - SLN.1) as u32)
+                    }
+                    Tool::Color => Move::Color(b_id.unwrap(), color),
+                    Tool::Swap => {
+                        todo!()
+                    }
+                    Tool::Merge => {
+                        todo!()
+                    }
+                };
+                let cost = mov.apply(&mut canvas);
+                b_id = None;
+                moves.push((mov, cost));
+            }
+        }
+
+        if rl.is_mouse_button_pressed(MouseButton::MOUSE_RIGHT_BUTTON) {
+            if SOLUTION_RECT.contains(mx as u32, my as u32) {
                 match tool {
                     Tool::CutVert => {}
                     Tool::CutHorz => {}
                     Tool::CutCross => {}
                     Tool::Color => {
-                        color = painting
-                            .get_color(mx as u32 - TARGET_RECT.x(), my as u32 - TARGET_RECT.y());
+                        color = painting.get_color(
+                            mx as u32 - SOLUTION_RECT.x(),
+                            my as u32 - SOLUTION_RECT.y(),
+                        );
                     }
                     Tool::Swap => {}
                     Tool::Merge => {}
