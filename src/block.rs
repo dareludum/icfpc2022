@@ -26,6 +26,13 @@ impl Rect {
         }
     }
 
+    pub const fn from_dimensions(bottom_left: Point, width: u32, height: u32) -> Self {
+        Rect::new(
+            bottom_left,
+            Point::new(bottom_left.x + width - 1, bottom_left.y + height - 1),
+        )
+    }
+
     pub fn x(&self) -> u32 {
         self.bottom_left.x
     }
@@ -53,6 +60,12 @@ impl Rect {
         let left = Rect::new(self.bottom_left, Point::new(x, self.top_right.y));
         let right = Rect::new(Point::new(x, self.bottom_left.y), self.top_right);
         (left, right)
+    }
+
+    pub fn horizontal_cut(&self, y: u32) -> (Self, Self) {
+        let bottom = Rect::new(self.bottom_left, Point::new(self.top_right.x, y));
+        let top = Rect::new(Point::new(self.bottom_left.x, y), self.top_right);
+        (bottom, top)
     }
 }
 

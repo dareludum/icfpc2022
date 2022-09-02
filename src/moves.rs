@@ -140,8 +140,52 @@ impl Move {
         cost
     }
 
-    fn horizontal_cut(&self, canvas: &mut Canvas, block: &BlockId, offset: u32) -> Cost {
-        todo!()
+    fn horizontal_cut(&self, canvas: &mut Canvas, block_id: &BlockId, col_number: u32) -> Cost {
+        let block = canvas.remove_move_block(block_id);
+        let cost = self.compute_cost(block.size(), canvas.area);
+        if !(block.rect().bottom_left.y <= col_number && col_number <= block.rect().top_right.x) {
+            panic!(
+                "Col number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
+                block_id,
+                block.rect().bottom_left,
+                block.rect().top_right,
+                col_number
+            );
+        }
+
+        match block {
+            Block::Simple(simple) => {
+                let (bottom_r, top_r) = simple.r.horizontal_cut(col_number);
+                canvas.put_block(simple.split(0, bottom_r).into());
+                canvas.put_block(simple.split(1, top_r).into());
+            }
+            Block::Complex(complex) => {
+                let mut bottom_blocks: Vec<SimpleBlock> = vec![];
+                let mut top_blocks: Vec<SimpleBlock> = vec![];
+                for child in complex.bs {
+                    if child.r.bottom_left.y >= col_number {
+                        top_blocks.push(child);
+                        continue;
+                    }
+                    if child.r.top_right.y <= col_number {
+                        bottom_blocks.push(child);
+                        continue;
+                    }
+                    let (bottom_r, top_r) = child.r.horizontal_cut(col_number);
+                    bottom_blocks.push(child.complex_split(bottom_r));
+                    top_blocks.push(child.complex_split(top_r));
+                }
+
+                let (bottom_r, top_r) = complex.r.horizontal_cut(col_number);
+                canvas.put_block(
+                    ComplexBlock::new(block_id.to_owned() + ".0", bottom_r, bottom_blocks).into(),
+                );
+                canvas.put_block(
+                    ComplexBlock::new(block_id.to_owned() + ".1", top_r, top_blocks).into(),
+                );
+            }
+        }
+        cost
     }
 
     fn point_cut(
