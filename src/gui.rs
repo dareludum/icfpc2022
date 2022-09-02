@@ -121,8 +121,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
         // Draw the in-progress solution
         for b in canvas.blocks_iter() {
             d.draw_rectangle(
-                MARGIN + b.r.x as i32,
-                MARGIN + b.r.y as i32,
+                MARGIN + b.r.bottom_left.x as i32,
+                MARGIN + b.r.bottom_left.y as i32,
                 b.r.width() as i32,
                 b.r.height() as i32,
                 b.c,
@@ -133,8 +133,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
         if let Some(b) = block {
             let r = b.rect();
             d.draw_rectangle_lines(
-                MARGIN + r.x as i32,
-                MARGIN + r.y as i32,
+                MARGIN + r.bottom_left.x as i32,
+                MARGIN + r.bottom_left.y as i32,
                 r.width() as i32,
                 r.height() as i32,
                 Color::GREEN,
@@ -143,9 +143,9 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 Tool::CutHorz => {
                     d.draw_line(
                         mx,
-                        MARGIN + r.y as i32,
+                        MARGIN + r.bottom_left.y as i32,
                         mx,
-                        MARGIN + r.y as i32 + r.height() as i32,
+                        MARGIN + r.top_right.y as i32,
                         Color::RED,
                     );
                 }

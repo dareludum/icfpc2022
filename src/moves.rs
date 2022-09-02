@@ -1,7 +1,7 @@
 use image::error;
 
 use crate::{
-    block::{Block, BlockId, Color, Rect, Point, SimpleBlock, ComplexBlock},
+    block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
     canvas::Canvas,
 };
 
@@ -97,35 +97,51 @@ impl Move {
         let block = canvas.remove_move_block(block_id)?;
         let cost = self.compute_cost(block.size(), canvas.area);
         if !(block.rect().bottom_left.x <= line_number && line_number <= block.rect().top_right.x) {
-            return Err(MoveError(format!("Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}", block_id, block.rect().bottom_left, block.rect().top_right, line_number)))
+            return Err(MoveError(format!(
+                "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
+                block_id,
+                block.rect().bottom_left,
+                block.rect().top_right,
+                line_number
+            )));
         }
 
         match block {
             Block::Simple(simple) => {
-                canvas.put_block(Block::Simple(
+                canvas.put_block(
                     SimpleBlock::new(
-                        simple.id + ".0", 
-                        Rect::new(simple.r.bottom_left, Point::new(line_number, simple.r.top_right.y)), 
-                        simple.c
-                    )));
-                canvas.put_block(Block::Simple(
+                        simple.id.clone() + ".0",
+                        Rect::new(
+                            simple.r.bottom_left,
+                            Point::new(line_number, simple.r.top_right.y),
+                        ),
+                        simple.c,
+                    )
+                    .into(),
+                );
+                canvas.put_block(
                     SimpleBlock::new(
-                        simple.id + ".1", 
-                        Rect::new(Point::new(line_number, simple.r.bottom_left.y), simple.r.top_right), 
-                        simple.c
-                    )));
-                },
+                        simple.id.clone() + ".1",
+                        Rect::new(
+                            Point::new(line_number, simple.r.bottom_left.y),
+                            simple.r.top_right,
+                        ),
+                        simple.c,
+                    )
+                    .into(),
+                );
+            }
             Block::Complex(complex) => {
                 let mut left_blocks: Vec<SimpleBlock> = vec![];
                 let mut right_blocks: Vec<SimpleBlock> = vec![];
                 for child in complex.bs {
                     if child.r.bottom_left.x >= line_number {
                         right_blocks.push(child);
-                        continue
+                        continue;
                     }
                     if child.r.top_right.x <= line_number {
                         left_blocks.push(child);
-                        continue
+                        continue;
                     }
                     left_blocks.push(SimpleBlock::new(
                         "child".into(),
@@ -133,35 +149,41 @@ impl Move {
                             child.r.bottom_left,
                             Point::new(line_number, child.r.top_right.y),
                         ),
-                        child.c
+                        child.c,
                     ));
                     right_blocks.push(SimpleBlock::new(
                         "child".into(),
                         Rect::new(
                             Point::new(line_number, child.r.bottom_left.y),
-                            child.r.top_right
+                            child.r.top_right,
                         ),
-                        child.c
-                    ));    
+                        child.c,
+                    ));
                 }
-                canvas.put_block(Block::Complex(ComplexBlock::new(
-                    block_id.to_owned() + ".0",
-                    Rect::new(
-                        complex.r.bottom_left,
-                        Point::new(line_number, complex.r.top_right.y)
-                    ),
-                    left_blocks
-                )));
-                canvas.put_block(Block::Complex(ComplexBlock::new(
-                    block_id.to_owned() + ".1",
-                    Rect::new(
-                        Point::new(line_number, complex.r.bottom_left.y),
-                        complex.r.top_right
-                    ),
-                    right_blocks
-                )));
-                return Ok(cost)
-            },
+                canvas.put_block(
+                    ComplexBlock::new(
+                        block_id.to_owned() + ".0",
+                        Rect::new(
+                            complex.r.bottom_left,
+                            Point::new(line_number, complex.r.top_right.y),
+                        ),
+                        left_blocks,
+                    )
+                    .into(),
+                );
+                canvas.put_block(
+                    ComplexBlock::new(
+                        block_id.to_owned() + ".1",
+                        Rect::new(
+                            Point::new(line_number, complex.r.bottom_left.y),
+                            complex.r.top_right,
+                        ),
+                        right_blocks,
+                    )
+                    .into(),
+                );
+                return Ok(cost);
+            }
         }
         return Ok(cost);
     }

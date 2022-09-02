@@ -1,6 +1,6 @@
 use image::Rgba;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
@@ -12,7 +12,6 @@ impl Point {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rect {
     pub bottom_left: Point,
@@ -21,7 +20,10 @@ pub struct Rect {
 
 impl Rect {
     pub fn new(bottom_left: Point, top_right: Point) -> Self {
-        Rect { bottom_left, top_right }
+        Rect {
+            bottom_left,
+            top_right,
+        }
     }
 
     pub fn width(&self) -> u32 {
@@ -33,8 +35,10 @@ impl Rect {
     }
 
     pub fn contains(&self, x: u32, y: u32) -> bool {
-        x >= self.bottom_left.x && x < self.top_right.x &&
-        y >= self.bottom_left.y && y < self.top_right.y
+        x >= self.bottom_left.x
+            && x < self.top_right.x
+            && y >= self.bottom_left.y
+            && y < self.top_right.y
     }
 }
 
@@ -98,6 +102,18 @@ impl ComplexBlock {
 pub enum Block {
     Simple(SimpleBlock),
     Complex(ComplexBlock),
+}
+
+impl Into<Block> for SimpleBlock {
+    fn into(self) -> Block {
+        Block::Simple(self)
+    }
+}
+
+impl Into<Block> for ComplexBlock {
+    fn into(self) -> Block {
+        Block::Complex(self)
+    }
 }
 
 impl Block {
