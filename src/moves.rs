@@ -95,22 +95,23 @@ impl Move {
         }
     }
 
-    fn vertical_cut(&self, canvas: &mut Canvas, block_id: &BlockId, line_number: u32) -> Cost {
+    fn vertical_cut(&self, canvas: &mut Canvas, block_id: &BlockId, cut_offset_x: u32) -> Cost {
         let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
-        if !(block.rect().bottom_left.x <= line_number && line_number <= block.rect().top_right.x) {
+        if !(block.rect().bottom_left.x <= cut_offset_x && cut_offset_x <= block.rect().top_right.x)
+        {
             panic!(
                 "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
                 block_id,
                 block.rect().bottom_left,
                 block.rect().top_right,
-                line_number
+                cut_offset_x
             );
         }
 
         match block {
             Block::Simple(simple) => {
-                let (left_r, right_r) = simple.r.vertical_cut(line_number);
+                let (left_r, right_r) = simple.r.vertical_cut(cut_offset_x);
                 canvas.put_block(simple.split(0, left_r).into());
                 canvas.put_block(simple.split(1, right_r).into());
             }
@@ -118,20 +119,20 @@ impl Move {
                 let mut left_blocks: Vec<SimpleBlock> = vec![];
                 let mut right_blocks: Vec<SimpleBlock> = vec![];
                 for child in complex.bs {
-                    if child.r.bottom_left.x >= line_number {
+                    if child.r.bottom_left.x >= cut_offset_x {
                         right_blocks.push(child);
                         continue;
                     }
-                    if child.r.top_right.x <= line_number {
+                    if child.r.top_right.x <= cut_offset_x {
                         left_blocks.push(child);
                         continue;
                     }
-                    let (left_r, right_r) = child.r.vertical_cut(line_number);
+                    let (left_r, right_r) = child.r.vertical_cut(cut_offset_x);
                     left_blocks.push(child.complex_split(left_r));
                     right_blocks.push(child.complex_split(right_r));
                 }
 
-                let (left_r, right_r) = complex.r.vertical_cut(line_number);
+                let (left_r, right_r) = complex.r.vertical_cut(cut_offset_x);
                 canvas.put_block(
                     ComplexBlock::new(block_id.to_owned() + ".0", left_r, left_blocks).into(),
                 );
@@ -143,22 +144,23 @@ impl Move {
         cost
     }
 
-    fn horizontal_cut(&self, canvas: &mut Canvas, block_id: &BlockId, col_number: u32) -> Cost {
+    fn horizontal_cut(&self, canvas: &mut Canvas, block_id: &BlockId, cut_offset_y: u32) -> Cost {
         let block = canvas.remove_move_block(block_id);
         let cost = self.compute_cost(block.size(), canvas.area);
-        if !(block.rect().bottom_left.y <= col_number && col_number <= block.rect().top_right.x) {
+        if !(block.rect().bottom_left.y <= cut_offset_y && cut_offset_y <= block.rect().top_right.y)
+        {
             panic!(
                 "Col number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
                 block_id,
                 block.rect().bottom_left,
                 block.rect().top_right,
-                col_number
+                cut_offset_y
             );
         }
 
         match block {
             Block::Simple(simple) => {
-                let (bottom_r, top_r) = simple.r.horizontal_cut(col_number);
+                let (bottom_r, top_r) = simple.r.horizontal_cut(cut_offset_y);
                 canvas.put_block(simple.split(0, bottom_r).into());
                 canvas.put_block(simple.split(1, top_r).into());
             }
@@ -166,20 +168,20 @@ impl Move {
                 let mut bottom_blocks: Vec<SimpleBlock> = vec![];
                 let mut top_blocks: Vec<SimpleBlock> = vec![];
                 for child in complex.bs {
-                    if child.r.bottom_left.y >= col_number {
+                    if child.r.bottom_left.y >= cut_offset_y {
                         top_blocks.push(child);
                         continue;
                     }
-                    if child.r.top_right.y <= col_number {
+                    if child.r.top_right.y <= cut_offset_y {
                         bottom_blocks.push(child);
                         continue;
                     }
-                    let (bottom_r, top_r) = child.r.horizontal_cut(col_number);
+                    let (bottom_r, top_r) = child.r.horizontal_cut(cut_offset_y);
                     bottom_blocks.push(child.complex_split(bottom_r));
                     top_blocks.push(child.complex_split(top_r));
                 }
 
-                let (bottom_r, top_r) = complex.r.horizontal_cut(col_number);
+                let (bottom_r, top_r) = complex.r.horizontal_cut(cut_offset_y);
                 canvas.put_block(
                     ComplexBlock::new(block_id.to_owned() + ".0", bottom_r, bottom_blocks).into(),
                 );
@@ -199,7 +201,6 @@ impl Move {
         offset_y: u32,
     ) -> Cost {
         todo!()
-
     }
 
     fn swap(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {

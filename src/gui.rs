@@ -77,10 +77,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
     const SOLUTION_RECT: Rect = Rect::new(
         Point::new(MARGIN as u32, MARGIN as u32),
-        Point::new(
-            (MARGIN + IMAGE_SIZE - 1) as u32,
-            (MARGIN + IMAGE_SIZE - 1) as u32,
-        ),
+        Point::new((MARGIN + IMAGE_SIZE) as u32, (MARGIN + IMAGE_SIZE) as u32),
     );
     const TARGET_RECT: Rect = Rect::new(
         Point::new((MARGIN * 2 + IMAGE_SIZE) as u32, MARGIN as u32),

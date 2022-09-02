@@ -14,7 +14,9 @@ impl Point {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rect {
+    /// inclusive lower bound
     pub bottom_left: Point,
+    /// exclusive upper bound
     pub top_right: Point,
 }
 
@@ -29,7 +31,7 @@ impl Rect {
     pub const fn from_dimensions(bottom_left: Point, width: u32, height: u32) -> Self {
         Rect::new(
             bottom_left,
-            Point::new(bottom_left.x + width - 1, bottom_left.y + height - 1),
+            Point::new(bottom_left.x + width, bottom_left.y + height),
         )
     }
 
@@ -42,18 +44,18 @@ impl Rect {
     }
 
     pub fn width(&self) -> u32 {
-        self.top_right.x - self.bottom_left.x + 1
+        self.top_right.x - self.bottom_left.x
     }
 
     pub fn height(&self) -> u32 {
-        self.top_right.y - self.bottom_left.y + 1
+        self.top_right.y - self.bottom_left.y
     }
 
     pub fn contains(&self, x: u32, y: u32) -> bool {
         x >= self.bottom_left.x
-            && x <= self.top_right.x
+            && x < self.top_right.x
             && y >= self.bottom_left.y
-            && y <= self.top_right.y
+            && y < self.top_right.y
     }
 
     pub fn vertical_cut(&self, x: u32) -> (Self, Self) {
