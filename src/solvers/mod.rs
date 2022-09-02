@@ -1,3 +1,4 @@
+mod divide_conquer;
 mod no_op;
 
 use crate::{
@@ -27,11 +28,12 @@ pub trait Solver {
     }
 }
 
-pub const SOLVERS: &[&'static str] = &["no_op"];
+pub const SOLVERS: &[&'static str] = &["no_op", "divide_conquer"];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {
         "no_op" => Box::new(no_op::NoOp {}),
+        "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
         n => panic!("Unknown solver `{}`", n),
     }
 }

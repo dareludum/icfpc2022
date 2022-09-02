@@ -1,3 +1,5 @@
+extern crate derive_more;
+
 use clap::Parser;
 
 use gui::gui_main;
@@ -49,7 +51,7 @@ fn main() -> std::io::Result<()> {
             }
         }
     } else {
-        let problem = match std::env::args().nth(1) {
+        let problem = match args.problem {
             Some(path) => path,
             None => "./problems/3.png".to_owned(),
         };

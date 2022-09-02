@@ -43,6 +43,13 @@ impl Rect {
         self.bottom_left.y
     }
 
+    pub fn center(&self) -> Point {
+        Point {
+            x: self.x() + self.width() / 2,
+            y: self.y() + self.height() / 2,
+        }
+    }
+
     pub fn width(&self) -> u32 {
         self.top_right.x - self.bottom_left.x
     }
@@ -82,7 +89,7 @@ impl Rect {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Color {
     pub r: u8,
     pub g: u8,

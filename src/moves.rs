@@ -1,3 +1,5 @@
+use derive_more::{Add, AddAssign};
+
 use std::fmt::Display;
 
 use crate::{
@@ -20,7 +22,7 @@ pub enum Move {
     Merge(BlockId, BlockId),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Add, AddAssign)]
 pub struct Cost(pub u32);
 
 #[derive(Debug, Clone)]
