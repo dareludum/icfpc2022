@@ -42,10 +42,10 @@ impl Canvas {
         blocks
     }
 
-    pub fn hit_test(&self, x: u32, y: u32) -> &Block {
+    pub fn hit_test(&self, x: u32, y: u32) -> String {
         for b in self.blocks.values() {
             if b.rect().contains(x, y) {
-                return b;
+                return b.id().clone();
             }
         }
         panic!("Programmer error: hit test didn't find any blocks");

@@ -23,7 +23,7 @@ pub enum Move {
 pub struct Cost(u32);
 
 #[derive(Debug, Clone)]
-struct MoveError(String);
+pub struct MoveError(String);
 
 impl Display for Orientation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

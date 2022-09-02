@@ -3,7 +3,8 @@ use raylib::prelude::*;
 use crate::{
     block::{Point, Rect},
     canvas::Canvas,
-    painting::{self, Painting},
+    moves::{Move, Orientation},
+    painting::Painting,
 };
 
 impl From<crate::block::Color> for raylib::ffi::Color {
@@ -14,8 +15,8 @@ impl From<crate::block::Color> for raylib::ffi::Color {
 
 #[derive(PartialEq, Eq)]
 enum Tool {
-    CutHorz,
     CutVert,
+    CutHorz,
     CutCross,
     Color,
     Swap,
@@ -25,8 +26,8 @@ enum Tool {
 impl Tool {
     pub fn name(&self) -> &'static str {
         match self {
-            Tool::CutHorz => "cut horz",
             Tool::CutVert => "cut vert",
+            Tool::CutHorz => "cut horz",
             Tool::CutCross => "cut cross",
             Tool::Color => "color",
             Tool::Swap => "swap",
@@ -39,7 +40,7 @@ type Offset = (i32, i32);
 
 pub fn gui_main(problem_path: &std::path::Path) {
     let painting = Painting::load(problem_path);
-    let canvas = Canvas::new(painting.width(), painting.height());
+    let mut canvas = Canvas::new(painting.width(), painting.height());
 
     let (mut rl, thread) = raylib::init()
         .size(1000, 600)
@@ -57,7 +58,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
     }
     let target_texture = rl.load_texture_from_image(&thread, &target_image).unwrap();
 
-    let mut tool = Tool::CutHorz;
+    let mut tool = Tool::CutVert;
     let mut color = crate::block::Color::new(255, 255, 255, 255);
 
     const MARGIN: i32 = 20;
@@ -65,9 +66,13 @@ pub fn gui_main(problem_path: &std::path::Path) {
     const COLOR_PREVIEW_SIZE: i32 = 50;
     // const OFFSET_SOLUTION: Offset = (0, MARGIN);
     // const OFFSET_TARGET: Offset = (MARGIN + IMAGE_SIZE, MARGIN);
-    const ZERO: Offset = (MARGIN, MARGIN);
+    const SLN: Offset = (MARGIN, MARGIN);
     const TGT: Offset = (MARGIN + IMAGE_SIZE + MARGIN, MARGIN);
-    const SOLUTION_FROM_TARGET: Offset = (-(IMAGE_SIZE + MARGIN), MARGIN);
+
+    const COLOR_BLOCK_BORDER: Color = Color {
+        a: 32,
+        ..Color::GRAY
+    };
 
     const SOLUTION_RECT: Rect = Rect::new(
         Point::new(MARGIN as u32, MARGIN as u32),
@@ -75,14 +80,17 @@ pub fn gui_main(problem_path: &std::path::Path) {
     );
     const TARGET_RECT: Rect = Rect::new(
         Point::new((MARGIN * 2 + IMAGE_SIZE) as u32, MARGIN as u32),
-        Point::new((MARGIN * 2 + IMAGE_SIZE * 2) as u32, (MARGIN + IMAGE_SIZE) as u32),
+        Point::new(
+            (MARGIN * 2 + IMAGE_SIZE * 2) as u32,
+            (MARGIN + IMAGE_SIZE) as u32,
+        ),
     );
 
     while !rl.window_should_close() {
         // ===== HIT TEST =====
         let mx = rl.get_mouse_x();
         let my = rl.get_mouse_y();
-        let block =
+        let mut b_id =
             if mx >= MARGIN && mx < MARGIN + IMAGE_SIZE && my >= MARGIN && my < MARGIN + IMAGE_SIZE
             {
                 match tool {
@@ -101,10 +109,10 @@ pub fn gui_main(problem_path: &std::path::Path) {
         match rl.get_key_pressed() {
             Some(k) => match k {
                 KeyboardKey::KEY_ONE => {
-                    tool = if tool == Tool::CutHorz {
-                        Tool::CutVert
-                    } else {
+                    tool = if tool == Tool::CutVert {
                         Tool::CutHorz
+                    } else {
+                        Tool::CutVert
                     };
                     rl.set_mouse_cursor(MouseCursor::MOUSE_CURSOR_ARROW);
                     rl.show_cursor();
@@ -134,11 +142,19 @@ pub fn gui_main(problem_path: &std::path::Path) {
             None => {}
         }
 
-        if rl.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON) {
+        if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
             if SOLUTION_RECT.contains(mx as u32, my as u32) {
                 match tool {
+                    Tool::CutVert => {
+                        let mov = Move::LineCut(
+                            b_id.unwrap(),
+                            Orientation::Vertical,
+                            (mx - SLN.0) as u32,
+                        );
+                        let _cost = mov.apply(&mut canvas).unwrap();
+                        b_id = None;
+                    }
                     Tool::CutHorz => {}
-                    Tool::CutVert => {}
                     Tool::CutCross => {}
                     Tool::Color => {}
                     Tool::Swap => {}
@@ -146,8 +162,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 }
             } else if TARGET_RECT.contains(mx as u32, my as u32) {
                 match tool {
-                    Tool::CutHorz => {}
                     Tool::CutVert => {}
+                    Tool::CutHorz => {}
                     Tool::CutCross => {}
                     Tool::Color => {
                         color = painting
@@ -188,6 +204,13 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 b.r.height() as i32,
                 b.c,
             );
+            d.draw_rectangle_lines(
+                MARGIN + b.r.bottom_left.x as i32,
+                MARGIN + b.r.bottom_left.y as i32,
+                b.r.width() as i32,
+                b.r.height() as i32,
+                COLOR_BLOCK_BORDER,
+            );
         }
 
         // Draw the target
@@ -199,9 +222,10 @@ pub fn gui_main(problem_path: &std::path::Path) {
         );
 
         // Draw the overlays
-        if let Some(b) = block {
+        if let Some(b_id) = b_id.clone() {
             let x = mx - MARGIN;
             let y = my - MARGIN;
+            let b = canvas.get_block(&b_id).unwrap();
             let r = b.rect();
             d.draw_rectangle_lines(
                 MARGIN + r.bottom_left.x as i32,
@@ -211,18 +235,18 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 Color::GREEN,
             );
             match tool {
-                Tool::CutHorz => {
-                    draw_notch_vert(&mut d, &ZERO, x, r.y() as i32, r.height() as i32, Color::RED);
+                Tool::CutVert => {
+                    draw_notch_vert(&mut d, &SLN, x, r.y() as i32, r.height() as i32, Color::RED);
                     draw_notch_vert(&mut d, &TGT, x, r.y() as i32, r.height() as i32, Color::RED);
                 }
-                Tool::CutVert => {
-                    draw_notch_horz(&mut d, &ZERO, r.x() as i32, y, r.width() as i32, Color::RED);
+                Tool::CutHorz => {
+                    draw_notch_horz(&mut d, &SLN, r.x() as i32, y, r.width() as i32, Color::RED);
                     draw_notch_horz(&mut d, &TGT, r.x() as i32, y, r.width() as i32, Color::RED);
                 }
                 Tool::CutCross => {
-                    draw_notch_vert(&mut d, &ZERO, x, r.y() as i32, r.height() as i32, Color::RED);
+                    draw_notch_vert(&mut d, &SLN, x, r.y() as i32, r.height() as i32, Color::RED);
                     draw_notch_vert(&mut d, &TGT, x, r.y() as i32, r.height() as i32, Color::RED);
-                    draw_notch_horz(&mut d, &ZERO, r.x() as i32, y, r.width() as i32, Color::RED);
+                    draw_notch_horz(&mut d, &SLN, r.x() as i32, y, r.width() as i32, Color::RED);
                     draw_notch_horz(&mut d, &TGT, r.x() as i32, y, r.width() as i32, Color::RED);
                 }
                 Tool::Color => {}
