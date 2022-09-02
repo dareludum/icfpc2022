@@ -1,6 +1,7 @@
 use raylib::prelude::*;
 
 mod block;
+mod canvas;
 mod moves;
 mod painting;
 

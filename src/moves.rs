@@ -14,7 +14,7 @@ pub enum Move {
 }
 
 impl Move {
-    pub fn cost(&self) -> u32 {
+    pub fn base_cost(&self) -> u32 {
         match self {
             Move::LineCut(_, _, _) => 7,
             Move::PointCut(_, _, _) => 10,

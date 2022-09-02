@@ -41,4 +41,8 @@ impl Block {
             Block::ComplexBlock(_, rect, _) => rect,
         }
     }
+
+    pub fn size(&self) -> u32 {
+        self.rect().w * self.rect().h
+    }
 }
