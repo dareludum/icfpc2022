@@ -43,7 +43,9 @@ fn main() -> std::io::Result<()> {
 
                 let solution = solver.solve(&painting);
                 program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
-                solution.result.write_to_file(&solution_dir.join(&solution_painting_filename))?;
+                solution
+                    .result
+                    .write_to_file(&solution_dir.join(&solution_painting_filename))?;
             }
         }
     } else {

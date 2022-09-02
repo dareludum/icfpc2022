@@ -1,6 +1,10 @@
-use crate::{canvas::Canvas, painting::Painting};
+use crate::{
+    canvas::Canvas,
+    moves::{Cost, Move},
+    painting::Painting,
+};
 
-use super::{Solution, Solver};
+use super::Solver;
 
 pub struct NoOp {}
 
@@ -9,11 +13,7 @@ impl Solver for NoOp {
         "no_op"
     }
 
-    fn solve(&self, painting: &Painting) -> Solution {
-        Solution {
-            result: Canvas::new(painting.width(), painting.height()).render(),
-            moves: vec![],
-            cost: 0,
-        }
+    fn solve_core(&self, _canvas: &mut Canvas, _painting: &Painting) -> (Vec<Move>, Cost) {
+        (vec![], Cost(0))
     }
 }

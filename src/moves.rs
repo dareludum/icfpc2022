@@ -21,7 +21,7 @@ pub enum Move {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Cost(u32);
+pub struct Cost(pub u32);
 
 #[derive(Debug, Clone)]
 pub struct MoveError(String);
