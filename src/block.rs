@@ -13,8 +13,16 @@ impl Rect {
         Rect { x, y, w, h }
     }
 
+    pub fn width(&self) -> u32 {
+        self.w
+    }
+
+    pub fn height(&self) -> u32 {
+        self.h
+    }
+
     pub fn contains(&self, x: u32, y: u32) -> bool {
-        self.x <= x && x < self.x + self.w && self.y <= y && y < self.y + self.h
+        self.x <= x && x < self.x + self.width() && self.y <= y && y < self.y + self.height()
     }
 }
 
@@ -96,6 +104,6 @@ impl Block {
     }
 
     pub fn size(&self) -> u32 {
-        self.rect().w * self.rect().h
+        self.rect().width() * self.rect().height()
     }
 }

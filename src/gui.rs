@@ -123,8 +123,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
             d.draw_rectangle(
                 MARGIN + b.r.x as i32,
                 MARGIN + b.r.y as i32,
-                b.r.w as i32,
-                b.r.h as i32,
+                b.r.width() as i32,
+                b.r.height() as i32,
                 b.c,
             );
         }
@@ -135,8 +135,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
             d.draw_rectangle_lines(
                 MARGIN + r.x as i32,
                 MARGIN + r.y as i32,
-                r.w as i32,
-                r.h as i32,
+                r.width() as i32,
+                r.height() as i32,
                 Color::GREEN,
             );
             match tool {
@@ -145,7 +145,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         mx,
                         MARGIN + r.y as i32,
                         mx,
-                        MARGIN + r.y as i32 + r.h as i32,
+                        MARGIN + r.y as i32 + r.height() as i32,
                         Color::RED,
                     );
                 }
