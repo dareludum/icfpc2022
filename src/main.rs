@@ -45,7 +45,7 @@ fn main() -> std::io::Result<()> {
                 program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
                 solution
                     .result
-                    .write_to_file(&solution_dir.join(&solution_painting_filename))?;
+                    .write_to_file(&solution_dir.join(&solution_painting_filename));
             }
         }
     } else {

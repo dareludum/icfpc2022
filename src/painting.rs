@@ -59,8 +59,9 @@ impl Painting {
         return image_score * 0.005;
     }
 
-    pub fn write_to_file(&self, path: &std::path::Path) -> std::io::Result<()> {
-        // TODO
-        Ok(())
+    pub fn write_to_file(&self, path: &std::path::Path) {
+        self.image
+            .save_with_format(path, image::ImageFormat::Png)
+            .unwrap();
     }
 }
