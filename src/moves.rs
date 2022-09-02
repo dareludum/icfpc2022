@@ -1,5 +1,9 @@
-use crate::block::{Block, BlockId, Color, Rect};
+use crate::{
+    block::{Block, BlockId, Color, Rect, SimpleBlock},
+    canvas::Canvas,
+};
 
+#[derive(Debug, Clone, Copy)]
 pub enum Orientation {
     Horizontal,
     Vertical,
@@ -13,116 +17,147 @@ pub enum Move {
     Merge(BlockId, BlockId),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Cost(u32);
+
+#[derive(Debug, Clone)]
+struct MoveError(String);
+
 impl Move {
-    pub fn base_cost(&self) -> u32 {
-        match self {
-            Move::LineCut(_, _, _) => 7,
-            Move::PointCut(_, _, _) => 10,
-            Move::Color(_, _) => 5,
-            Move::Swap(_, _) => 3,
-            Move::Merge(_, _) => 1,
+    pub fn apply(&self, canvas: &mut Canvas) -> Result<Cost, MoveError> {
+        match *self {
+            Move::LineCut(ref block, orientation, offset) => {
+                self.line_cut(canvas, block, orientation, offset)
+            }
+            Move::PointCut(ref block, x, y) => self.point_cut(canvas, block, x, y),
+            Move::Color(ref block, c) => self.color(canvas, block, c),
+            Move::Swap(ref block_a, ref block_b) => self.swap(canvas, block_a, block_b),
+            Move::Merge(ref block_a, ref block_b) => self.merge(canvas, block_a, block_b),
         }
     }
 
-    pub fn line_cut(block: &mut Block, orientation: Orientation, offset: u32) -> Self {
-        todo!()
-        // let id = block.id().clone();
-        // match block {
-        //     Block::Simple(id, rect, color) => {
-        //         let (b0, b1) = match orientation {
-        //             Orientation::Horizontal => {
-        //                 let r0 = Rect::new(rect.x, rect.y, rect.w, offset);
-        //                 let r1 = Rect::new(rect.x, rect.y, rect.w, rect.h - offset);
-        //                 let mut id0 = id.clone();
-        //                 id0.push(0);
-        //                 let mut id1 = id.clone();
-        //                 id1.push(1);
-        //                 (
-        //                     Block::Simple(id0, r0, *color),
-        //                     Block::Simple(id1, r1, *color),
-        //                 )
-        //             }
-        //             Orientation::Vertical => {
-        //                 let r0 = Rect::new(rect.x, rect.y, offset, rect.h);
-        //                 let r1 = Rect::new(rect.x, rect.y, rect.w - offset, rect.h);
-        //                 let mut id0 = id.clone();
-        //                 id0.push(0);
-        //                 let mut id1 = id.clone();
-        //                 id1.push(1);
-        //                 (
-        //                     Block::Simple(id0, r0, *color),
-        //                     Block::Simple(id1, r1, *color),
-        //                 )
-        //             }
-        //         };
-        //         *block = Block::ComplexBlock(id.clone(), rect.clone(), vec![b0, b1]);
-        //     }
-        //     Block::ComplexBlock(_, _, _) => panic!("Invalid block"),
-        // }
-        // Move::LineCut(id, orientation, offset)
+    fn base_cost(&self) -> u32 {
+        match self {
+            Move::LineCut(..) => 7,
+            Move::PointCut(..) => 10,
+            Move::Color(..) => 5,
+            Move::Swap(..) => 3,
+            Move::Merge(..) => 1,
+        }
     }
 
-    pub fn point_cut(block: &mut Block, offset_x: u32, offset_y: u32) -> Self {
-        todo!()
-        // let id = block.id().clone();
-        // match block {
-        //     Block::Simple(id, rect, color) => {
-        //         let r0 = Rect::new(rect.x, rect.y, offset_x, offset_y);
-        //         let r1 = Rect::new(offset_x, rect.y, rect.w - offset_x, offset_y);
-        //         let r2 = Rect::new(offset_x, offset_y, rect.w - offset_x, rect.h - offset_y);
-        //         let r3 = Rect::new(rect.x, offset_y, offset_x, rect.h - offset_y);
-        //         let mut id0 = id.clone();
-        //         id0.push(0);
-        //         let mut id1 = id.clone();
-        //         id1.push(1);
-        //         let mut id2 = id.clone();
-        //         id1.push(2);
-        //         let mut id3 = id.clone();
-        //         id1.push(3);
-        //         let b0 = Block::Simple(id0, r0, *color);
-        //         let b1 = Block::Simple(id1, r1, *color);
-        //         let b2 = Block::Simple(id2, r2, *color);
-        //         let b3 = Block::Simple(id3, r3, *color);
-        //         *block = Block::ComplexBlock(id.clone(), rect.clone(), vec![b0, b1, b2, b3]);
-        //     }
-        //     Block::ComplexBlock(_, _, _) => panic!("Invalid block"),
-        // }
-        // Move::PointCut(id, offset_x, offset_y)
+    fn compute_cost(&self, block_area: u32, canvas_area: u32) -> Cost {
+        Cost((self.base_cost() as f32 * (canvas_area as f32 / block_area as f32)).round() as u32)
     }
 
-    pub fn color(block: &mut Block, new_color: Color) -> Self {
-        todo!()
-        // let id = block.id().clone();
-        // match block {
-        //     Block::Simple(_, _, color) => {
-        //         *color = new_color;
-        //     }
-        //     Block::ComplexBlock(_, _, _) => panic!("Invalid block"),
-        // }
-        // Move::Color(id, new_color)
+    fn color(
+        &self,
+        canvas: &mut Canvas,
+        block_id: &BlockId,
+        new_color: Color,
+    ) -> Result<Cost, MoveError> {
+        let canvas_area = canvas.area;
+        let block = canvas.get_move_block_mut(block_id)?;
+        let cost = self.compute_cost(block.size(), canvas_area);
+        let (block_id, rect) = match block {
+            // if the block is simple, change its color
+            Block::Simple(ref mut simple) => {
+                simple.c = new_color;
+                return Ok(cost);
+            }
+            // if its complex, turn it into a simple block
+            Block::Complex(ref mut complex) => (complex.id.clone(), complex.r.clone()),
+        };
+
+        *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));
+        return Ok(cost);
     }
 
-    pub fn swap(block0: &mut Block, block1: &mut Block) -> Self {
-        assert!(block0.rect() == block1.rect());
-        std::mem::swap(block0, block1);
-        Move::Swap(block1.id().clone(), block0.id().clone())
+    fn line_cut(
+        &self,
+        canvas: &mut Canvas,
+        block: &BlockId,
+        orientation: Orientation,
+        offset: u32,
+    ) -> Result<Cost, MoveError> {
+        match orientation {
+            Orientation::Horizontal => self.horizontal_cut(canvas, block, offset),
+            Orientation::Vertical => self.vertical_cut(canvas, block, offset),
+        }
     }
 
-    pub fn merge(block0: Block, block1: Block) -> (Block, Self) {
+    fn vertical_cut(
+        &self,
+        canvas: &mut Canvas,
+        block_id: &BlockId,
+        offset: u32,
+    ) -> Result<Cost, MoveError> {
+        let canvas_area = canvas.area;
+        let block = canvas.remove_move_block(block_id)?;
+        let cost = self.compute_cost(block.size(), canvas_area);
         todo!()
-        // let r0 = block0.rect();
-        // let r1 = block1.rect();
-        // let vertically_adjacent = r0.w == r1.w && ((r0.y + r0.h == r1.y) || (r0.y == r1.y + r1.h));
-        // let horizontally_adjacent = r0.h == r1.h && ((r0.x + r0.w == r1.x) || (r0.x == r1.x + r1.w));
-        // assert!(vertically_adjacent || horizontally_adjacent);
-        // let id0 = block0.id().clone();
-        // let id1 = block1.id().clone();
-        // let rect = if vertically_adjacent {
-        //     Rect::new(r0.x, r0.y.min(r1.y), r0.w, r0.h + r1.h)
-        // } else {
-        //     Rect::new(r0.x.min(r1.x), r1.y, r0.w + r1.w, r0.h)
-        // };
-        // let new_block = Block::ComplexBlock(BlockId::new(), rect, vec![block0, block1]);
-        // (new_block, Move::Merge(id0, id1))
+    }
+
+    fn horizontal_cut(
+        &self,
+        canvas: &mut Canvas,
+        block: &BlockId,
+        offset: u32,
+    ) -> Result<Cost, MoveError> {
+        todo!()
+    }
+
+    fn point_cut(
+        &self,
+        canvas: &mut Canvas,
+        block: &BlockId,
+        offset_x: u32,
+        offset_y: u32,
+    ) -> Result<Cost, MoveError> {
+        todo!()
+    }
+
+    fn swap(
+        &self,
+        canvas: &mut Canvas,
+        block0: &BlockId,
+        block1: &BlockId,
+    ) -> Result<Cost, MoveError> {
+        // assert!(block0.rect() == block1.rect());
+        // std::mem::swap(block0, block1);
+        // Move::Swap(block1.id().clone(), block0.id().clone())
+        todo!()
+    }
+
+    fn merge(
+        &self,
+        canvas: &mut Canvas,
+        block0: &BlockId,
+        block1: &BlockId,
+    ) -> Result<Cost, MoveError> {
+        todo!()
+    }
+}
+
+impl Canvas {
+    fn get_move_block(&self, block_id: &BlockId) -> Result<&Block, MoveError> {
+        match self.get_block(block_id) {
+            Some(block) => Ok(block),
+            None => Err(MoveError(format!("missing block: {}", block_id))),
+        }
+    }
+
+    fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
+        match self.get_block_mut(block_id) {
+            Some(block) => Ok(block),
+            None => Err(MoveError(format!("missing block: {}", block_id))),
+        }
+    }
+
+    fn remove_move_block(&mut self, block_id: &BlockId) -> Result<Block, MoveError> {
+        match self.remove_block(block_id) {
+            Some(block) => Ok(block),
+            None => Err(MoveError(format!("missing block: {}", block_id))),
+        }
     }
 }

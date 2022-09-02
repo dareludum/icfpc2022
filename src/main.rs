@@ -1,5 +1,4 @@
 use gui::gui_main;
-use raylib::prelude::*;
 
 mod block;
 mod canvas;

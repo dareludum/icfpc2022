@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::block::{Block, BlockId, Color, Rect, SimpleBlock};
 
 pub struct Canvas {
-    size: u32,
+    pub area: u32,
     blocks: HashMap<BlockId, Block>,
 }
 
@@ -19,7 +19,7 @@ impl Canvas {
             )),
         );
         Canvas {
-            size: w * h,
+            area: w * h,
             blocks,
         }
     }
@@ -49,5 +49,17 @@ impl Canvas {
             }
         }
         panic!("Programmer error: hit test didn't find any blocks");
+    }
+
+    pub fn get_block(&self, block: &BlockId) -> Option<&Block> {
+        self.blocks.get(block)
+    }
+
+    pub fn get_block_mut(&mut self, block: &BlockId) -> Option<&mut Block> {
+        self.blocks.get_mut(block)
+    }
+
+    pub fn remove_block(&mut self, block: &BlockId) -> Option<Block> {
+        self.blocks.remove(block)
     }
 }
