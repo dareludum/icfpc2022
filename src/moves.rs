@@ -436,8 +436,8 @@ impl Move {
         block_a_id: &BlockId,
         block_b_id: &BlockId,
     ) -> Result<Cost, MoveError> {
-        let mut block_a = canvas.remove_move_block(block_a_id)?;
-        let mut block_b = canvas.remove_move_block(block_b_id)?;
+        let block_a = canvas.remove_move_block(block_a_id)?;
+        let block_b = canvas.remove_move_block(block_b_id)?;
         let cost = self.compute_cost(std::cmp::max(block_a.size(), block_b.size()), canvas.area);
         let a_bottom_left = block_a.rect().bottom_left;
         let b_bottom_left = block_b.rect().bottom_left;
@@ -449,7 +449,7 @@ impl Move {
             && a_bottom_left.x == b_bottom_left.x
             && a_top_right.x == b_top_right.x
         {
-            let (new_bottom_left, new_top_right) = if (a_bottom_left.y < b_bottom_left.y) {
+            let (new_bottom_left, new_top_right) = if a_bottom_left.y < b_bottom_left.y {
                 (a_bottom_left, b_top_right)
             } else {
                 (b_bottom_left, a_top_right)
@@ -495,16 +495,6 @@ impl Move {
 }
 
 impl Canvas {
-    fn get_move_block(&self, block_id: &BlockId) -> Result<&Block, MoveError> {
-        match self.get_block(block_id) {
-            Some(block) => Ok(block),
-            None => Err(MoveError::LogicError(format!(
-                "missing block: {}",
-                block_id
-            ))),
-        }
-    }
-
     fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
         match self.get_block_mut(block_id) {
             Some(block) => Ok(block),
