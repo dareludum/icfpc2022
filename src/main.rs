@@ -48,6 +48,10 @@ fn main() -> std::io::Result<()> {
                 solution
                     .result
                     .write_to_file(&solution_dir.join(&solution_painting_filename));
+
+                let score = painting.calculate_score(&solution.result) as u32;
+                let total = score + solution.cost.0;
+                println!("  {}: {} ({} + {})", solver.name(), total, score, solution.cost.0);
             }
         }
     } else {
