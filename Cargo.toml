@@ -5,7 +5,8 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[target.'cfg(unix)'.dependencies]
 raylib = { version = "3.7", git = "https://github.com/deltaphc/raylib-rs", features = ["wayland"] }
-# On Windows this one instead (too much time to fix building the above :/):
-# raylib = "3.7.0"
+
+[target.'cfg(windows)'.dependencies]
+raylib = { version = "3.7", git = "https://github.com/deltaphc/raylib-rs" }
