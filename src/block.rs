@@ -51,9 +51,9 @@ impl Rect {
 
     pub fn contains(&self, x: u32, y: u32) -> bool {
         x >= self.bottom_left.x
-            && x < self.top_right.x
+            && x <= self.top_right.x
             && y >= self.bottom_left.y
-            && y < self.top_right.y
+            && y <= self.top_right.y
     }
 
     pub fn vertical_cut(&self, x: u32) -> (Self, Self) {
