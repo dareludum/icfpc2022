@@ -93,6 +93,15 @@ impl SimpleBlock {
     pub fn new(id: BlockId, r: Rect, c: Color) -> Self {
         SimpleBlock { id, r, c }
     }
+
+    pub fn split(&self, i: u32, r: Rect) -> Self {
+        Self::new(format!("{}.{}", self.id, i), r, self.c)
+    }
+
+    /// Called when splitting a complex block
+    pub fn complex_split(&self, r: Rect) -> Self {
+        Self::new("child".to_owned(), r, self.c)
+    }
 }
 
 pub struct ComplexBlock {

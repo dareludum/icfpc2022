@@ -118,26 +118,26 @@ impl Move {
         match block {
             Block::Simple(simple) => {
                 canvas.put_block(
-                    SimpleBlock::new(
-                        simple.id.clone() + ".0",
-                        Rect::new(
-                            simple.r.bottom_left,
-                            Point::new(line_number, simple.r.top_right.y),
-                        ),
-                        simple.c,
-                    )
-                    .into(),
+                    simple
+                        .split(
+                            0,
+                            Rect::new(
+                                simple.r.bottom_left,
+                                Point::new(line_number, simple.r.top_right.y),
+                            ),
+                        )
+                        .into(),
                 );
                 canvas.put_block(
-                    SimpleBlock::new(
-                        simple.id.clone() + ".1",
-                        Rect::new(
-                            Point::new(line_number, simple.r.bottom_left.y),
-                            simple.r.top_right,
-                        ),
-                        simple.c,
-                    )
-                    .into(),
+                    simple
+                        .split(
+                            0,
+                            Rect::new(
+                                Point::new(line_number, simple.r.bottom_left.y),
+                                simple.r.top_right,
+                            ),
+                        )
+                        .into(),
                 );
             }
             Block::Complex(complex) => {
@@ -152,22 +152,14 @@ impl Move {
                         left_blocks.push(child);
                         continue;
                     }
-                    left_blocks.push(SimpleBlock::new(
-                        "child".into(),
-                        Rect::new(
-                            child.r.bottom_left,
-                            Point::new(line_number, child.r.top_right.y),
-                        ),
-                        child.c,
-                    ));
-                    right_blocks.push(SimpleBlock::new(
-                        "child".into(),
-                        Rect::new(
-                            Point::new(line_number, child.r.bottom_left.y),
-                            child.r.top_right,
-                        ),
-                        child.c,
-                    ));
+                    left_blocks.push(child.complex_split(Rect::new(
+                        child.r.bottom_left,
+                        Point::new(line_number, child.r.top_right.y),
+                    )));
+                    right_blocks.push(child.complex_split(Rect::new(
+                        Point::new(line_number, child.r.bottom_left.y),
+                        child.r.top_right,
+                    )));
                 }
                 canvas.put_block(
                     ComplexBlock::new(
