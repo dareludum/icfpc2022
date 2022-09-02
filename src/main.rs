@@ -1,5 +1,7 @@
 use raylib::prelude::*;
 
+mod block;
+
 fn main() {
     let (mut rl, thread) = raylib::init()
         .size(640, 480)
