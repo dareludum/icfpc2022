@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use image::Rgba;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -117,6 +119,12 @@ impl From<&Rgba<u8>> for Color {
             b: src[2],
             a: src[3],
         }
+    }
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({},{},{},{})", self.r, self.g, self.b, self.a)
     }
 }
 
