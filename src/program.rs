@@ -27,8 +27,8 @@ pub fn generate_isl(moves: &Vec<Move>) -> String {
     isl
 }
 
-pub fn write_to_file(path: &Path, moves: &Vec<Move>) {
-    fs::write(path, generate_isl(moves)).expect("error writing ISL to file");
+pub fn write_to_file(path: &Path, moves: &Vec<Move>) -> std::io::Result<()> {
+    fs::write(path, generate_isl(moves))
 }
 
 #[cfg(test)]

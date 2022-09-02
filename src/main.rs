@@ -27,8 +27,9 @@ fn main() -> std::io::Result<()> {
     if args.batch {
         for file in std::fs::read_dir("./problems")? {
             let problem_path = file?.path();
-            let mut filename = problem_path.file_stem().unwrap().to_owned();
-            filename.push(".txt");
+            let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
+            solution_filename.push(".txt");
+            let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
 
             println!("Processing {:?}", problem_path);
             let painting = Painting::load(&problem_path);
@@ -36,13 +37,13 @@ fn main() -> std::io::Result<()> {
             for solver_name in SOLVERS {
                 let solver = create_solver(solver_name);
 
-                let mut solution_path = std::path::PathBuf::from("./solutions/");
-                solution_path.push(solver.name());
-                std::fs::create_dir_all(&solution_path)?;
-                solution_path.push(&filename);
+                let mut solution_dir = std::path::PathBuf::from("./solutions/");
+                solution_dir.push(solver.name());
+                std::fs::create_dir_all(&solution_dir)?;
 
-                let moves = solver.solve(&painting);
-                program::write_to_file(&solution_path, &moves);
+                let solution = solver.solve(&painting);
+                program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
+                solution.result.write_to_file(&solution_dir.join(&solution_painting_filename))?;
             }
         }
     } else {
