@@ -41,4 +41,13 @@ impl Canvas {
         }
         blocks
     }
+
+    pub fn hit_test(&self, x: u32, y: u32) -> &Block {
+        for b in self.blocks.values() {
+            if b.rect().contains(x, y) {
+                return b;
+            }
+        }
+        panic!("Programmer error: hit test didn't find any blocks");
+    }
 }

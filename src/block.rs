@@ -1,6 +1,6 @@
 use image::Rgba;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rect {
     pub x: u32,
     pub y: u32,
@@ -11,6 +11,10 @@ pub struct Rect {
 impl Rect {
     pub fn new(x: u32, y: u32, w: u32, h: u32) -> Self {
         Rect { x, y, w, h }
+    }
+
+    pub fn contains(&self, x: u32, y: u32) -> bool {
+        self.x <= x && x < self.x + self.w && self.y <= y && y < self.y + self.h
     }
 }
 
