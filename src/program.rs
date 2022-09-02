@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use crate::{block::Color, moves::Move};
 
-fn to_isl(mov: &Move) -> String {
+pub fn to_isl(mov: &Move) -> String {
     match mov {
         Move::LineCut(bid, orientation, lnum) => {
             format!("cut[{bid}][{orientation}][{lnum}]")

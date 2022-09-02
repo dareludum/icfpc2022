@@ -3,8 +3,9 @@ use raylib::prelude::*;
 use crate::{
     block::{Point, Rect},
     canvas::Canvas,
-    moves::{Cost, Move, Orientation},
+    moves::{Move, Orientation},
     painting::Painting,
+    program::to_isl,
 };
 
 impl From<crate::block::Color> for raylib::ffi::Color {
@@ -147,29 +148,38 @@ pub fn gui_main(problem_path: &std::path::Path) {
             None => {}
         }
 
+        // TODO refactor to a function
+        let mov = if !SOLUTION_RECT.contains(mx as u32, my as u32) {
+            None
+        } else {
+            match tool {
+                Tool::CutVert => Some(Move::LineCut(
+                    b_id.clone().unwrap(),
+                    Orientation::Vertical,
+                    (mx - SLN.0) as u32,
+                )),
+                Tool::CutHorz => Some(Move::LineCut(
+                    b_id.clone().unwrap(),
+                    Orientation::Horizontal,
+                    (my - SLN.1) as u32,
+                )),
+                Tool::CutCross => Some(Move::PointCut(
+                    b_id.clone().unwrap(),
+                    (mx - SLN.0) as u32,
+                    (my - SLN.1) as u32,
+                )),
+                Tool::Color => Some(Move::Color(b_id.clone().unwrap(), color)),
+                Tool::Swap => None,
+                Tool::Merge => None,
+            }
+        };
+
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
             if SOLUTION_RECT.contains(mx as u32, my as u32) {
-                let mov = match tool {
-                    Tool::CutVert => {
-                        Move::LineCut(b_id.unwrap(), Orientation::Vertical, (mx - SLN.0) as u32)
-                    }
-                    Tool::CutHorz => {
-                        Move::LineCut(b_id.unwrap(), Orientation::Horizontal, (my - SLN.1) as u32)
-                    }
-                    Tool::CutCross => {
-                        Move::PointCut(b_id.unwrap(), (mx - SLN.0) as u32, (my - SLN.1) as u32)
-                    }
-                    Tool::Color => Move::Color(b_id.unwrap(), color),
-                    Tool::Swap => {
-                        todo!()
-                    }
-                    Tool::Merge => {
-                        todo!()
-                    }
-                };
-                let cost = mov.apply(&mut canvas);
+                // TODO refactor army of clones
+                let cost = mov.clone().unwrap().apply(&mut canvas);
                 b_id = None;
-                moves.push((mov, cost));
+                moves.push((mov.clone().unwrap(), cost));
             }
         }
 
@@ -286,6 +296,16 @@ pub fn gui_main(problem_path: &std::path::Path) {
             20,
             Color::BLACK,
         );
+
+        if let Some(mv) = mov {
+            d.draw_text(
+                &format!("Move: {}", to_isl(&mv)),
+                MARGIN + COLOR_PREVIEW_SIZE + MARGIN,
+                MARGIN + IMAGE_SIZE + 2 * MARGIN,
+                20,
+                Color::BLACK,
+            );
+        }
     }
 }
 
