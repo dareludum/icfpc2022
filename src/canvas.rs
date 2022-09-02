@@ -43,19 +43,10 @@ impl Canvas {
     }
 
     // TODO: change to iterate instead of creating a vec
-    pub fn blocks_iter(&self) -> Vec<&SimpleBlock> {
+    pub fn blocks_iter(&self) -> Vec<&Block> {
         let mut blocks = vec![];
         for b in self.blocks.values() {
-            match b {
-                Block::Simple(b) => {
-                    blocks.push(b);
-                }
-                Block::Complex(b) => {
-                    for b in b.bs.iter() {
-                        blocks.push(b);
-                    }
-                }
-            }
+            blocks.push(b);
         }
         blocks
     }
