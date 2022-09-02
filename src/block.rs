@@ -22,7 +22,11 @@ pub struct Color {
     a: u8,
 }
 
-pub type BlockId = Vec<u32>;
+impl Color {
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Color { r, g, b, a }
+    }
+}
 
 impl Into<Rgba<u8>> for &Color {
     fn into(self) -> Rgba<u8> {
@@ -32,9 +36,16 @@ impl Into<Rgba<u8>> for &Color {
 
 impl From<&Rgba<u8>> for Color {
     fn from(src: &Rgba<u8>) -> Self {
-        Color{ r: src[0], g: src[1], b: src[2], a: src[3] }
+        Color {
+            r: src[0],
+            g: src[1],
+            b: src[2],
+            a: src[3],
+        }
     }
 }
+
+pub type BlockId = Vec<u32>;
 
 pub enum Block {
     SimpleBlock(BlockId, Rect, Color),
