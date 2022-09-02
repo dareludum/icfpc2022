@@ -172,26 +172,14 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 Tool::Color => Some(Move::Color(b_id.clone().unwrap(), color)),
                 Tool::Swap => {
                     if let (Some(b0_id), Some(b1_id)) = (b_id.clone(), marked_block.clone()) {
-                        let mov = Move::Swap(b0_id, b1_id);
-                        if mov.is_valid(&canvas) {
-                            // TODO: message
-                            None
-                        } else {
-                            Some(mov)
-                        }
+                        Some(Move::Swap(b0_id, b1_id))
                     } else {
                         None
                     }
                 }
                 Tool::Merge => {
                     if let (Some(b0_id), Some(b1_id)) = (b_id.clone(), marked_block.clone()) {
-                        let mov = Move::Merge(b0_id, b1_id);
-                        if mov.is_valid(&canvas) {
-                            // TODO: message
-                            None
-                        } else {
-                            Some(mov)
-                        }
+                        Some(Move::Merge(b0_id, b1_id))
                     } else {
                         None
                     }
@@ -203,10 +191,13 @@ pub fn gui_main(problem_path: &std::path::Path) {
             if SOLUTION_RECT.contains(mx as u32, my as u32) {
                 // TODO refactor army of clones
                 if let Some(mov) = mov.clone() {
-                    let cost = mov.apply(&mut canvas);
-                    b_id = None;
-                    marked_block = None;
-                    moves.push((mov, cost));
+                    if let Some(cost) = mov.apply(&mut canvas) {
+                        b_id = None;
+                        marked_block = None;
+                        moves.push((mov, cost));
+                    } else {
+                        // TODO: show a message
+                    }
                 }
             }
         }

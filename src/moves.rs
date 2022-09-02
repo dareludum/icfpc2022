@@ -36,18 +36,7 @@ impl Display for Orientation {
 }
 
 impl Move {
-    pub fn is_valid(&self, _canvas: &Canvas) -> bool {
-        // TODO: add the validity checks
-        match self {
-            Move::LineCut(_, _, _) => true,
-            Move::PointCut(_, _, _) => true,
-            Move::Color(_, _) => true,
-            Move::Swap(_, _) => true,
-            Move::Merge(_, _) => true,
-        }
-    }
-
-    pub fn apply(&self, canvas: &mut Canvas) -> Cost {
+    pub fn apply(&self, canvas: &mut Canvas) -> Option<Cost> {
         let res = match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 self.line_cut(canvas, block, orientation, offset)
@@ -57,7 +46,7 @@ impl Move {
             Move::Swap(ref block_a, ref block_b) => self.swap(canvas, block_a, block_b),
             Move::Merge(ref block_a, ref block_b) => self.merge(canvas, block_a, block_b),
         };
-        res
+        Some(res)
     }
 
     fn base_cost(&self) -> u32 {
