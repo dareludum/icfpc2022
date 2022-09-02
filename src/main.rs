@@ -5,6 +5,7 @@ mod canvas;
 mod gui;
 mod moves;
 mod painting;
+mod program;
 
 fn main() {
     let problem = match std::env::args().nth(1) {

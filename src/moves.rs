@@ -1,4 +1,4 @@
-use image::error;
+use std::fmt::Display;
 
 use crate::{
     block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
@@ -24,6 +24,15 @@ pub struct Cost(u32);
 
 #[derive(Debug, Clone)]
 struct MoveError(String);
+
+impl Display for Orientation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            Orientation::Horizontal => write!(f, "y"),
+            Orientation::Vertical => write!(f, "x"),
+        }
+    }
+}
 
 impl Move {
     pub fn apply(&self, canvas: &mut Canvas) -> Result<Cost, MoveError> {
