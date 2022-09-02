@@ -1,6 +1,8 @@
 use raylib::prelude::*;
 
 mod block;
+mod moves;
+mod painting;
 
 fn main() {
     let (mut rl, thread) = raylib::init()
