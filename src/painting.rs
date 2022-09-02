@@ -14,9 +14,9 @@ impl Painting {
             Ok(file) => file,
         };
         let mut reader = BufReader::new(file);
-        let dyn_img = image::load(&mut reader, image::ImageFormat::PNG)
+        let dyn_img = image::load(&mut reader, image::ImageFormat::Png)
             .expect("image loading failed");
-        return Painting { image: dyn_img.into_rgba() }
+        return Painting { image: dyn_img.into_rgba8() }
     }
 
     pub fn width(&self) -> u32 {
