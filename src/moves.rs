@@ -193,13 +193,34 @@ impl Move {
         cost
     }
 
-    fn point_cut(
-        &self,
-        canvas: &mut Canvas,
-        block: &BlockId,
-        offset_x: u32,
-        offset_y: u32,
-    ) -> Cost {
+    fn point_cut(&self, canvas: &mut Canvas, block_id: &BlockId, cut_x: u32, cut_y: u32) -> Cost {
+        let block = canvas.remove_move_block(block_id);
+        let cost = self.compute_cost(block.size(), canvas.area);
+
+        if !block.rect().contains(cut_x, cut_y) {
+            panic!(
+                "Point is out of [{}]! Block is from {:?} to {:?}, point is at {} {}!",
+                block_id,
+                block.rect().bottom_left,
+                block.rect().top_right,
+                cut_x,
+                cut_y
+            );
+        }
+
+        let complex_block = match block {
+            Block::Simple(simple) => {
+                let (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl) =
+                    simple.r.cross_cut(cut_x, cut_y);
+                canvas.put_block(simple.split(0, bottom_left_bl).into());
+                canvas.put_block(simple.split(1, bottom_right_bl).into());
+                canvas.put_block(simple.split(2, top_right_bl).into());
+                canvas.put_block(simple.split(3, top_left_bl).into());
+                return cost;
+            }
+            Block::Complex(complex) => complex,
+        };
+
         todo!()
     }
 

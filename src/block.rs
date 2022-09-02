@@ -69,6 +69,17 @@ impl Rect {
         let top = Rect::new(Point::new(self.bottom_left.x, y), self.top_right);
         (bottom, top)
     }
+
+    pub fn cross_cut(&self, x: u32, y: u32) -> (Self, Self, Self, Self) {
+        let cut_point = Point::new(x, y);
+        let bottom_left = &self.bottom_left;
+        let top_right = &self.top_right;
+        let bottom_left_bl = Rect::new(*bottom_left, cut_point);
+        let bottom_right_bl = Rect::new(Point::new(x, bottom_left.y), Point::new(top_right.x, y));
+        let top_right_bl = Rect::new(cut_point, *top_right);
+        let top_left_bl = Rect::new(Point::new(bottom_left.x, y), Point::new(x, top_right.y));
+        (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
