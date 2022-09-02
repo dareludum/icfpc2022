@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::block::{Block, BlockId, Color, Point, Rect, SimpleBlock};
 
+#[derive(Debug)]
 pub struct Canvas {
     pub area: u32,
     blocks: HashMap<BlockId, Block>,

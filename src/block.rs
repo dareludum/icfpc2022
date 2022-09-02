@@ -69,7 +69,7 @@ impl Rect {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
     pub r: u8,
     pub g: u8,
@@ -102,6 +102,7 @@ impl From<&Rgba<u8>> for Color {
 
 pub type BlockId = String;
 
+#[derive(Debug)]
 pub struct SimpleBlock {
     pub id: BlockId,
     pub r: Rect,
@@ -123,6 +124,7 @@ impl SimpleBlock {
     }
 }
 
+#[derive(Debug)]
 pub struct ComplexBlock {
     pub id: BlockId,
     pub r: Rect,
@@ -135,6 +137,7 @@ impl ComplexBlock {
     }
 }
 
+#[derive(Debug)]
 pub enum Block {
     Simple(SimpleBlock),
     Complex(ComplexBlock),

@@ -11,6 +11,7 @@ pub enum Orientation {
     Vertical,
 }
 
+#[derive(Debug, Clone)]
 pub enum Move {
     LineCut(BlockId, Orientation, u32),
     PointCut(BlockId, u32, u32),
@@ -36,7 +37,7 @@ impl Display for Orientation {
 
 impl Move {
     pub fn apply(&self, canvas: &mut Canvas) -> Cost {
-        match *self {
+        let res = match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 self.line_cut(canvas, block, orientation, offset)
             }
@@ -44,7 +45,9 @@ impl Move {
             Move::Color(ref block, c) => self.color(canvas, block, c),
             Move::Swap(ref block_a, ref block_b) => self.swap(canvas, block_a, block_b),
             Move::Merge(ref block_a, ref block_b) => self.merge(canvas, block_a, block_b),
-        }
+        };
+        dbg!(canvas);
+        res
     }
 
     fn base_cost(&self) -> u32 {
@@ -196,6 +199,7 @@ impl Move {
         offset_y: u32,
     ) -> Cost {
         todo!()
+
     }
 
     fn swap(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {
