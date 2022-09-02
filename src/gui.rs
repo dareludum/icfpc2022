@@ -243,20 +243,42 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         // Draw the in-progress solution
         for b in canvas.blocks_iter() {
-            d.draw_rectangle(
-                MARGIN + b.r.bottom_left.x as i32,
-                MARGIN + b.r.bottom_left.y as i32,
-                b.r.width() as i32,
-                b.r.height() as i32,
-                b.c,
-            );
-            d.draw_rectangle_lines(
-                MARGIN + b.r.bottom_left.x as i32,
-                MARGIN + b.r.bottom_left.y as i32,
-                b.r.width() as i32,
-                b.r.height() as i32,
-                COLOR_BLOCK_BORDER,
-            );
+            match b {
+                crate::block::Block::Simple(b) => {
+                    d.draw_rectangle(
+                        MARGIN + b.r.bottom_left.x as i32,
+                        MARGIN + b.r.bottom_left.y as i32,
+                        b.r.width() as i32,
+                        b.r.height() as i32,
+                        b.c,
+                    );
+                    d.draw_rectangle_lines(
+                        MARGIN + b.r.bottom_left.x as i32,
+                        MARGIN + b.r.bottom_left.y as i32,
+                        b.r.width() as i32,
+                        b.r.height() as i32,
+                        COLOR_BLOCK_BORDER,
+                    );
+                }
+                crate::block::Block::Complex(b) => {
+                    for b in b.bs.iter() {
+                        d.draw_rectangle(
+                            MARGIN + b.r.bottom_left.x as i32,
+                            MARGIN + b.r.bottom_left.y as i32,
+                            b.r.width() as i32,
+                            b.r.height() as i32,
+                            b.c,
+                        );
+                    }
+                    d.draw_rectangle_lines(
+                        MARGIN + b.r.bottom_left.x as i32,
+                        MARGIN + b.r.bottom_left.y as i32,
+                        b.r.width() as i32,
+                        b.r.height() as i32,
+                        COLOR_BLOCK_BORDER,
+                    );
+                }
+            }
         }
 
         // Draw the target
