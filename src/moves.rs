@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
-    block::{BlockId, Block, Color, ComplexBlock, Point, Rect, SimpleBlock},
+    block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
     canvas::Canvas,
 };
 
@@ -276,18 +276,12 @@ impl Move {
             {
                 top_left_blocks.push(SimpleBlock::new(
                     "case2_tl_child".into(),
-                    Rect::new(
-                        child.r.bottom_left,
-                        Point::new(cut_x, child.r.top_right.y),
-                    ),
+                    Rect::new(child.r.bottom_left, Point::new(cut_x, child.r.top_right.y)),
                     child.c,
                 ));
                 top_right_blocks.push(SimpleBlock::new(
                     "case2_tr_child".into(),
-                    Rect::new(
-                        Point::new(cut_x, child.r.bottom_left.y),
-                        child.r.top_right,
-                    ),
+                    Rect::new(Point::new(cut_x, child.r.bottom_left.y), child.r.top_right),
                     child.c,
                 ));
                 continue;
@@ -299,18 +293,12 @@ impl Move {
             {
                 bottom_left_blocks.push(SimpleBlock::new(
                     "case8_bl_child".into(),
-                    Rect::new(
-                        child.r.bottom_left,
-                        Point::new(cut_x, child.r.top_right.y),
-                    ),
+                    Rect::new(child.r.bottom_left, Point::new(cut_x, child.r.top_right.y)),
                     child.c,
                 ));
                 bottom_right_blocks.push(SimpleBlock::new(
                     "case8_br_child".into(),
-                    Rect::new(
-                        Point::new(cut_x, child.r.bottom_left.y),
-                        child.r.top_right,
-                    ),
+                    Rect::new(Point::new(cut_x, child.r.bottom_left.y), child.r.top_right),
                     child.c,
                 ));
                 continue;
@@ -322,18 +310,12 @@ impl Move {
             {
                 bottom_right_blocks.push(SimpleBlock::new(
                     "case4_br_child".into(),
-                    Rect::new(
-                        child.r.bottom_left,
-                        Point::new(child.r.top_right.x, cut_y),
-                    ),
+                    Rect::new(child.r.bottom_left, Point::new(child.r.top_right.x, cut_y)),
                     child.c,
                 ));
                 top_right_blocks.push(SimpleBlock::new(
                     "case4_tr_child".into(),
-                    Rect::new(
-                        Point::new(child.r.bottom_left.x, cut_y),
-                        child.r.top_right,
-                    ),
+                    Rect::new(Point::new(child.r.bottom_left.x, cut_y), child.r.top_right),
                     child.c,
                 ));
                 continue;
@@ -345,18 +327,12 @@ impl Move {
             {
                 bottom_left_blocks.push(SimpleBlock::new(
                     "case6_bl_child".into(),
-                    Rect::new(
-                        child.r.bottom_left,
-                        Point::new(child.r.top_right.x, cut_y),
-                    ),
+                    Rect::new(child.r.bottom_left, Point::new(child.r.top_right.x, cut_y)),
                     child.c,
                 ));
                 top_left_blocks.push(SimpleBlock::new(
                     "case6_br_child".into(),
-                    Rect::new(
-                        Point::new(child.r.bottom_left.x, cut_y),
-                        child.r.top_right,
-                    ),
+                    Rect::new(Point::new(child.r.bottom_left.x, cut_y), child.r.top_right),
                     child.c,
                 ));
                 continue;
@@ -395,14 +371,33 @@ impl Move {
         cost
     }
 
-    fn swap(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {
-        // assert!(block0.rect() == block1.rect());
-        // std::mem::swap(block0, block1);
-        // Move::Swap(block1.id().clone(), block0.id().clone())
-        todo!()
+    fn swap(&self, canvas: &mut Canvas, block_a_id: &BlockId, block_b_id: &BlockId) -> Cost {
+        let mut block_a = canvas.remove_move_block(block_a_id);
+        let mut block_b = canvas.remove_move_block(block_b_id);
+
+        let cost = self.compute_cost(block_a.size(), canvas.area);
+
+        if block_a.rect().width() != block_b.rect().width()
+            || block_a.rect().height() != block_b.rect().height()
+        {
+            panic!(
+                "Blocks are not the same size, [{}] has size [{},{}] while [{}] has size [{},{}]",
+                block_a_id,
+                block_a.rect().width(),
+                block_a.rect().height(),
+                block_b_id,
+                block_b.rect().width(),
+                block_b.rect().height(),
+            );
+        }
+
+        std::mem::swap(block_a.get_id_mut(), block_b.get_id_mut());
+        canvas.put_block(block_a);
+        canvas.put_block(block_b);
+        cost
     }
 
-    fn merge(&self, canvas: &mut Canvas, block0: &BlockId, block1: &BlockId) -> Cost {
+    fn merge(&self, canvas: &mut Canvas, block0: &BlockId, block_a: &BlockId) -> Cost {
         todo!()
     }
 }

@@ -169,10 +169,17 @@ impl Into<Block> for ComplexBlock {
 }
 
 impl Block {
-    pub fn id(&self) -> &BlockId {
+    pub fn get_id(&self) -> &BlockId {
         match self {
             Block::Simple(b) => &b.id,
             Block::Complex(b) => &b.id,
+        }
+    }
+
+    pub fn get_id_mut(&mut self) -> &mut BlockId {
+        match self {
+            Block::Simple(b) => &mut b.id,
+            Block::Complex(b) => &mut b.id,
         }
     }
 

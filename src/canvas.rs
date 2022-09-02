@@ -55,7 +55,7 @@ impl Canvas {
     pub fn hit_test(&self, x: u32, y: u32) -> String {
         for b in self.blocks.values() {
             if b.rect().contains(x, y) {
-                return b.id().clone();
+                return b.get_id().clone();
             }
         }
         panic!(
@@ -69,7 +69,7 @@ impl Canvas {
     }
 
     pub fn put_block(&mut self, block: Block) {
-        self.blocks.insert(block.id().clone(), block);
+        self.blocks.insert(block.get_id().clone(), block);
     }
 
     pub fn get_block_mut(&mut self, block: &BlockId) -> Option<&mut Block> {
