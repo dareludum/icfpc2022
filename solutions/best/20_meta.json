@@ -1,6 +1,6 @@
 {
-  "solver_name": "unknown",
-  "total_score": 31588,
-  "score": 0,
-  "solution_cost": 0
+  "solver_name": "simple",
+  "total_score": 25695,
+  "score": 22365,
+  "solution_cost": 3330
 }
