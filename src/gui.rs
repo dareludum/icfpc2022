@@ -148,6 +148,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         // WTF?
                         let undo: UndoMove = undo;
                         undo.apply(&mut canvas);
+                        b_id = None;
+                        marked_block = None;
                     }
                 }
                 _ => {}
@@ -156,60 +158,45 @@ pub fn gui_main(problem_path: &std::path::Path) {
         }
 
         // TODO refactor to a function
-        let mov = if !SOLUTION_RECT.contains(mx as u32, my as u32) {
-            None
-        } else {
+        let mov = if let Some(b_id) = b_id.clone() {
             match tool {
                 Tool::CutVert => Some(Move::LineCut(
-                    b_id.clone().unwrap(),
+                    b_id.clone(),
                     Orientation::Vertical,
                     (mx - SLN.0) as u32,
                 )),
                 Tool::CutHorz => Some(Move::LineCut(
-                    b_id.clone().unwrap(),
+                    b_id.clone(),
                     Orientation::Horizontal,
                     (my - SLN.1) as u32,
                 )),
                 Tool::CutCross => Some(Move::PointCut(
-                    b_id.clone().unwrap(),
+                    b_id.clone(),
                     (mx - SLN.0) as u32,
                     (my - SLN.1) as u32,
                 )),
-                Tool::Color => Some(Move::Color(b_id.clone().unwrap(), color)),
-                Tool::Swap => {
-                    if let (Some(b0_id), Some(b1_id)) = (b_id.clone(), marked_block.clone()) {
-                        Some(Move::Swap(b0_id, b1_id))
-                    } else {
-                        None
-                    }
-                }
-                Tool::Merge => {
-                    if let (Some(b0_id), Some(b1_id)) = (b_id.clone(), marked_block.clone()) {
-                        Some(Move::Merge(b0_id, b1_id))
-                    } else {
-                        None
-                    }
-                }
+                Tool::Color => Some(Move::Color(b_id.clone(), color)),
+                Tool::Swap => marked_block.clone().map(|id| Move::Swap(b_id, id)),
+                Tool::Merge => marked_block.clone().map(|id| Move::Merge(b_id, id)),
             }
+        } else {
+            None
         };
 
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
-            if SOLUTION_RECT.contains(mx as u32, my as u32) {
-                // TODO refactor army of clones
-                if let Some(mov) = mov.clone() {
-                    if let Some(cost) = mov.apply(&mut canvas) {
-                        b_id = None;
-                        marked_block = None;
-                        moves.push((mov, cost));
-                    } else {
-                        // TODO: show a message
-                    }
+            if let Some(mov) = mov.clone() {
+                if let Some(cost) = mov.apply(&mut canvas) {
+                    b_id = None;
+                    marked_block = None;
+                    moves.push((mov, cost));
+                } else {
+                    // TODO: show a message
                 }
             }
         }
 
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_RIGHT_BUTTON) {
-            if SOLUTION_RECT.contains(mx as u32, my as u32) {
+            if let Some(b_id) = b_id.clone() {
                 match tool {
                     Tool::CutVert => {}
                     Tool::CutHorz => {}
@@ -221,7 +208,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         );
                     }
                     Tool::Swap | Tool::Merge => {
-                        marked_block = b_id.clone();
+                        marked_block = Some(b_id);
                     }
                 }
             }
