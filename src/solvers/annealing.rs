@@ -1,7 +1,7 @@
 use crate::{
     canvas::Canvas,
     color::Color,
-    moves::{Cost, Move, MoveType, Orientation, UndoMove, AppliedMove, UndoMoveOp},
+    moves::{AppliedMove, Cost, Move, MoveType, Orientation, UndoMove, UndoMoveOp},
     painting::Painting,
 };
 
@@ -23,7 +23,12 @@ impl Solver for Annealing {
             let t = self.temperature(1.0 - (k as f32 + 1.0) / KMAX as f32);
             let budget = (current_painting_score.0 - current_move_cost.0) as i64;
             let mut iteration_canvas = canvas.clone();
-            let iteration_moves = self.pick_neighbor(&mut iteration_canvas, painting, applied_moves.clone(), budget);
+            let iteration_moves = self.pick_neighbor(
+                &mut iteration_canvas,
+                painting,
+                applied_moves.clone(),
+                budget,
+            );
             let new_painting_score = painting.calculate_score(&iteration_canvas.render());
             let new_move_cost = iteration_moves.iter().map(|am| am.cost).sum::<Cost>();
             let e_curr = (current_painting_score + current_move_cost).0 as f32;
