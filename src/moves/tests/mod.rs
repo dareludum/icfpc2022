@@ -69,10 +69,38 @@ fn make_cross_canvas() -> Canvas {
     let br = Rect::from_coords([16, 0, 32, 16]);
     let tr = Rect::from_coords([16, 16, 32, 32]);
     let tl = Rect::from_coords([0, 16, 16, 32]);
-    blocks.push(ComplexBlock::new("3.0".into(), bl, vec![SimpleBlock::new("0.0".into(), bl, bg)]).into());
-    blocks.push(ComplexBlock::new("3.1".into(), br, vec![SimpleBlock::new("0.1".into(), br, bg)]).into());
-    blocks.push(ComplexBlock::new("3.2".into(), tr, vec![SimpleBlock::new("0.2".into(), tr, bg)]).into());
-    blocks.push(ComplexBlock::new("3.3".into(), tl, vec![SimpleBlock::new("0.3".into(), tl, bg)]).into());
+    blocks.push(
+        ComplexBlock::new(
+            "3.0".into(),
+            bl,
+            vec![SimpleBlock::new("0.0".into(), bl, bg)],
+        )
+        .into(),
+    );
+    blocks.push(
+        ComplexBlock::new(
+            "3.1".into(),
+            br,
+            vec![SimpleBlock::new("0.1".into(), br, bg)],
+        )
+        .into(),
+    );
+    blocks.push(
+        ComplexBlock::new(
+            "3.2".into(),
+            tr,
+            vec![SimpleBlock::new("0.2".into(), tr, bg)],
+        )
+        .into(),
+    );
+    blocks.push(
+        ComplexBlock::new(
+            "3.3".into(),
+            tl,
+            vec![SimpleBlock::new("0.3".into(), tl, bg)],
+        )
+        .into(),
+    );
     // this is a 3rd generation canvas, as 3 moves were applied
     return Canvas::from_blocks(32, 32, 4, 5, blocks.into_iter());
 }
@@ -92,7 +120,6 @@ fn test_reproduce_cross() -> Result<(), MoveError> {
     assert_eq!(&canvas, &ref_canvas);
     Ok(())
 }
-
 
 #[test]
 fn line_cut() -> Result<(), MoveError> {
