@@ -1,4 +1,9 @@
-use crate::{color::Color, moves::Move};
+use crate::{
+    canvas::Canvas,
+    color::Color,
+    moves::{AppliedMove, Move},
+    painting::Painting,
+};
 
 use super::Solver;
 
@@ -9,22 +14,17 @@ impl Solver for TopColor {
         "top_color"
     }
 
-    fn solve_core(
-        &self,
-        canvas: &mut crate::canvas::Canvas,
-        painting: &crate::painting::Painting,
-    ) -> (Vec<Move>, crate::moves::Cost) {
+    fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
         let block = canvas.get_block(&"0".to_owned()).unwrap();
         let colors = painting.count_colors(block.rect());
         let top_color = Color::find_most_common(&colors);
 
         let mov_id = "0".to_string();
         let mov = Move::Color(mov_id, top_color);
-        let cost = mov
+        let applied_move = mov
             .apply(canvas)
-            .expect("TopColor solver: couldn't perform color move")
-            .0; // TODO refactor to return error, it's rust or javascript after all
+            .expect("TopColor solver: couldn't perform color move"); // TODO refactor to return error, it's rust or javascript after all
 
-        (vec![mov], cost)
+        vec![applied_move]
     }
 }

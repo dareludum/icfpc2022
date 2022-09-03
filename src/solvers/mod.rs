@@ -4,7 +4,7 @@ mod top_color;
 
 use crate::{
     canvas::Canvas,
-    moves::{Cost, Move},
+    moves::{AppliedMove, Cost, Move},
     painting::Painting,
 };
 
@@ -16,10 +16,16 @@ pub struct Solution {
 
 pub trait Solver {
     fn name(&self) -> &'static str;
-    fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> (Vec<Move>, Cost);
+    fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove>;
 
     fn solve(&self, canvas: &mut Canvas, painting: &Painting) -> Solution {
-        let (moves, cost) = self.solve_core(canvas, painting);
+        let applied_moves = self.solve_core(canvas, painting);
+        let mut cost = Cost(0);
+        let mut moves = vec![];
+        for am in applied_moves {
+            cost += am.cost;
+            moves.push(am.mov);
+        }
         Solution {
             result: canvas.render(),
             moves,

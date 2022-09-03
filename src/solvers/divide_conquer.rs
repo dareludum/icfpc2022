@@ -1,8 +1,8 @@
 use crate::{
     block::{BlockId, Point},
-    canvas::{self, Canvas},
+    canvas::Canvas,
     color::Color,
-    moves::{Cost, Move},
+    moves::{AppliedMove, Cost, Move},
     painting::Painting,
 };
 
@@ -20,7 +20,7 @@ impl Solver for DivideConquerSolver {
     }
 
     fn solve(&self, canvas: &mut Canvas, painting: &Painting) -> Solution {
-        let mut moves = vec![];
+        let mut applied_moves = vec![];
         let mut cost = Cost(u64::MAX);
         let mut result = None;
         let mut max_move_cost = 100;
@@ -38,11 +38,15 @@ impl Solver for DivideConquerSolver {
                 &mut iteration_cost,
             );
             if iteration_cost.0 < cost.0 {
-                moves = iteration_moves;
+                applied_moves = iteration_moves;
                 cost = iteration_cost;
                 result = Some(canvas.render());
             }
             max_move_cost += 100;
+        }
+        let mut moves = vec![];
+        for am in applied_moves {
+            moves.push(am.mov);
         }
         Solution {
             result: result.unwrap(),
@@ -51,7 +55,7 @@ impl Solver for DivideConquerSolver {
         }
     }
 
-    fn solve_core(&self, _canvas: &mut Canvas, _painting: &Painting) -> (Vec<Move>, Cost) {
+    fn solve_core(&self, _canvas: &mut Canvas, _painting: &Painting) -> Vec<AppliedMove> {
         panic!("API users must call solve() instead")
     }
 }
@@ -63,7 +67,7 @@ impl DivideConquerSolver {
         canvas: &mut Canvas,
         painting: &Painting,
         id: &BlockId,
-        moves: &mut Vec<Move>,
+        moves: &mut Vec<AppliedMove>,
         cost: &mut Cost,
     ) {
         const SMALLEST_SIZE: u32 = 4;
@@ -78,8 +82,9 @@ impl DivideConquerSolver {
         if counts.len() == 1 || r.width() < SMALLEST_SIZE || r.height() < SMALLEST_SIZE {
             let best_color = Color::find_average(&counts);
             let mov = Move::Color(id.to_owned(), best_color);
-            *cost += mov.apply(canvas).unwrap().0;
-            moves.push(mov);
+            let applied_move = mov.apply(canvas).unwrap();
+            *cost += applied_move.cost;
+            moves.push(applied_move);
             return;
         }
 
@@ -87,18 +92,19 @@ impl DivideConquerSolver {
 
         // TODO: assess move cost before performing it
         let cut = Move::PointCut(id.to_owned(), x, y);
-        let (move_cost, undo) = cut.apply(canvas).unwrap();
-        if move_cost.0 > params.max_move_cost {
-            undo.apply(canvas);
+        let applied_move = cut.apply(canvas).unwrap();
+        if applied_move.cost.0 > params.max_move_cost {
+            applied_move.undo(canvas);
             let best_color = Color::find_average(&counts);
             let mov = Move::Color(id.to_owned(), best_color);
-            *cost += mov.apply(canvas).unwrap().0;
-            moves.push(mov);
+            let applied_move = mov.apply(canvas).unwrap();
+            *cost += applied_move.cost;
+            moves.push(applied_move);
             return;
         }
-        *cost += move_cost;
+        *cost += applied_move.cost;
 
-        moves.push(cut);
+        moves.push(applied_move);
 
         let id0 = canvas.hit_test(x, y);
         let id1 = canvas.hit_test(x - 1, y);

@@ -43,6 +43,13 @@ pub enum Move {
     Merge(BlockId, BlockId),
 }
 
+#[derive(Debug, Clone)]
+pub struct AppliedMove {
+    pub mov: Move,
+    pub cost: Cost,
+    pub undo: UndoMove,
+}
+
 impl Canvas {
     fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
         match self.get_block_mut(block_id) {
@@ -72,33 +79,45 @@ pub enum MoveError {
 }
 
 impl Move {
-    pub fn apply(&self, canvas: &mut Canvas) -> Result<(Cost, UndoMove), MoveError> {
+    pub fn apply(self, canvas: &mut Canvas) -> Result<AppliedMove, MoveError> {
         use color::*;
         use cut::*;
         use merge::*;
         use swap::*;
 
-        let res = match *self {
+        let (cost, undo) = match self {
             Move::LineCut(ref block, orientation, offset) => {
-                line_cut(self, canvas, block, orientation, offset)
+                line_cut(&self, canvas, block, orientation, offset)
             }
-            Move::PointCut(ref block, x, y) => point_cut(self, canvas, block, x, y),
-            Move::Color(ref block, c) => color(self, canvas, block, c),
-            Move::Swap(ref block_a, ref block_b) => swap(self, canvas, block_a, block_b),
-            Move::Merge(ref block_a, ref block_b) => merge(self, canvas, block_a, block_b),
+            Move::PointCut(ref block, x, y) => point_cut(&self, canvas, block, x, y),
+            Move::Color(ref block, c) => color(&self, canvas, block, c),
+            Move::Swap(ref block_a, ref block_b) => swap(&self, canvas, block_a, block_b),
+            Move::Merge(ref block_a, ref block_b) => merge(&self, canvas, block_a, block_b),
         }?;
-        Ok(res)
+
+        Ok(AppliedMove {
+            mov: self,
+            cost,
+            undo,
+        })
     }
 
-    pub fn checked_apply(&self, canvas: &mut Canvas) -> Result<(Cost, UndoMove), MoveError> {
+    pub fn checked_apply(self, canvas: &mut Canvas) -> Result<AppliedMove, MoveError> {
         // make a copy of the canvas before the move
         let ref_canvas = canvas.clone();
-        let (mov_cost, mov_undo) = self.apply(canvas)?;
+        let applied_move = self.apply(canvas)?;
 
         // check that applying undo to the current state reverts to the previous state
         let mut cur_canvas = canvas.clone();
-        mov_undo.clone().apply(&mut cur_canvas);
-        assert_eq!(&ref_canvas, &cur_canvas, "failed to undo {:?}", self);
-        Ok((mov_cost, mov_undo))
+        applied_move.clone().undo(&mut cur_canvas);
+        assert_eq!(&ref_canvas, &cur_canvas, "failed to undo");
+        Ok(applied_move)
+    }
+}
+
+impl AppliedMove {
+    pub fn undo(self, canvas: &mut Canvas) -> Move {
+        self.undo.apply(canvas);
+        self.mov
     }
 }

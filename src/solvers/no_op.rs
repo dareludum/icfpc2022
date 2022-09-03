@@ -1,8 +1,4 @@
-use crate::{
-    canvas::Canvas,
-    moves::{Cost, Move},
-    painting::Painting,
-};
+use crate::{canvas::Canvas, moves::AppliedMove, painting::Painting};
 
 use super::Solver;
 
@@ -13,7 +9,7 @@ impl Solver for NoOp {
         "no_op"
     }
 
-    fn solve_core(&self, _canvas: &mut Canvas, _painting: &Painting) -> (Vec<Move>, Cost) {
-        (vec![], Cost(0))
+    fn solve_core(&self, _canvas: &mut Canvas, _painting: &Painting) -> Vec<AppliedMove> {
+        vec![]
     }
 }

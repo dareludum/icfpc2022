@@ -4,7 +4,7 @@ use raylib::prelude::*;
 use crate::{
     block::{Point, Rect},
     canvas::Canvas,
-    moves::{Move, Orientation, UndoMove},
+    moves::{AppliedMove, Move, Orientation, UndoMove},
     painting::Painting,
     program::to_isl,
 };
@@ -65,7 +65,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let mut tool = Tool::CutVert;
     let mut color = crate::color::Color::new(255, 255, 255, 255);
     let mut marked_block = None;
-    let mut moves = vec![];
+    let mut moves: Vec<AppliedMove> = vec![];
 
     const MARGIN: i32 = 20;
     const IMAGE_SIZE: i32 = 400;
@@ -146,9 +146,9 @@ pub fn gui_main(problem_path: &std::path::Path) {
                     rl.show_cursor();
                 }
                 KeyboardKey::KEY_U => {
-                    if let Some((_, (_, undo))) = moves.pop() {
+                    if let Some(applied_move) = moves.pop() {
                         // WTF?
-                        let undo: UndoMove = undo;
+                        let undo: UndoMove = applied_move.undo;
                         undo.apply(&mut canvas);
                         b_id = None;
                         marked_block = None;
@@ -187,10 +187,10 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
             if let Some(mov) = mov.clone() {
-                if let Some(cost) = mov.apply(&mut canvas).ok() {
+                if let Some(applied_move) = mov.apply(&mut canvas).ok() {
                     b_id = None;
                     marked_block = None;
-                    moves.push((mov, cost));
+                    moves.push(applied_move);
                 } else {
                     // TODO: show a message
                 }
