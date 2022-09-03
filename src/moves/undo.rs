@@ -52,11 +52,23 @@ impl UndoMove {
                     panic!("Invalid block")
                 }
             }
-            UndoMove::ComplexColor { .. } => todo!(),
+            UndoMove::ComplexColor { old_block } => {
+                canvas.remove_block(old_block.get_id());
+                canvas.put_block(old_block);
+            }
             UndoMove::Swap { a_id, b_id } => {
                 Move::Swap(a_id, b_id).apply(canvas);
             }
-            UndoMove::Merge { .. } => todo!(),
+            UndoMove::Merge {
+                merged_block_id,
+                initial_a,
+                initial_b,
+            } => {
+                canvas.remove_block(&merged_block_id);
+                canvas.prev_merge_id();
+                canvas.put_block(initial_a);
+                canvas.put_block(initial_b);
+            }
         }
     }
 }

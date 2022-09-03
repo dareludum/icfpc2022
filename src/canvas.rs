@@ -24,9 +24,9 @@ impl Canvas {
         res.to_string()
     }
 
-    // pub fn prev_merge_id(&mut self) {
-    //     self.roots_count -= 1
-    // }
+    pub fn prev_merge_id(&mut self) {
+        self.roots_count -= 1
+    }
 
     pub fn new(w: u32, h: u32) -> Self {
         let mut blocks = HashMap::new();
