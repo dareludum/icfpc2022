@@ -1,7 +1,6 @@
 use crate::{
     canvas::Canvas,
-    color::Color,
-    moves::{AppliedMove, Cost, Move, MoveType, Orientation, UndoMove, UndoMoveOp},
+    moves::{AppliedMove, Cost, Move, MoveType, Orientation, UndoMoveOp},
     painting::Painting,
 };
 
@@ -56,7 +55,7 @@ impl Annealing {
         mut moves: Vec<AppliedMove>,
         budget: i64,
     ) -> Vec<AppliedMove> {
-        let viable_moves = self.get_viable_moves(canvas, painting, &moves, budget);
+        let viable_moves = self.get_viable_moves(canvas, &moves, budget);
         let (undo_count, mov, _) = &viable_moves[rand::random::<usize>() % viable_moves.len()];
 
         for _ in 0..*undo_count {
@@ -95,11 +94,10 @@ impl Annealing {
     fn get_viable_moves(
         &self,
         canvas: &mut Canvas,
-        painting: &Painting,
         current_moves: &Vec<AppliedMove>,
         mut budget: i64,
     ) -> Vec<(u32, Move, Cost)> {
-        let mut moves = self.get_moves_for_budget(canvas, painting, budget, 0);
+        let mut moves = self.get_moves_for_budget(canvas, budget, 0);
         let mut redo_stack = vec![];
         for i in 0..current_moves.len() {
             let am = &current_moves[current_moves.len() - i - 1];
@@ -107,7 +105,7 @@ impl Annealing {
             let mov = am.clone().undo(canvas);
             match mov {
                 Move::LineCut(_, _, _) | Move::PointCut(_, _, _) => {
-                    moves.extend(self.get_moves_for_budget(canvas, painting, budget, i as u32 + 1));
+                    moves.extend(self.get_moves_for_budget(canvas, budget, i as u32 + 1));
                 }
                 _ => {}
             }
@@ -122,7 +120,6 @@ impl Annealing {
     fn get_moves_for_budget(
         &self,
         canvas: &Canvas,
-        painting: &Painting,
         budget: i64,
         undo_count: u32,
     ) -> Vec<(u32, Move, Cost)> {

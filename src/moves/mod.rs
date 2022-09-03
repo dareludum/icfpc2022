@@ -51,6 +51,7 @@ pub struct AppliedMove {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum MoveType {
     LineCut,
     PointCut,
@@ -111,6 +112,7 @@ impl Move {
         })
     }
 
+    #[allow(dead_code)]
     pub fn checked_apply(self, canvas: &mut Canvas) -> Result<AppliedMove, MoveError> {
         // make a copy of the canvas before the move
         let ref_canvas = canvas.clone();
