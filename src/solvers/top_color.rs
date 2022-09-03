@@ -49,7 +49,8 @@ impl Solver for TopColor {
         let mov = Move::Color(mov_id, top_color);
         let cost = mov
             .apply(canvas)
-            .expect("TopColor solver: couldn't perform color move"); // TODO refactor to return error, it's rust or javascript after all
+            .expect("TopColor solver: couldn't perform color move")
+            .0; // TODO refactor to return error, it's rust or javascript after all
 
         (vec![mov], cost)
     }

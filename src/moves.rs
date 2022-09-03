@@ -101,7 +101,7 @@ enum MoveError {
 }
 
 impl Move {
-    pub fn apply(&self, canvas: &mut Canvas) -> Option<Cost> {
+    pub fn apply(&self, canvas: &mut Canvas) -> Option<(Cost, UndoMove)> {
         let res: Result<(Cost, UndoMove), MoveError> = match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 self.line_cut(canvas, block, orientation, offset)
@@ -111,10 +111,7 @@ impl Move {
             Move::Swap(ref block_a, ref block_b) => self.swap(canvas, block_a, block_b),
             Move::Merge(ref block_a, ref block_b) => self.merge(canvas, block_a, block_b),
         };
-        match res {
-            Ok((cost, _undo)) => Some(cost),
-            Err(_) => None,
-        }
+        res.ok()
     }
 
     fn base_cost(&self) -> u32 {

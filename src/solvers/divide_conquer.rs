@@ -49,7 +49,7 @@ impl DivideConquerSolver {
             let best_color = counts.into_iter().max_by_key(|(_, v)| *v).unwrap().0;
 
             let mov = Move::Color(id.to_owned(), best_color);
-            let cost = mov.apply(canvas).unwrap();
+            let cost = mov.apply(canvas).unwrap().0;
             moves.push(mov);
             return cost;
         }
@@ -57,7 +57,7 @@ impl DivideConquerSolver {
         let Point { x, y } = r.center();
 
         let cut = Move::PointCut(id.to_owned(), x, y);
-        let mut cost = cut.apply(canvas).unwrap();
+        let mut cost = cut.apply(canvas).unwrap().0;
         moves.push(cut);
 
         let id0 = canvas.hit_test(x, y);
