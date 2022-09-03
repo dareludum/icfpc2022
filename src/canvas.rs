@@ -9,7 +9,7 @@ use crate::{
     painting::Painting,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Canvas {
     pub area: u32,
     width: u32,
@@ -30,21 +30,31 @@ impl Canvas {
     }
 
     pub fn new(w: u32, h: u32) -> Self {
-        let mut blocks = HashMap::new();
-        blocks.insert(
+        let blocks = [SimpleBlock::new(
             BlockId::from("0"),
-            Block::Simple(SimpleBlock::new(
-                BlockId::from("0"),
-                Rect::from_dimensions(Point::new(0, 0), w, h),
-                Color::new(255, 255, 255, 255),
-            )),
-        );
+            Rect::from_dimensions(Point::new(0, 0), w, h),
+            Color::new(255, 255, 255, 255),
+        )
+        .into()];
+        Self::from_blocks(w, h, 1, blocks.into_iter())
+    }
+
+    pub fn from_blocks(
+        w: u32,
+        h: u32,
+        roots_count: u32,
+        blocks: impl Iterator<Item = Block>,
+    ) -> Self {
+        let mut blocks_map = HashMap::new();
+        for block in blocks {
+            blocks_map.insert(block.get_id().clone(), block);
+        }
         Canvas {
             width: w,
             height: h,
             area: w * h,
-            blocks,
-            roots_count: 1,
+            blocks: blocks_map,
+            roots_count,
         }
     }
 

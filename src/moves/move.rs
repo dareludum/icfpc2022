@@ -1,31 +1,9 @@
-use std::fmt::Display;
-
-use crate::{
-    block::{Block, BlockId, ComplexBlock, SimpleBlock},
-    canvas::Canvas,
-    color::Color,
-};
-
-#[cfg(test)]
-mod tests;
-
-mod color;
-mod cost;
-mod cut;
-mod history_tester;
-mod merge;
-mod swap;
-mod undo;
-
-pub use cost::*;
-pub use history_tester::HistoryTester;
-pub use undo::*;
-
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {
     Horizontal,
     Vertical,
 }
+
 
 impl Display for Orientation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -45,6 +23,8 @@ pub enum Move {
     Merge(BlockId, BlockId),
 }
 
+
+
 impl Canvas {
     fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
         match self.get_block_mut(block_id) {
@@ -63,31 +43,6 @@ impl Canvas {
                 "missing block: {}",
                 block_id
             ))),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum MoveError {
-    LogicError(String),
-    InvalidInput(String),
-}
-
-impl Move {
-    pub fn apply(&self, canvas: &mut Canvas) -> Result<(Cost, UndoMove), MoveError> {
-        use color::*;
-        use cut::*;
-        use merge::*;
-        use swap::*;
-
-        match *self {
-            Move::LineCut(ref block, orientation, offset) => {
-                line_cut(self, canvas, block, orientation, offset)
-            }
-            Move::PointCut(ref block, x, y) => point_cut(self, canvas, block, x, y),
-            Move::Color(ref block, c) => color(self, canvas, block, c),
-            Move::Swap(ref block_a, ref block_b) => swap(self, canvas, block_a, block_b),
-            Move::Merge(ref block_a, ref block_b) => merge(self, canvas, block_a, block_b),
         }
     }
 }

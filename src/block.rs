@@ -21,6 +21,13 @@ pub struct Rect {
 }
 
 impl Rect {
+    pub const fn from_coords(coords: [u32; 4]) -> Self {
+        Rect::new(
+            Point::new(coords[0], coords[1]),
+            Point::new(coords[2], coords[3]),
+        )
+    }
+
     pub const fn new(bottom_left: Point, top_right: Point) -> Self {
         Rect {
             bottom_left,
@@ -91,7 +98,7 @@ impl Rect {
 
 pub type BlockId = String;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SimpleBlock {
     pub id: BlockId,
     pub r: Rect,
@@ -113,7 +120,7 @@ impl SimpleBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ComplexBlock {
     pub id: BlockId,
     pub r: Rect,
@@ -126,7 +133,7 @@ impl ComplexBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Block {
     Simple(SimpleBlock),
     Complex(ComplexBlock),
