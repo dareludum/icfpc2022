@@ -1,6 +1,6 @@
 {
-  "solver_name": "top_color",
-  "total_score": 54943,
-  "score": 54938,
-  "solution_cost": 5
+  "solver_name": "annealing",
+  "total_score": 47778,
+  "score": 40193,
+  "solution_cost": 7585
 }

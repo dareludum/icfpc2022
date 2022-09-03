@@ -1,6 +1,6 @@
 {
-  "solver_name": "no_op",
-  "total_score": 42755,
-  "score": 42755,
-  "solution_cost": 0
+  "solver_name": "annealing",
+  "total_score": 35974,
+  "score": 31422,
+  "solution_cost": 4552
 }

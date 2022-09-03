@@ -1,6 +1,6 @@
 {
-  "solver_name": "divide_conquer",
-  "total_score": 111372,
-  "score": 109922,
-  "solution_cost": 1450
+  "solver_name": "annealing",
+  "total_score": 55956,
+  "score": 42183,
+  "solution_cost": 13773
 }
