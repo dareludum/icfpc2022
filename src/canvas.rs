@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use image::{Rgba, RgbaImage};
 
 use crate::{
-    block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
+    block::{Block, BlockId, ComplexBlock, Point, Rect, SimpleBlock},
+    color::Color,
     painting::Painting,
 };
 

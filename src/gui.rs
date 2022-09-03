@@ -9,8 +9,8 @@ use crate::{
     program::to_isl,
 };
 
-impl From<crate::block::Color> for raylib::ffi::Color {
-    fn from(c: crate::block::Color) -> Self {
+impl From<crate::color::Color> for raylib::ffi::Color {
+    fn from(c: crate::color::Color) -> Self {
         raylib::prelude::Color::new(c.r, c.g, c.b, c.a).into()
     }
 }
@@ -61,7 +61,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let target_texture = rl.load_texture_from_image(&thread, &target_image).unwrap();
 
     let mut tool = Tool::CutVert;
-    let mut color = crate::block::Color::new(255, 255, 255, 255);
+    let mut color = crate::color::Color::new(255, 255, 255, 255);
     let mut marked_block = None;
     let mut moves = vec![];
 

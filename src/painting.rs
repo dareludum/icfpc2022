@@ -1,9 +1,27 @@
-use crate::block::{Color, Rect};
+use crate::block::Rect;
+use crate::color::Color;
 use crate::moves::Cost;
-use image::RgbaImage;
+use image::{Rgba, RgbaImage};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
+
+impl From<Color> for Rgba<u8> {
+    fn from(c: Color) -> Self {
+        Rgba([c.r, c.g, c.b, c.a])
+    }
+}
+
+impl From<&Rgba<u8>> for Color {
+    fn from(src: &Rgba<u8>) -> Self {
+        Color {
+            r: src[0],
+            g: src[1],
+            b: src[2],
+            a: src[3],
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Painting {

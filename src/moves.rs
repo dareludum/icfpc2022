@@ -3,8 +3,9 @@ use derive_more::{Add, AddAssign};
 use std::fmt::Display;
 
 use crate::{
-    block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
+    block::{Block, BlockId, ComplexBlock, Point, Rect, SimpleBlock},
     canvas::Canvas,
+    color::Color,
 };
 
 #[derive(Debug, Clone, Copy)]

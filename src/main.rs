@@ -8,6 +8,7 @@ use solvers::{create_solver, SOLVERS};
 
 mod block;
 mod canvas;
+mod color;
 mod gui;
 mod moves;
 mod painting;

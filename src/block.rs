@@ -1,6 +1,4 @@
-use std::fmt::Display;
-
-use image::Rgba;
+use crate::color::Color;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Point {
@@ -88,43 +86,6 @@ impl Rect {
         let top_right_bl = Rect::new(cut_point, *top_right);
         let top_left_bl = Rect::new(Point::new(bottom_left.x, y), Point::new(x, top_right.y));
         (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl)
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    pub a: u8,
-}
-
-impl Color {
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Color { r, g, b, a }
-    }
-}
-
-impl From<Color> for Rgba<u8> {
-    fn from(c: Color) -> Self {
-        Rgba([c.r, c.g, c.b, c.a])
-    }
-}
-
-impl From<&Rgba<u8>> for Color {
-    fn from(src: &Rgba<u8>) -> Self {
-        Color {
-            r: src[0],
-            g: src[1],
-            b: src[2],
-            a: src[3],
-        }
-    }
-}
-
-impl Display for Color {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({},{},{},{})", self.r, self.g, self.b, self.a)
     }
 }
 

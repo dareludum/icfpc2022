@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use crate::{block::Color, moves::Move};
+use crate::{color::Color, moves::Move};
 
 pub fn to_isl(mov: &Move) -> String {
     match mov {
