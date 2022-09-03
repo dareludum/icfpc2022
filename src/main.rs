@@ -2,7 +2,7 @@ extern crate derive_more;
 
 use std::{
     ffi::OsStr,
-    fs::DirEntry,
+    fs::{self, DirEntry},
     path::{Path, PathBuf},
 };
 
@@ -36,34 +36,94 @@ struct Args {
     solver: Option<String>,
 }
 
+fn fcopy_to(current_dir: &PathBuf, target_dir: &PathBuf, filename: &str) -> std::io::Result<()> {
+    let fname_from = current_dir.join(filename);
+    let fname_to = target_dir.join(filename);
+
+    std::fs::copy(fname_from, fname_to)?;
+
+    Ok(())
+}
+
+fn copy_output(
+    current_solution_dir: PathBuf,
+    target_dir: PathBuf,
+    problem_num: &str,
+) -> Result<(), std::io::Error> {
+    fcopy_to(
+        &current_solution_dir,
+        &target_dir,
+        &format!("{problem_num}_meta.json"),
+    )?;
+
+    fcopy_to(
+        &current_solution_dir,
+        &target_dir,
+        &format!("{problem_num}.png"),
+    )?;
+
+    fcopy_to(
+        &current_solution_dir,
+        &target_dir,
+        &format!("{problem_num}.txt"),
+    )?;
+
+    Ok(())
+}
+
+fn write_best(
+    base_dir: &PathBuf,
+    problem_num: &str,
+    solution: &SolvedSolutionDto,
+) -> std::io::Result<()> {
+    let target_dir = base_dir.join("best");
+    let current_solution_dir = base_dir.join("current").join(solution.solver_name.clone());
+    let meta_fname = &format!("{problem_num}_meta.json");
+    let best_solution_filename = target_dir.join(meta_fname);
+
+    std::fs::create_dir_all(&target_dir)?;
+
+    match best_solution_filename.try_exists() {
+        Ok(false) => copy_output(current_solution_dir, target_dir, problem_num),
+        Ok(true) => {
+            let current_best_json = fs::read_to_string(best_solution_filename)?;
+            let current_best: SolvedSolutionDto =
+                serde_json::from_str(&current_best_json).expect("Deserialization error");
+
+            if solution.total_score < current_best.total_score {
+                copy_output(current_solution_dir, target_dir, problem_num)?
+            }
+
+            Ok(())
+        }
+        Err(e) => Err(e),
+    }
+}
+
 fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
+    let base_solution_dir = PathBuf::from("./solutions/");
+
     problem_paths
         .par_iter()
         .map(|problem_path| {
-            let base_filename = problem_path.file_stem().unwrap().to_str().unwrap();
-            let solution_painting_filename = problem_path
-                .file_name()
-                .unwrap()
-                .to_str()
-                .expect("filename is not unicode compatible");
-
+            let problem_num = problem_path.file_stem().unwrap().to_str().unwrap();
             let painting = Painting::load(problem_path);
 
             for solver_name in solvers {
                 let solver = create_solver(solver_name);
 
-                let mut solution_dir = std::path::PathBuf::from("./solutions/");
-                solution_dir.push(solver.name());
-                std::fs::create_dir_all(&solution_dir)?;
+                let current_solution_dir = &base_solution_dir.join("current").join(solver.name());
+                std::fs::create_dir_all(current_solution_dir)?;
 
                 let initial_config_path = problem_path.with_extension("json");
                 let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
                 let solution = solver.solve(&mut canvas, &painting);
-                let isl_path = solution_dir.join(base_filename).with_extension("txt");
+                let isl_path = current_solution_dir.join(problem_num).with_extension("txt");
+
                 program::write_to_file(&isl_path, &solution.moves)?;
                 solution
                     .result
-                    .write_to_file(&solution_dir.join(&solution_painting_filename));
+                    .write_to_file(&current_solution_dir.join(problem_num).with_extension("png"));
 
                 let score = painting.calculate_score(&solution.result);
                 let total = score + solution.cost;
@@ -77,13 +137,15 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
 
                 let solution_meta_json = serde_json::to_string_pretty(&solution_meta)?;
                 std::fs::write(
-                    isl_path.with_file_name(format!("{base_filename}_meta.json")),
+                    isl_path.with_file_name(format!("{problem_num}_meta.json")),
                     solution_meta_json,
                 )?;
 
+                write_best(&base_solution_dir, problem_num, &solution_meta)?;
+
                 println!(
-                    "{:10}{}: {} ({} + {})",
-                    format!("[{}]", solution_painting_filename),
+                    "{:15}{}: {} ({} + {})",
+                    format!("[problem {}]", problem_num),
                     solver.name(),
                     total.0,
                     score.0,
