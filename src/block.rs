@@ -107,6 +107,7 @@ impl Rect {
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct BlockId(SmartString<LazyCompact>);
 
+
 impl BlockId {
     pub fn new(data: SmartString<LazyCompact>) -> Self {
         BlockId(data)
@@ -117,8 +118,12 @@ impl BlockId {
     }
 
     pub fn new_root(root: u32) -> Self {
+        use lexical_core::BUFFER_SIZE;
+        let mut buffer = [b'0'; BUFFER_SIZE];
+        let bytes = lexical_core::write(root, &mut buffer);
+        let str = unsafe { std::str::from_utf8_unchecked(bytes) };
         // we can't easily get rid of the string allocation here
-        BlockId(root.to_string().into())
+        BlockId(str.into())
     }
 
     pub fn new_child(&self, child_name: &str) -> Self {
