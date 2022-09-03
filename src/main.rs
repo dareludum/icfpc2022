@@ -13,7 +13,7 @@ use painting::Painting;
 use rayon::prelude::*;
 use solvers::{create_solver, SOLVERS};
 
-use crate::canvas::Canvas;
+use crate::{canvas::Canvas, dto::SolvedSolutionDto};
 
 mod block;
 mod canvas;
@@ -40,8 +40,7 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
     problem_paths
         .par_iter()
         .map(|problem_path| {
-            let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
-            solution_filename.push(".txt");
+            let base_filename = problem_path.file_stem().unwrap().to_str().unwrap();
             let solution_painting_filename = problem_path
                 .file_name()
                 .unwrap()
@@ -60,13 +59,27 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
                 let initial_config_path = problem_path.with_extension("json");
                 let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
                 let solution = solver.solve(&mut canvas, &painting);
-                program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
+                let isl_path = solution_dir.join(base_filename).with_extension("txt");
+                program::write_to_file(&isl_path, &solution.moves)?;
                 solution
                     .result
                     .write_to_file(&solution_dir.join(&solution_painting_filename));
 
                 let score = painting.calculate_score(&solution.result);
                 let total = score + solution.cost;
+
+                let solution_meta = SolvedSolutionDto {
+                    solver_name: solver.name().to_string(),
+                    score: score.0,
+                    total_score: total.0,
+                    solution_cost: solution.cost.0,
+                };
+
+                let solution_meta_json = serde_json::to_string_pretty(&solution_meta)?;
+                std::fs::write(
+                    isl_path.with_file_name(format!("{base_filename}_meta.json")),
+                    solution_meta_json,
+                )?;
 
                 println!(
                     "{:10}{}: {} ({} + {})",
