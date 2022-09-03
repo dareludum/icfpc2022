@@ -75,8 +75,7 @@ impl Annealing {
                 for b_id in delete_block_ids {
                     let b = canvas.get_block(&b_id).unwrap();
                     let before = painting.calculate_score(&canvas.render());
-                    let counts = painting.count_colors(b.rect());
-                    let color = Color::find_average(&counts);
+                    let color = painting.calculate_average_color(b.rect());
                     let mov = Move::Color(b_id, color);
                     let am = mov.apply(canvas).unwrap();
                     let after = painting.calculate_score(&canvas.render());
