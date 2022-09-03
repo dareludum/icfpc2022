@@ -130,7 +130,7 @@ impl Display for Color {
 
 pub type BlockId = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SimpleBlock {
     pub id: BlockId,
     pub r: Rect,
@@ -152,7 +152,7 @@ impl SimpleBlock {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ComplexBlock {
     pub id: BlockId,
     pub r: Rect,
@@ -165,7 +165,7 @@ impl ComplexBlock {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Block {
     Simple(SimpleBlock),
     Complex(ComplexBlock),

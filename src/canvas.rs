@@ -17,10 +17,14 @@ pub struct Canvas {
 }
 
 impl Canvas {
-    pub fn new_root_id(&mut self) -> String {
+    pub fn next_merge_id(&mut self) -> String {
         let res = self.roots_count;
         self.roots_count += 1;
         res.to_string()
+    }
+
+    pub fn prev_merge_id(&mut self) {
+        self.roots_count -= 1
     }
 
     pub fn new(w: u32, h: u32) -> Self {

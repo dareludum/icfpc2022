@@ -1,6 +1,6 @@
 use derive_more::{Add, AddAssign};
 
-use std::fmt::Display;
+use std::{arch::x86_64::_SIDD_CMP_EQUAL_ANY, fmt::Display};
 
 use crate::{
     block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
@@ -20,6 +20,66 @@ pub enum Move {
     Color(BlockId, Color),
     Swap(BlockId, BlockId),
     Merge(BlockId, BlockId),
+}
+
+#[derive(Debug, Clone)]
+pub enum UndoMove {
+    Cut {
+        delete_blocks: Vec<BlockId>,
+        restore_blocks: Vec<Block>,
+    },
+    SimpleColor {
+        block: BlockId,
+        prev_color: Color,
+    },
+    ComplexColor {
+        old_block: Block,
+    },
+    Swap {
+        a: BlockId,
+        b: BlockId,
+    },
+    Merge {
+        merged_block: BlockId,
+        initial_a: Block,
+        initial_b: Block,
+    },
+}
+
+struct UndoCutBuilder {
+    delete_blocks: Vec<BlockId>,
+    restore_blocks: Vec<Block>,
+}
+
+impl UndoCutBuilder {
+    pub fn new() -> Self {
+        UndoCutBuilder {
+            delete_blocks: vec![],
+            restore_blocks: vec![],
+        }
+    }
+
+    pub fn remove(&mut self, canvas: &mut Canvas, block_id: &BlockId) -> Result<Block, MoveError> {
+        let block = canvas.remove_move_block(block_id)?;
+        self.restore_blocks.push(block.clone());
+        Ok(block)
+    }
+
+    pub fn create(&mut self, canvas: &mut Canvas, block: Block) {
+        self.delete_blocks.push(block.get_id().clone());
+        canvas.put_block(block)
+    }
+
+    pub fn add_original_block(&mut self, block: Block) {
+        self.restore_blocks.push(block);
+    }
+
+    fn build(self) -> UndoMove {
+        UndoMove::Cut {
+            delete_blocks: self.delete_blocks,
+            restore_blocks: self.restore_blocks,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Add, AddAssign)]
@@ -42,7 +102,7 @@ enum MoveError {
 
 impl Move {
     pub fn apply(&self, canvas: &mut Canvas) -> Option<Cost> {
-        let res: Result<Cost, MoveError> = match *self {
+        let res: Result<(Cost, UndoMove), MoveError> = match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 self.line_cut(canvas, block, orientation, offset)
             }
@@ -52,7 +112,7 @@ impl Move {
             Move::Merge(ref block_a, ref block_b) => self.merge(canvas, block_a, block_b),
         };
         match res {
-            Ok(res) => Some(res),
+            Ok((cost, _undo)) => Some(cost),
             Err(_) => None,
         }
     }
@@ -76,22 +136,29 @@ impl Move {
         canvas: &mut Canvas,
         block_id: &BlockId,
         new_color: Color,
-    ) -> Result<Cost, MoveError> {
+    ) -> Result<(Cost, UndoMove), MoveError> {
         let canvas_area = canvas.area;
         let block = canvas.get_move_block_mut(block_id)?;
         let cost = self.compute_cost(block.size(), canvas_area);
         let (block_id, rect) = match block {
             // if the block is simple, change its color
             Block::Simple(ref mut simple) => {
+                let old_color = simple.c;
                 simple.c = new_color;
-                return Ok(cost);
+                return Ok((
+                    cost,
+                    UndoMove::SimpleColor {
+                        block: block_id.clone(),
+                        prev_color: old_color,
+                    },
+                ));
             }
             // if its complex, turn it into a simple block
             Block::Complex(ref mut complex) => (complex.id.clone(), complex.r.clone()),
         };
-
+        let old_block = block.clone();
         *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));
-        Ok(cost)
+        Ok((cost, UndoMove::ComplexColor { old_block }))
     }
 
     fn line_cut(
@@ -100,7 +167,7 @@ impl Move {
         block: &BlockId,
         orientation: Orientation,
         offset: u32,
-    ) -> Result<Cost, MoveError> {
+    ) -> Result<(Cost, UndoMove), MoveError> {
         match orientation {
             Orientation::Horizontal => self.horizontal_cut(canvas, block, offset),
             Orientation::Vertical => self.vertical_cut(canvas, block, offset),
@@ -112,8 +179,9 @@ impl Move {
         canvas: &mut Canvas,
         block_id: &BlockId,
         cut_offset_x: u32,
-    ) -> Result<Cost, MoveError> {
-        let block = canvas.remove_move_block(block_id)?;
+    ) -> Result<(Cost, UndoMove), MoveError> {
+        let mut builder = UndoCutBuilder::new();
+        let block = builder.remove(canvas, block_id)?;
         let cost = self.compute_cost(block.size(), canvas.area);
         if !(block.rect().bottom_left.x <= cut_offset_x && cut_offset_x < block.rect().top_right.x)
         {
@@ -129,8 +197,8 @@ impl Move {
         match block {
             Block::Simple(simple) => {
                 let (left_r, right_r) = simple.r.vertical_cut(cut_offset_x);
-                canvas.put_block(simple.split(0, left_r).into());
-                canvas.put_block(simple.split(1, right_r).into());
+                builder.create(canvas, simple.split(0, left_r).into());
+                builder.create(canvas, simple.split(1, right_r).into());
             }
             Block::Complex(complex) => {
                 let mut left_blocks: Vec<SimpleBlock> = vec![];
@@ -150,15 +218,17 @@ impl Move {
                 }
 
                 let (left_r, right_r) = complex.r.vertical_cut(cut_offset_x);
-                canvas.put_block(
+                builder.create(
+                    canvas,
                     ComplexBlock::new(block_id.to_owned() + ".0", left_r, left_blocks).into(),
                 );
-                canvas.put_block(
+                builder.create(
+                    canvas,
                     ComplexBlock::new(block_id.to_owned() + ".1", right_r, right_blocks).into(),
                 );
             }
         }
-        Ok(cost)
+        Ok((cost, builder.build()))
     }
 
     fn horizontal_cut(
@@ -166,8 +236,9 @@ impl Move {
         canvas: &mut Canvas,
         block_id: &BlockId,
         cut_offset_y: u32,
-    ) -> Result<Cost, MoveError> {
-        let block = canvas.remove_move_block(block_id)?;
+    ) -> Result<(Cost, UndoMove), MoveError> {
+        let mut builder = UndoCutBuilder::new();
+        let block = builder.remove(canvas, block_id)?;
         let cost = self.compute_cost(block.size(), canvas.area);
         if !(block.rect().bottom_left.y <= cut_offset_y && cut_offset_y < block.rect().top_right.y)
         {
@@ -183,8 +254,8 @@ impl Move {
         match block {
             Block::Simple(simple) => {
                 let (bottom_r, top_r) = simple.r.horizontal_cut(cut_offset_y);
-                canvas.put_block(simple.split(0, bottom_r).into());
-                canvas.put_block(simple.split(1, top_r).into());
+                builder.create(canvas, simple.split(0, bottom_r).into());
+                builder.create(canvas, simple.split(1, top_r).into());
             }
             Block::Complex(complex) => {
                 let mut bottom_blocks: Vec<SimpleBlock> = vec![];
@@ -204,15 +275,17 @@ impl Move {
                 }
 
                 let (bottom_r, top_r) = complex.r.horizontal_cut(cut_offset_y);
-                canvas.put_block(
+                builder.create(
+                    canvas,
                     ComplexBlock::new(block_id.to_owned() + ".0", bottom_r, bottom_blocks).into(),
                 );
-                canvas.put_block(
+                builder.create(
+                    canvas,
                     ComplexBlock::new(block_id.to_owned() + ".1", top_r, top_blocks).into(),
                 );
             }
         }
-        Ok(cost)
+        Ok((cost, builder.build()))
     }
 
     fn point_cut(
@@ -221,9 +294,10 @@ impl Move {
         block_id: &BlockId,
         cut_x: u32,
         cut_y: u32,
-    ) -> Result<Cost, MoveError> {
+    ) -> Result<(Cost, UndoMove), MoveError> {
         let cut_point = Point::new(cut_x, cut_y);
-        let block = canvas.remove_move_block(block_id)?;
+        let mut builder = UndoCutBuilder::new();
+        let block = builder.remove(canvas, block_id)?;
         let cost = self.compute_cost(block.size(), canvas.area);
 
         if !block.rect().contains(cut_x, cut_y) {
@@ -241,11 +315,11 @@ impl Move {
             Block::Simple(simple) => {
                 let (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl) =
                     simple.r.cross_cut(cut_x, cut_y);
-                canvas.put_block(simple.split(0, bottom_left_bl).into());
-                canvas.put_block(simple.split(1, bottom_right_bl).into());
-                canvas.put_block(simple.split(2, top_right_bl).into());
-                canvas.put_block(simple.split(3, top_left_bl).into());
-                return Ok(cost);
+                builder.create(canvas, simple.split(0, bottom_left_bl).into());
+                builder.create(canvas, simple.split(1, bottom_right_bl).into());
+                builder.create(canvas, simple.split(2, top_right_bl).into());
+                builder.create(canvas, simple.split(3, top_left_bl).into());
+                return Ok((cost, builder.build()));
             }
             Block::Complex(complex) => complex,
         };
@@ -392,11 +466,12 @@ impl Move {
             ),
             top_left_blocks,
         );
-        canvas.put_block(bottom_left_block.into());
-        canvas.put_block(bottom_right_block.into());
-        canvas.put_block(top_right_block.into());
-        canvas.put_block(top_left_block.into());
-        Ok(cost)
+
+        builder.create(canvas, bottom_left_block.into());
+        builder.create(canvas, bottom_right_block.into());
+        builder.create(canvas, top_right_block.into());
+        builder.create(canvas, top_left_block.into());
+        Ok((cost, builder.build()))
     }
 
     fn swap(
@@ -404,7 +479,7 @@ impl Move {
         canvas: &mut Canvas,
         block_a_id: &BlockId,
         block_b_id: &BlockId,
-    ) -> Result<Cost, MoveError> {
+    ) -> Result<(Cost, UndoMove), MoveError> {
         let mut block_a = canvas.remove_move_block(block_a_id)?;
         let mut block_b = canvas.remove_move_block(block_b_id)?;
 
@@ -427,7 +502,13 @@ impl Move {
         std::mem::swap(block_a.get_id_mut(), block_b.get_id_mut());
         canvas.put_block(block_a);
         canvas.put_block(block_b);
-        Ok(cost)
+        Ok((
+            cost,
+            UndoMove::Swap {
+                a: block_a_id.clone(),
+                b: block_b_id.clone(),
+            },
+        ))
     }
 
     fn merge(
@@ -435,7 +516,7 @@ impl Move {
         canvas: &mut Canvas,
         block_a_id: &BlockId,
         block_b_id: &BlockId,
-    ) -> Result<Cost, MoveError> {
+    ) -> Result<(Cost, UndoMove), MoveError> {
         let block_a = canvas.remove_move_block(block_a_id)?;
         let block_b = canvas.remove_move_block(block_b_id)?;
         let cost = self.compute_cost(std::cmp::max(block_a.size(), block_b.size()), canvas.area);
@@ -454,15 +535,20 @@ impl Move {
             } else {
                 (b_bottom_left, a_top_right)
             };
+            let new_id = canvas.next_merge_id();
+            let undo = UndoMove::Merge {
+                merged_block: new_id.clone(),
+                initial_a: block_a.clone(),
+                initial_b: block_b.clone(),
+            };
             let mut children: Vec<SimpleBlock> = vec![];
             children.extend(block_a.take_children().into_iter());
             children.extend(block_b.take_children().into_iter());
-            let new_id = canvas.new_root_id();
             canvas.put_block(
                 ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children)
                     .into(),
             );
-            return Ok(cost);
+            return Ok((cost, undo));
         }
 
         // horizontal merge
@@ -475,16 +561,21 @@ impl Move {
             } else {
                 (b_bottom_left, a_top_right)
             };
-
+            let new_id = canvas.next_merge_id();
+            let undo = UndoMove::Merge {
+                merged_block: new_id.clone(),
+                initial_a: block_a.clone(),
+                initial_b: block_b.clone(),
+            };
             let mut children: Vec<SimpleBlock> = vec![];
             children.extend(block_a.take_children().into_iter());
             children.extend(block_b.take_children().into_iter());
-            let new_id = canvas.new_root_id();
+            let new_id = canvas.next_merge_id();
             canvas.put_block(
                 ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children)
                     .into(),
             );
-            return Ok(cost);
+            return Ok((cost, undo));
         }
 
         Err(MoveError::LogicError(format!(
