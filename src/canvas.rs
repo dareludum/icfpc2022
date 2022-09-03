@@ -22,6 +22,18 @@ pub struct Canvas {
     pub generation: u32,
 }
 
+impl From<CanvasDto> for Canvas {
+    fn from(dto: CanvasDto) -> Self {
+        let mut canvas = Canvas::new(dto.width, dto.height);
+
+        dto.blocks
+            .iter()
+            .for_each(|bdto| canvas.put_block(bdto.into()));
+
+        canvas
+    }
+}
+
 impl Canvas {
     pub fn next_merge_id(&mut self) -> String {
         let res = self.roots_count;
@@ -125,16 +137,10 @@ impl Canvas {
         Painting::from_image(img)
     }
 
-    // TODO impl From trait instead
     fn load_canvas(path: &Path) -> std::io::Result<Self> {
         let txt = std::fs::read_to_string(path)?;
         let dto: CanvasDto = serde_json::from_str(&txt)?;
-        let mut canvas = Canvas::new(dto.width, dto.height);
-        dto.blocks
-            .iter()
-            .for_each(|bdto| canvas.put_block(bdto.into()));
-
-        Ok(canvas)
+        Ok(dto.into())
     }
 
     pub fn try_create(

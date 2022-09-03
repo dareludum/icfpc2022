@@ -162,7 +162,7 @@ impl From<&BlockDto> for Block {
 
         Block::Simple(SimpleBlock::new(
             block_id.clone(),
-            Rect::new(Point::new(*bl_x, *bl_y), Point::new(*tr_x, *tr_y)),
+            Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
             Color::new(*r, *g, *b, *a),
         ))
     }
