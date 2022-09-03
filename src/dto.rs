@@ -19,7 +19,7 @@ pub struct CanvasDto {
     pub blocks: Vec<BlockDto>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct SolvedSolutionDto {
     pub solver_name: String,
     pub total_score: u64,

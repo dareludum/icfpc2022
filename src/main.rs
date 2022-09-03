@@ -71,6 +71,28 @@ fn copy_output(
     Ok(())
 }
 
+fn get_best_solution(
+    current_solution: &SolvedSolutionDto,
+    best_solution_path: &PathBuf,
+) -> std::io::Result<(SolvedSolutionDto, bool)> {
+    best_solution_path
+        .try_exists()
+        .and_then(|exists| match exists {
+            true => {
+                let current_best_json = fs::read_to_string(best_solution_path)?;
+                let current_best: SolvedSolutionDto =
+                    serde_json::from_str(&current_best_json).expect("Deserialization error");
+
+                if current_solution.total_score < current_best.total_score {
+                    Ok((current_solution.clone(), true))
+                } else {
+                    Ok((current_best, false))
+                }
+            }
+            false => Ok((current_solution.clone(), true)),
+        })
+}
+
 fn write_best(
     base_dir: &PathBuf,
     problem_num: &str,
@@ -82,21 +104,10 @@ fn write_best(
     let best_solution_filename = target_dir.join(meta_fname);
 
     std::fs::create_dir_all(&target_dir)?;
-
-    match best_solution_filename.try_exists() {
-        Ok(false) => copy_output(current_solution_dir, target_dir, problem_num),
-        Ok(true) => {
-            let current_best_json = fs::read_to_string(best_solution_filename)?;
-            let current_best: SolvedSolutionDto =
-                serde_json::from_str(&current_best_json).expect("Deserialization error");
-
-            if solution.total_score < current_best.total_score {
-                copy_output(current_solution_dir, target_dir, problem_num)?
-            }
-
-            Ok(())
-        }
-        Err(e) => Err(e),
+    let best = get_best_solution(solution, &best_solution_filename)?;
+    match best {
+        (_, false) => Ok(()),
+        _ => copy_output(current_solution_dir, target_dir, problem_num),
     }
 }
 
