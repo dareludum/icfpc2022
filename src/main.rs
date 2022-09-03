@@ -12,6 +12,8 @@ use gui::gui_main;
 use painting::Painting;
 use solvers::{create_solver, SOLVERS};
 
+use crate::canvas::Canvas;
+
 mod block;
 mod canvas;
 mod color;
@@ -41,12 +43,6 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
 
         println!("Processing {:?}", solution_painting_filename);
         let painting = Painting::load(problem_path);
-        let initial_config_path = problem_path.with_extension("json");
-        if let Ok(true) = initial_config_path.try_exists() {
-            let _canvas = canvas::Canvas::load_canvas(&initial_config_path)?;
-            // TODO work in progress
-            // println!("{:?}", canvas);
-        }
 
         for solver_name in solvers {
             let solver = create_solver(solver_name);
@@ -55,7 +51,9 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
             solution_dir.push(solver.name());
             std::fs::create_dir_all(&solution_dir)?;
 
-            let solution = solver.solve(&painting);
+            let initial_config_path = problem_path.with_extension("json");
+            let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
+            let solution = solver.solve(&mut canvas, &painting);
             program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
             solution
                 .result

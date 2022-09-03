@@ -42,7 +42,9 @@ type Offset = (i32, i32);
 
 pub fn gui_main(problem_path: &std::path::Path) {
     let painting = Painting::load(problem_path);
-    let mut canvas = Canvas::new(painting.width(), painting.height());
+    let initial_config_path = problem_path.with_extension("json");
+    let mut canvas = Canvas::try_create(initial_config_path, &painting)
+        .expect("gui_main: Error while creating Canvas");
 
     let (mut rl, thread) = raylib::init()
         .size(1000, 600)

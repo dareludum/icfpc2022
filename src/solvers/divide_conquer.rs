@@ -1,6 +1,6 @@
 use crate::{
     block::{BlockId, Point},
-    canvas::Canvas,
+    canvas::{self, Canvas},
     color::Color,
     moves::{Cost, Move},
     painting::Painting,
@@ -19,13 +19,14 @@ impl Solver for DivideConquerSolver {
         "divide_conquer"
     }
 
-    fn solve(&self, painting: &Painting) -> Solution {
+    fn solve(&self, canvas: &mut Canvas, painting: &Painting) -> Solution {
         let mut moves = vec![];
         let mut cost = Cost(u64::MAX);
         let mut result = None;
         let mut max_move_cost = 100;
+
         while max_move_cost <= 1000 {
-            let mut canvas = Canvas::new(painting.width(), painting.height());
+            let mut canvas = canvas.clone();
             let mut iteration_moves = vec![];
             let mut iteration_cost = Cost(0);
             self.solve_block(
@@ -67,7 +68,9 @@ impl DivideConquerSolver {
     ) {
         const SMALLEST_SIZE: u32 = 4;
 
-        let block = canvas.get_block(id).unwrap();
+        let block = canvas
+            .get_block(id)
+            .expect(&format!("DivideConquerSolver: Can't get block {id}"));
         let r = block.rect();
         // This is recalculated twice, essentially :(
         let counts = painting.count_colors(r);

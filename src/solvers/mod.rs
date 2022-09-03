@@ -18,9 +18,8 @@ pub trait Solver {
     fn name(&self) -> &'static str;
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> (Vec<Move>, Cost);
 
-    fn solve(&self, painting: &Painting) -> Solution {
-        let mut canvas = Canvas::new(painting.width(), painting.height());
-        let (moves, cost) = self.solve_core(&mut canvas, painting);
+    fn solve(&self, canvas: &mut Canvas, painting: &Painting) -> Solution {
+        let (moves, cost) = self.solve_core(canvas, painting);
         Solution {
             result: canvas.render(),
             moves,

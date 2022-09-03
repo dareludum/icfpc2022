@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use image::{Rgba, RgbaImage};
 
@@ -122,14 +125,27 @@ impl Canvas {
         Painting::from_image(img)
     }
 
-    // TODO impl from trait instead
-    pub fn load_canvas(path: &Path) -> std::io::Result<Self> {
+    // TODO impl From trait instead
+    fn load_canvas(path: &Path) -> std::io::Result<Self> {
         let txt = std::fs::read_to_string(path)?;
         let dto: CanvasDto = serde_json::from_str(&txt)?;
         let mut canvas = Canvas::new(dto.width, dto.height);
         dto.blocks
             .iter()
             .for_each(|bdto| canvas.put_block(bdto.into()));
+
+        Ok(canvas)
+    }
+
+    pub fn try_create(
+        initial_config_path: PathBuf,
+        painting: &Painting,
+    ) -> Result<Canvas, std::io::Error> {
+        let canvas = match initial_config_path.try_exists() {
+            Ok(true) => Canvas::load_canvas(&initial_config_path)?,
+            Ok(false) => Canvas::new(painting.width(), painting.height()),
+            Err(e) => return Err(e),
+        };
 
         Ok(canvas)
     }
