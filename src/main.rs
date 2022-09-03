@@ -1,6 +1,10 @@
 extern crate derive_more;
 
-use std::path::{self, Path, PathBuf};
+use std::{
+    ffi::OsStr,
+    fs::DirEntry,
+    path::{Path, PathBuf},
+};
 
 use clap::Parser;
 
@@ -11,6 +15,7 @@ use solvers::{create_solver, SOLVERS};
 mod block;
 mod canvas;
 mod color;
+mod dto;
 mod gui;
 mod moves;
 mod painting;
@@ -35,7 +40,13 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
         let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
 
         println!("Processing {:?}", solution_painting_filename);
-        let painting = Painting::load(&problem_path);
+        let painting = Painting::load(problem_path);
+        let initial_config_path = problem_path.with_extension("json");
+        if let Ok(true) = initial_config_path.try_exists() {
+            let _canvas = canvas::Canvas::load_canvas(&initial_config_path)?;
+            // TODO work in progress
+            // println!("{:?}", canvas);
+        }
 
         for solver_name in solvers {
             let solver = create_solver(solver_name);
@@ -69,10 +80,16 @@ fn get_problem_paths(args: &Args) -> Result<Vec<PathBuf>, std::io::Error> {
     if let Some(problem) = args.problem.clone() {
         Ok(vec![PathBuf::from(&problem)])
     } else if args.batch {
-        let paths: Result<Vec<PathBuf>, _> = std::fs::read_dir("./problems")?
-            .map(|f_res| f_res.map(|f| f.path()))
+        let paths: Vec<PathBuf> = std::fs::read_dir("./problems")?
+            .collect::<Result<Vec<DirEntry>, _>>()?
+            .iter()
+            .filter_map(|f| match f.path().extension() {
+                Some(ext) if ext == OsStr::new("png") => Some(f.path()),
+                _ => None,
+            })
             .collect();
-        paths
+
+        Ok(paths)
     } else {
         Ok(vec![PathBuf::from("./problems/3.png")])
     }

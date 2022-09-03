@@ -1,10 +1,11 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
 use image::{Rgba, RgbaImage};
 
 use crate::{
     block::{Block, BlockId, ComplexBlock, Point, Rect, SimpleBlock},
     color::Color,
+    dto::CanvasDto,
     painting::Painting,
 };
 
@@ -97,6 +98,18 @@ impl Canvas {
         }
 
         Painting::from_image(img)
+    }
+
+    // TODO impl from trait instead
+    pub fn load_canvas(path: &Path) -> std::io::Result<Self> {
+        let txt = std::fs::read_to_string(path)?;
+        let dto: CanvasDto = serde_json::from_str(&txt)?;
+        let mut canvas = Canvas::new(dto.width, dto.height);
+        dto.blocks
+            .iter()
+            .for_each(|bdto| canvas.put_block(bdto.into()));
+
+        Ok(canvas)
     }
 }
 

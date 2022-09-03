@@ -1,4 +1,4 @@
-use crate::color::Color;
+use crate::{color::Color, dto::BlockDto};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Point {
@@ -141,6 +141,23 @@ impl From<SimpleBlock> for Block {
 impl From<ComplexBlock> for Block {
     fn from(b: ComplexBlock) -> Self {
         Block::Complex(b)
+    }
+}
+
+impl From<&BlockDto> for Block {
+    fn from(dto: &BlockDto) -> Self {
+        let BlockDto {
+            block_id,
+            bottom_left: [bl_x, bl_y],
+            top_right: [tr_x, tr_y],
+            color: [r, g, b, a],
+        } = dto;
+
+        Block::Simple(SimpleBlock::new(
+            block_id.clone(),
+            Rect::new(Point::new(*bl_x, *bl_y), Point::new(*tr_x, *tr_y)),
+            Color::new(*r, *g, *b, *a),
+        ))
     }
 }
 
