@@ -1,6 +1,6 @@
 {
-  "solver_name": "simple",
-  "total_score": 91360,
-  "score": 71264,
-  "solution_cost": 20096
+  "solver_name": "swapper",
+  "total_score": 67252,
+  "score": 62752,
+  "solution_cost": 4500
 }
