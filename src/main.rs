@@ -1,5 +1,7 @@
 extern crate derive_more;
 
+use std::path::{self, Path, PathBuf};
+
 use clap::Parser;
 
 use gui::gui_main;
@@ -26,9 +28,8 @@ struct Args {
     solver: Option<String>,
 }
 
-fn solve(solvers: &[&str]) -> std::io::Result<()> {
-    for file in std::fs::read_dir("./problems")? {
-        let problem_path = file?.path();
+fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
+    for problem_path in problem_paths {
         let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
         solution_filename.push(".txt");
         let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
@@ -64,19 +65,46 @@ fn solve(solvers: &[&str]) -> std::io::Result<()> {
     Ok(())
 }
 
+fn get_problem_paths(args: &Args) -> Result<Vec<PathBuf>, std::io::Error> {
+    if let Some(problem) = args.problem.clone() {
+        Ok(vec![PathBuf::from(&problem)])
+    } else if args.batch {
+        let paths: Result<Vec<PathBuf>, _> = std::fs::read_dir("./problems")?
+            .map(|f_res| f_res.map(|f| f.path()))
+            .collect();
+        paths
+    } else {
+        Ok(vec![PathBuf::from("./problems/3.png")])
+    }
+}
+
+fn get_solvers(args: &Args) -> Option<Vec<String>> {
+    if let Some(solver) = args.solver.clone() {
+        Some(vec![solver])
+    } else if args.batch {
+        Some(SOLVERS.iter().map(|s| s.to_string()).collect())
+    } else {
+        None
+    }
+}
+
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
-    if args.batch {
-        solve(SOLVERS)?;
-    } else if let Some(solver) = args.solver {
-        solve(&[&solver])?;
-    } else {
-        let problem = match args.problem {
-            Some(path) => path,
-            None => "./problems/3.png".to_owned(),
-        };
-        gui_main(&std::path::PathBuf::from(problem));
+    let problem_paths_buf = get_problem_paths(&args)?;
+    let problem_paths: Vec<&Path> = problem_paths_buf
+        .iter()
+        .map(|path| path.as_path())
+        .collect();
+
+    let solvers = get_solvers(&args);
+
+    match (&problem_paths[..], solvers) {
+        ([problem_path], None) => {
+            gui_main(&std::path::PathBuf::from(problem_path));
+            Ok(())
+        }
+        (paths, Some(solvers)) => solve(&solvers, &paths),
+        (_, None) => panic!("No problem paths and solvers provided"),
     }
-    Ok(())
 }
