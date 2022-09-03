@@ -83,13 +83,8 @@ impl Canvas {
         }
     }
 
-    // TODO: change to iterate instead of creating a vec
-    pub fn blocks_iter(&self) -> Vec<&Block> {
-        let mut blocks = vec![];
-        for b in self.blocks.values() {
-            blocks.push(b);
-        }
-        blocks
+    pub fn blocks_iter(&self) -> impl Iterator<Item = &Block> {
+        self.blocks.values().into_iter()
     }
 
     pub fn hit_test(&self, x: u32, y: u32) -> BlockId {
