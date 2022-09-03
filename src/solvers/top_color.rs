@@ -16,21 +16,8 @@ impl Solver for TopColor {
         canvas: &mut crate::canvas::Canvas,
         painting: &crate::painting::Painting,
     ) -> (Vec<Move>, crate::moves::Cost) {
-        let mut colors: HashMap<Color, u32> = HashMap::new();
-
-        for x in 0..painting.width() {
-            for y in 0..painting.height() {
-                let pixel = painting.get_color(x, y);
-                match colors.get_mut(&pixel) {
-                    Some(count) => {
-                        *count += 1;
-                    }
-                    None => {
-                        colors.insert(pixel, 0);
-                    }
-                }
-            }
-        }
+        let block = canvas.get_block(&"0".to_owned()).unwrap();
+        let colors = painting.count_colors(block.rect());
 
         let (top_color, top_color_count) = colors
             .into_iter()

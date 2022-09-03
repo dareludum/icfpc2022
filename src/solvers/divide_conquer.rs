@@ -35,17 +35,7 @@ impl DivideConquerSolver {
         let block = canvas.get_block(id).unwrap();
         let r = block.rect();
         if r.width() < SMALLEST_SIZE || r.height() < SMALLEST_SIZE {
-            let mut counts = HashMap::new();
-            for x in r.x()..r.top_right.x {
-                for y in r.y()..r.top_right.y {
-                    let color = painting.get_color(x, y);
-                    if let Some(v) = counts.get_mut(&color) {
-                        *v += 1;
-                    } else {
-                        counts.insert(color, 0);
-                    }
-                }
-            }
+            let counts = painting.count_colors(r);
             let best_color = counts.into_iter().max_by_key(|(_, v)| *v).unwrap().0;
 
             let mov = Move::Color(id.to_owned(), best_color);

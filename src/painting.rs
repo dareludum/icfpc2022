@@ -1,6 +1,7 @@
-use crate::block::Color;
+use crate::block::{Color, Rect};
 use crate::moves::Cost;
 use image::RgbaImage;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -33,6 +34,21 @@ impl Painting {
 
     pub fn get_color(&self, x: u32, y: u32) -> Color {
         self.image.get_pixel(x, y).into()
+    }
+
+    pub fn count_colors(&self, r: &Rect) -> HashMap<Color, u32> {
+        let mut counts = HashMap::new();
+        for x in r.x()..r.top_right.x {
+            for y in r.y()..r.top_right.y {
+                let color = self.get_color(x, y);
+                if let Some(v) = counts.get_mut(&color) {
+                    *v += 1;
+                } else {
+                    counts.insert(color, 0);
+                }
+            }
+        }
+        counts
     }
 
     pub fn calculate_score(&self, target: &Painting) -> Cost {
