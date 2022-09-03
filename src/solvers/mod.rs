@@ -41,6 +41,7 @@ pub const SOLVERS: &[&str] = &[
     "divide_conquer",
     "no_op",
     "simple",
+    "simple_no_x",
     "top_color",
 ];
 
@@ -49,7 +50,12 @@ pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
         "annealing" => Box::new(annealing::Annealing {}),
         "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
         "no_op" => Box::new(no_op::NoOp {}),
-        "simple" => Box::new(simple::Simple {}),
+        "simple" => Box::new(simple::Simple {
+            allow_cross_cut: true,
+        }),
+        "simple_no_x" => Box::new(simple::Simple {
+            allow_cross_cut: false,
+        }),
         "top_color" => Box::new(top_color::TopColor {}),
         n => panic!("Unknown solver `{}`", n),
     }

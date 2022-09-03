@@ -9,11 +9,17 @@ use crate::{
 
 use super::Solver;
 
-pub struct Simple;
+pub struct Simple {
+    pub allow_cross_cut: bool,
+}
 
 impl Solver for Simple {
     fn name(&self) -> &'static str {
-        "simple"
+        if self.allow_cross_cut {
+            "simple"
+        } else {
+            "simple_no_x"
+        }
     }
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
@@ -112,15 +118,17 @@ impl Simple {
                 }
             }
         }
-        let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
-        if (cross_cut_cost.0 as i64) < budget {
-            for x in (XSTEP..r.width() - 1).step_by(XSTEP as usize) {
-                for y in (XSTEP..r.height() - 1).step_by(XSTEP as usize) {
-                    let mov = Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y);
-                    let result = self.assess_move(&mov, canvas, painting);
-                    if result < best_result {
-                        best_result = result;
-                        best_move = Some(mov);
+        if self.allow_cross_cut {
+            let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
+            if (cross_cut_cost.0 as i64) < budget {
+                for x in (XSTEP..r.width() - 1).step_by(XSTEP as usize) {
+                    for y in (XSTEP..r.height() - 1).step_by(XSTEP as usize) {
+                        let mov = Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y);
+                        let result = self.assess_move(&mov, canvas, painting);
+                        if result < best_result {
+                            best_result = result;
+                            best_move = Some(mov);
+                        }
                     }
                 }
             }
