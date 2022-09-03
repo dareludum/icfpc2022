@@ -12,13 +12,11 @@ mod tests;
 mod color;
 mod cost;
 mod cut;
-mod history_tester;
 mod merge;
 mod swap;
 mod undo;
 
 pub use cost::*;
-pub use history_tester::HistoryTester;
 pub use undo::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -89,5 +87,17 @@ impl Move {
             Move::Swap(ref block_a, ref block_b) => swap(self, canvas, block_a, block_b),
             Move::Merge(ref block_a, ref block_b) => merge(self, canvas, block_a, block_b),
         }
+    }
+
+    pub fn checked_apply(&self, canvas: &mut Canvas) -> Result<Cost, MoveError> {
+        // make a copy of the canvas before the move
+        let ref_canvas = canvas.clone();
+        let (mov_cost, mov_undo) = self.apply(canvas)?;
+
+        // check that applying undo to the current state reverts to the previous state
+        let mut cur_canvas = canvas.clone();
+        mov_undo.apply(&mut cur_canvas);
+        assert_eq!(&ref_canvas, &cur_canvas, "failed to undo {:?}", self);
+        Ok(mov_cost)
     }
 }

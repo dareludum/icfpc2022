@@ -1,6 +1,5 @@
 use super::*;
 use crate::block::*;
-use crate::moves::HistoryTester;
 
 ///  0,32             16,32    24,32    32,32
 ///   +-----------------+--------+--------+
@@ -39,13 +38,12 @@ fn make_test_canvas() -> Canvas {
 
 #[test]
 fn test_complicated() -> Result<(), MoveError> {
-    let mut tester = HistoryTester::new(Canvas::new(32, 32));
-    tester.apply(Move::LineCut("0".to_owned(), Orientation::Vertical, 16))?;
-    tester.apply(Move::PointCut("0.1".to_owned(), 24, 16))?;
-    tester.apply(Move::Merge("0.1.2".to_owned(), "0.1.3".to_owned()))?;
+    let mut canvas = Canvas::new(32, 32);
+    Move::LineCut("0".to_owned(), Orientation::Vertical, 16).checked_apply(&mut canvas)?;
+    Move::PointCut("0.1".to_owned(), 24, 16).checked_apply(&mut canvas)?;
+    Move::Merge("0.1.2".to_owned(), "0.1.3".to_owned()).checked_apply(&mut canvas)?;
     let ref_canvas = make_test_canvas();
-    assert_eq!(tester.get_canvas(), &ref_canvas);
-    tester.validate_history();
+    assert_eq!(&canvas, &ref_canvas);
     Ok(())
 }
 
@@ -53,10 +51,7 @@ fn test_complicated() -> Result<(), MoveError> {
 fn line_cut() -> Result<(), MoveError> {
     for orientation in [Orientation::Horizontal, Orientation::Vertical] {
         let mut canvas = Canvas::new(32, 32);
-        let bare_canvas = canvas.clone();
-        let (_cost, undo) = Move::LineCut("0".to_owned(), orientation, 16).apply(&mut canvas)?;
-        undo.apply(&mut canvas);
-        assert_eq!(canvas, bare_canvas);
+        Move::LineCut("0".to_owned(), orientation, 16).checked_apply(&mut canvas)?;
     }
     Ok(())
 }
