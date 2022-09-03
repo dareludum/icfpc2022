@@ -1,4 +1,4 @@
-use crate::block::BlockId;
+use crate::block::{Block, BlockId};
 use crate::canvas::Canvas;
 use crate::moves::{Cost, Move, MoveError, UndoMove};
 
@@ -27,7 +27,14 @@ pub fn swap(
         )));
     }
 
-    std::mem::swap(block_a.get_id_mut(), block_b.get_id_mut());
+    if let (&mut Block::Simple(ref mut b_a), &mut Block::Simple(ref mut b_b)) =
+        (&mut block_a, &mut block_b)
+    {
+        std::mem::swap(&mut b_a.c, &mut b_b.c);
+    } else {
+        todo!("Swap for complex blocks is not implemented")
+    }
+
     canvas.put_block(block_a);
     canvas.put_block(block_b);
     Ok((
