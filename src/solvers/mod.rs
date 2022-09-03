@@ -1,6 +1,7 @@
 mod annealing;
 mod divide_conquer;
 mod no_op;
+mod simple;
 mod top_color;
 
 use crate::{
@@ -35,13 +36,20 @@ pub trait Solver {
     }
 }
 
-pub const SOLVERS: &[&str] = &["annealing", "no_op", "divide_conquer", "top_color"];
+pub const SOLVERS: &[&str] = &[
+    "annealing",
+    "divide_conquer",
+    "no_op",
+    "simple",
+    "top_color",
+];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {
         "annealing" => Box::new(annealing::Annealing {}),
-        "no_op" => Box::new(no_op::NoOp {}),
         "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
+        "no_op" => Box::new(no_op::NoOp {}),
+        "simple" => Box::new(simple::Simple {}),
         "top_color" => Box::new(top_color::TopColor {}),
         n => panic!("Unknown solver `{}`", n),
     }
