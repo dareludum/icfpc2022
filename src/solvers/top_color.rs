@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use crate::{block::Color, moves::Move};
+use crate::moves::Move;
 
 use super::Solver;
 
@@ -19,15 +17,15 @@ impl Solver for TopColor {
         let block = canvas.get_block(&"0".to_owned()).unwrap();
         let colors = painting.count_colors(block.rect());
 
-        let (top_color, top_color_count) = colors
+        let (top_color, _top_color_count) = colors
             .into_iter()
             .max_by(|(_, count1), (_, count2)| count1.cmp(count2))
             .expect("TopColor solver: colors hash map is empty");
 
-        println!(
-            "TopColor solver: color={} with {} pixels",
-            top_color, top_color_count
-        );
+        // println!(
+        //     "TopColor solver: color={} with {} pixels",
+        //     top_color, top_color_count
+        // );
 
         let mov_id = "0".to_string();
         let mov = Move::Color(mov_id, top_color);

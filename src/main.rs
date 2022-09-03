@@ -32,7 +32,7 @@ fn solve(solvers: &[&str]) -> std::io::Result<()> {
         solution_filename.push(".txt");
         let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
 
-        println!("Processing {:?}", problem_path);
+        println!("Processing {:?}", solution_painting_filename);
         let painting = Painting::load(&problem_path);
 
         for solver_name in solvers {
