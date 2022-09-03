@@ -10,6 +10,7 @@ use clap::Parser;
 
 use gui::gui_main;
 use painting::Painting;
+use rayon::prelude::*;
 use solvers::{create_solver, SOLVERS};
 
 use crate::canvas::Canvas;
@@ -36,42 +37,50 @@ struct Args {
 }
 
 fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
-    for problem_path in problem_paths {
-        let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
-        solution_filename.push(".txt");
-        let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
+    problem_paths
+        .par_iter()
+        .map(|problem_path| {
+            let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
+            solution_filename.push(".txt");
+            let solution_painting_filename = problem_path
+                .file_name()
+                .unwrap()
+                .to_str()
+                .expect("filename is not unicode compatible");
 
-        println!("Processing {:?}", solution_painting_filename);
-        let painting = Painting::load(problem_path);
+            let painting = Painting::load(problem_path);
 
-        for solver_name in solvers {
-            let solver = create_solver(solver_name);
+            for solver_name in solvers {
+                let solver = create_solver(solver_name);
 
-            let mut solution_dir = std::path::PathBuf::from("./solutions/");
-            solution_dir.push(solver.name());
-            std::fs::create_dir_all(&solution_dir)?;
+                let mut solution_dir = std::path::PathBuf::from("./solutions/");
+                solution_dir.push(solver.name());
+                std::fs::create_dir_all(&solution_dir)?;
 
-            let initial_config_path = problem_path.with_extension("json");
-            let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
-            let solution = solver.solve(&mut canvas, &painting);
-            program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
-            solution
-                .result
-                .write_to_file(&solution_dir.join(&solution_painting_filename));
+                let initial_config_path = problem_path.with_extension("json");
+                let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
+                let solution = solver.solve(&mut canvas, &painting);
+                program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
+                solution
+                    .result
+                    .write_to_file(&solution_dir.join(&solution_painting_filename));
 
-            let score = painting.calculate_score(&solution.result);
-            let total = score + solution.cost;
-            println!(
-                "  {}: {} ({} + {})",
-                solver.name(),
-                total.0,
-                score.0,
-                solution.cost.0
-            );
-        }
-    }
+                let score = painting.calculate_score(&solution.result);
+                let total = score + solution.cost;
 
-    Ok(())
+                println!(
+                    "{:10}{}: {} ({} + {})",
+                    format!("[{}]", solution_painting_filename),
+                    solver.name(),
+                    total.0,
+                    score.0,
+                    solution.cost.0
+                );
+            }
+
+            Ok(())
+        })
+        .collect::<std::io::Result<()>>()
 }
 
 fn get_problem_paths(args: &Args) -> Result<Vec<PathBuf>, std::io::Error> {
