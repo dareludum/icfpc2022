@@ -12,7 +12,7 @@ impl Move {
         let mut block_a = canvas.remove_move_block(block_a_id)?;
         let mut block_b = canvas.remove_move_block(block_b_id)?;
 
-        let cost = self.compute_cost(block_a.size(), canvas.area);
+        let cost = Cost::compute(self, block_a.size(), canvas.area);
 
         if block_a.rect().width() != block_b.rect().width()
             || block_a.rect().height() != block_b.rect().height()

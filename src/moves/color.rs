@@ -12,7 +12,7 @@ impl Move {
     ) -> Result<(Cost, UndoMove), MoveError> {
         let canvas_area = canvas.area;
         let block = canvas.get_move_block_mut(block_id)?;
-        let cost = self.compute_cost(block.size(), canvas_area);
+        let cost = Cost::compute(self, block.size(), canvas_area);
         let (block_id, rect) = match block {
             // if the block is simple, change its color
             Block::Simple(ref mut simple) => {

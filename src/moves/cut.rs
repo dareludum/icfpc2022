@@ -59,7 +59,7 @@ impl Move {
     ) -> Result<(Cost, UndoMove), MoveError> {
         let mut builder = UndoCutBuilder::new();
         let block = builder.remove(canvas, block_id)?;
-        let cost = self.compute_cost(block.size(), canvas.area);
+        let cost = Cost::compute(self, block.size(), canvas.area);
         if !(block.rect().bottom_left.x <= cut_offset_x && cut_offset_x < block.rect().top_right.x)
         {
             return Err(MoveError::LogicError(format!(
@@ -116,7 +116,7 @@ impl Move {
     ) -> Result<(Cost, UndoMove), MoveError> {
         let mut builder = UndoCutBuilder::new();
         let block = builder.remove(canvas, block_id)?;
-        let cost = self.compute_cost(block.size(), canvas.area);
+        let cost = Cost::compute(self, block.size(), canvas.area);
         if !(block.rect().bottom_left.y <= cut_offset_y && cut_offset_y < block.rect().top_right.y)
         {
             return Err(MoveError::LogicError(format!(
@@ -175,7 +175,7 @@ impl Move {
         let cut_point = Point::new(cut_x, cut_y);
         let mut builder = UndoCutBuilder::new();
         let block = builder.remove(canvas, block_id)?;
-        let cost = self.compute_cost(block.size(), canvas.area);
+        let cost = Cost::compute(self, block.size(), canvas.area);
 
         if !block.rect().contains(cut_x, cut_y) {
             return Err(MoveError::LogicError(format!(

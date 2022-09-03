@@ -12,7 +12,11 @@ impl Move {
     ) -> Result<(Cost, UndoMove), MoveError> {
         let block_a = canvas.remove_move_block(block_a_id)?;
         let block_b = canvas.remove_move_block(block_b_id)?;
-        let cost = self.compute_cost(std::cmp::max(block_a.size(), block_b.size()), canvas.area);
+        let cost = Cost::compute(
+            self,
+            std::cmp::max(block_a.size(), block_b.size()),
+            canvas.area,
+        );
         let a_bottom_left = block_a.rect().bottom_left;
         let b_bottom_left = block_b.rect().bottom_left;
         let a_top_right = block_a.rect().top_right;
