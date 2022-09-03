@@ -187,7 +187,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
             if let Some(mov) = mov.clone() {
-                if let Some(applied_move) = mov.apply(&mut canvas).ok() {
+                if let Ok(applied_move) = mov.apply(&mut canvas) {
                     b_id = None;
                     marked_block = None;
                     moves.push(applied_move);

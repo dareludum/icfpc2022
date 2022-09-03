@@ -128,7 +128,7 @@ fn main() -> std::io::Result<()> {
             gui_main(&std::path::PathBuf::from(problem_path));
             Ok(())
         }
-        (paths, Some(solvers)) => solve(&solvers, &paths),
+        (paths, Some(solvers)) => solve(&solvers, paths),
         (_, None) => panic!("No problem paths and solvers provided"),
     }
 }

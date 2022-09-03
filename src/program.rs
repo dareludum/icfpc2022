@@ -1,3 +1,4 @@
+use std::fmt::Write as _;
 use std::{fs, path::Path};
 
 use crate::{color::Color, moves::Move};
@@ -21,7 +22,7 @@ pub fn generate_isl(moves: &Vec<Move>) -> String {
 
     for mov in moves {
         let mov_isl = to_isl(mov);
-        isl += &format!("{mov_isl}\n");
+        writeln!(isl, "{mov_isl}").expect("can't write to isl string");
     }
 
     isl

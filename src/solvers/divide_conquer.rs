@@ -74,7 +74,8 @@ impl DivideConquerSolver {
 
         let block = canvas
             .get_block(id)
-            .expect(&format!("DivideConquerSolver: Can't get block {id}"));
+            .unwrap_or_else(|| panic!("DivideConquerSolver: Can't get block {id}"));
+
         let r = block.rect();
         // This is recalculated twice, essentially :(
         let counts = painting.count_colors(r);
