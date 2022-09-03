@@ -96,7 +96,7 @@ impl Canvas {
             }
         }
 
-        Painting { image: img }
+        Painting::from_image(img)
     }
 }
 
@@ -112,7 +112,7 @@ fn render_simple_block(img: &mut RgbaImage, block: &SimpleBlock) {
 
     for x in bottom_left.x..top_right.x {
         for y in bottom_left.y..top_right.y {
-            img.put_pixel(x, y, Rgba([*r, *g, *b, *a]))
+            img.put_pixel(x, img.height() - 1 - y, Rgba([*r, *g, *b, *a]))
         }
     }
 }

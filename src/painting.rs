@@ -25,10 +25,14 @@ impl From<&Rgba<u8>> for Color {
 
 #[derive(Debug)]
 pub struct Painting {
-    pub image: RgbaImage,
+    image: RgbaImage,
 }
 
 impl Painting {
+    pub fn from_image(image: RgbaImage) -> Self {
+        Painting { image }
+    }
+
     pub fn load(path: &std::path::Path) -> Self {
         let file = match File::open(&path) {
             Err(why) => panic!("couldn't open {:?}: {}", path, why),
@@ -51,7 +55,7 @@ impl Painting {
     }
 
     pub fn get_color(&self, x: u32, y: u32) -> Color {
-        self.image.get_pixel(x, y).into()
+        self.image.get_pixel(x, self.height() - 1 - y).into()
     }
 
     pub fn count_colors(&self, r: &Rect) -> HashMap<Color, u32> {
