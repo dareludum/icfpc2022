@@ -1,3 +1,4 @@
+mod annealing;
 mod divide_conquer;
 mod no_op;
 mod top_color;
@@ -34,10 +35,11 @@ pub trait Solver {
     }
 }
 
-pub const SOLVERS: &[&str] = &["no_op", "divide_conquer", "top_color"];
+pub const SOLVERS: &[&str] = &["annealing", "no_op", "divide_conquer", "top_color"];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {
+        "annealing" => Box::new(annealing::Annealing {}),
         "no_op" => Box::new(no_op::NoOp {}),
         "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
         "top_color" => Box::new(top_color::TopColor {}),

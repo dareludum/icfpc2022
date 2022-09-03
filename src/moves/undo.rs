@@ -6,7 +6,7 @@ use crate::moves::Move;
 #[derive(Debug, Clone)]
 pub struct UndoMove {
     expected_gen: u32,
-    operation: UndoMoveOp,
+    pub operation: UndoMoveOp,
 }
 
 #[derive(Debug, Clone)]

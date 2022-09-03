@@ -50,6 +50,15 @@ pub struct AppliedMove {
     pub undo: UndoMove,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum MoveType {
+    LineCut,
+    PointCut,
+    Color,
+    Swap,
+    Merge,
+}
+
 impl Canvas {
     fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
         match self.get_block_mut(block_id) {
@@ -109,9 +118,21 @@ impl Move {
 
         // check that applying undo to the current state reverts to the previous state
         let mut cur_canvas = canvas.clone();
-        applied_move.clone().undo(&mut cur_canvas);
+        applied_move.undo.clone().apply(&mut cur_canvas);
         assert_eq!(&ref_canvas, &cur_canvas, "failed to undo");
         Ok(applied_move)
+    }
+
+    // TODO: refactor this duplication :/
+    pub fn get_cost(typ: MoveType, block_area: u32, canvas_area: u32) -> Cost {
+        let base_cost = match typ {
+            MoveType::LineCut => 7.0,
+            MoveType::PointCut => 10.0,
+            MoveType::Color => 5.0,
+            MoveType::Swap => 3.0,
+            MoveType::Merge => 1.0,
+        };
+        Cost((base_cost * (canvas_area as f64 / block_area as f64)).round() as u64)
     }
 }
 

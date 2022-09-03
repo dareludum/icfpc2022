@@ -65,6 +65,10 @@ impl Rect {
         self.top_right.y - self.bottom_left.y
     }
 
+    pub fn area(&self) -> u32 {
+        self.width() * self.height()
+    }
+
     pub fn contains(&self, x: u32, y: u32) -> bool {
         x >= self.bottom_left.x
             && x < self.top_right.x

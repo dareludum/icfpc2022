@@ -9,6 +9,7 @@ edition = "2021"
 clap = { version = "3.2.20", features = ["derive"] }
 derive_more = "0.99.17"
 image = { version = "0.24.3", default-features = false, features = ["png"] }
+rand = "0.8.5"
 raylib = { version = "3.7", git = "https://github.com/deltaphc/raylib-rs"}
 rayon = "1.5.3"
 serde = { version = "1.0.144", features = ["derive"] }
