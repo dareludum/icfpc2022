@@ -21,39 +21,55 @@ struct Args {
     batch: bool,
     #[clap(short, long, value_parser)]
     problem: Option<String>,
+    #[clap(short, long)]
+    solver: Option<String>,
+}
+
+fn solve(solvers: &[&str]) -> std::io::Result<()> {
+    for file in std::fs::read_dir("./problems")? {
+        let problem_path = file?.path();
+        let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
+        solution_filename.push(".txt");
+        let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
+
+        println!("Processing {:?}", problem_path);
+        let painting = Painting::load(&problem_path);
+
+        for solver_name in solvers {
+            let solver = create_solver(solver_name);
+
+            let mut solution_dir = std::path::PathBuf::from("./solutions/");
+            solution_dir.push(solver.name());
+            std::fs::create_dir_all(&solution_dir)?;
+
+            let solution = solver.solve(&painting);
+            program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
+            solution
+                .result
+                .write_to_file(&solution_dir.join(&solution_painting_filename));
+
+            let score = painting.calculate_score(&solution.result);
+            let total = score + solution.cost;
+            println!(
+                "  {}: {} ({} + {})",
+                solver.name(),
+                total.0,
+                score.0,
+                solution.cost.0
+            );
+        }
+    }
+
+    Ok(())
 }
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
     if args.batch {
-        for file in std::fs::read_dir("./problems")? {
-            let problem_path = file?.path();
-            let mut solution_filename = problem_path.file_stem().unwrap().to_owned();
-            solution_filename.push(".txt");
-            let solution_painting_filename = problem_path.file_name().unwrap().to_owned();
-
-            println!("Processing {:?}", problem_path);
-            let painting = Painting::load(&problem_path);
-
-            for solver_name in SOLVERS {
-                let solver = create_solver(solver_name);
-
-                let mut solution_dir = std::path::PathBuf::from("./solutions/");
-                solution_dir.push(solver.name());
-                std::fs::create_dir_all(&solution_dir)?;
-
-                let solution = solver.solve(&painting);
-                program::write_to_file(&solution_dir.join(&solution_filename), &solution.moves)?;
-                solution
-                    .result
-                    .write_to_file(&solution_dir.join(&solution_painting_filename));
-
-                let score = painting.calculate_score(&solution.result);
-                let total = score + solution.cost;
-                println!("  {}: {} ({} + {})", solver.name(), total.0, score.0, solution.cost.0);
-            }
-        }
+        solve(SOLVERS)?;
+    } else if let Some(solver) = args.solver {
+        solve(&[&solver])?;
     } else {
         let problem = match args.problem {
             Some(path) => path,
