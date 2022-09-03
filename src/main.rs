@@ -73,24 +73,38 @@ fn copy_output(
 
 fn get_best_solution(
     current_solution: &SolvedSolutionDto,
-    best_solution_path: &PathBuf,
+    base_dir: &PathBuf,
+    problem_num: &str,
 ) -> std::io::Result<(SolvedSolutionDto, bool)> {
-    best_solution_path
-        .try_exists()
-        .and_then(|exists| match exists {
-            true => {
-                let current_best_json = fs::read_to_string(best_solution_path)?;
-                let current_best: SolvedSolutionDto =
-                    serde_json::from_str(&current_best_json).expect("Deserialization error");
-
-                if current_solution.total_score < current_best.total_score {
-                    Ok((current_solution.clone(), true))
-                } else {
-                    Ok((current_best, false))
-                }
+    read_current_best(base_dir, problem_num).map(|best| match best {
+        Some(current_best) => {
+            if current_solution.total_score < current_best.total_score {
+                (current_solution.clone(), true)
+            } else {
+                (current_best, false)
             }
-            false => Ok((current_solution.clone(), true)),
-        })
+        }
+        None => (current_solution.clone(), true),
+    })
+}
+
+fn read_current_best(
+    base_dir: &PathBuf,
+    problem_num: &str,
+) -> std::io::Result<Option<SolvedSolutionDto>> {
+    let meta_fname = &format!("{problem_num}_meta.json");
+    let best_solution_filename = base_dir.join("best").join(meta_fname);
+
+    match best_solution_filename.try_exists() {
+        Ok(false) => Ok(None),
+        Ok(true) => {
+            let current_best_json = fs::read_to_string(best_solution_filename)?;
+            let current_best: SolvedSolutionDto =
+                serde_json::from_str(&current_best_json).expect("Deserialization error");
+            Ok(Some(current_best))
+        }
+        Err(e) => Err(e),
+    }
 }
 
 fn write_best(
@@ -100,11 +114,9 @@ fn write_best(
 ) -> std::io::Result<()> {
     let target_dir = base_dir.join("best");
     let current_solution_dir = base_dir.join("current").join(solution.solver_name.clone());
-    let meta_fname = &format!("{problem_num}_meta.json");
-    let best_solution_filename = target_dir.join(meta_fname);
 
     std::fs::create_dir_all(&target_dir)?;
-    let best = get_best_solution(solution, &best_solution_filename)?;
+    let best = get_best_solution(solution, &base_dir, problem_num)?;
     match best {
         (_, false) => Ok(()),
         _ => copy_output(current_solution_dir, target_dir, problem_num),
@@ -119,6 +131,12 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
         .map(|problem_path| {
             let problem_num = problem_path.file_stem().unwrap().to_str().unwrap();
             let painting = Painting::load(problem_path);
+            let SolvedSolutionDto {
+                total_score: current_best_total,
+                solver_name: current_best_solver,
+                ..
+            } = read_current_best(&base_solution_dir, problem_num)?
+                .unwrap_or(SolvedSolutionDto::not_solved());
 
             for solver_name in solvers {
                 let solver = create_solver(solver_name);
@@ -155,18 +173,29 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
                 write_best(&base_solution_dir, problem_num, &solution_meta)?;
 
                 println!(
-                    "{:15}{}: {} ({} + {})",
+                    "{:15}{}: {} ({} + {}); best: {} {} {}",
                     format!("[problem {}]", problem_num),
                     solver.name(),
                     total.0,
                     score.0,
-                    solution.cost.0
+                    solution.cost.0,
+                    current_best_solver,
+                    current_best_total,
+                    win_indicator_str(current_best_total, solution_meta.total_score)
                 );
             }
 
             Ok(())
         })
         .collect::<std::io::Result<()>>()
+}
+
+fn win_indicator_str(old: u64, new: u64) -> String {
+    if new < old {
+        "!!! WE ARE WINNING SON !!!".to_string()
+    } else {
+        "".to_string()
+    }
 }
 
 fn get_problem_paths(args: &Args) -> Result<Vec<PathBuf>, std::io::Error> {

@@ -26,3 +26,14 @@ pub struct SolvedSolutionDto {
     pub score: u64,
     pub solution_cost: u64,
 }
+
+impl SolvedSolutionDto {
+    pub fn not_solved() -> Self {
+        SolvedSolutionDto {
+            solver_name: "err_not_solved".to_string(),
+            total_score: u64::MAX,
+            score: u64::MAX,
+            solution_cost: u64::MAX,
+        }
+    }
+}
