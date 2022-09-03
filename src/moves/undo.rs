@@ -57,7 +57,7 @@ impl UndoMove {
                 canvas.put_block(old_block);
             }
             UndoMove::Swap { a_id, b_id } => {
-                Move::Swap(a_id, b_id).apply(canvas);
+                Move::Swap(a_id, b_id).apply(canvas).ok();
             }
             UndoMove::Merge {
                 merged_block_id,

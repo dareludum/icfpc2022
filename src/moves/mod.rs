@@ -69,13 +69,13 @@ pub enum MoveError {
 }
 
 impl Move {
-    pub fn apply(&self, canvas: &mut Canvas) -> Option<(Cost, UndoMove)> {
+    pub fn apply(&self, canvas: &mut Canvas) -> Result<(Cost, UndoMove), MoveError> {
         use color::*;
         use cut::*;
         use merge::*;
         use swap::*;
 
-        let res: Result<(Cost, UndoMove), MoveError> = match *self {
+        match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 line_cut(self, canvas, block, orientation, offset)
             }
@@ -83,7 +83,6 @@ impl Move {
             Move::Color(ref block, c) => color(self, canvas, block, c),
             Move::Swap(ref block_a, ref block_b) => swap(self, canvas, block_a, block_b),
             Move::Merge(ref block_a, ref block_b) => merge(self, canvas, block_a, block_b),
-        };
-        res.ok()
+        }
     }
 }
