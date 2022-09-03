@@ -1,6 +1,6 @@
 use derive_more::{Add, AddAssign};
 
-use std::{arch::x86_64::_SIDD_CMP_EQUAL_ANY, fmt::Display};
+use std::fmt::Display;
 
 use crate::{
     block::{Block, BlockId, Color, ComplexBlock, Point, Rect, SimpleBlock},
@@ -70,9 +70,9 @@ impl UndoCutBuilder {
         canvas.put_block(block)
     }
 
-    pub fn add_original_block(&mut self, block: Block) {
-        self.restore_blocks.push(block);
-    }
+    // pub fn add_original_block(&mut self, block: Block) {
+    //     self.restore_blocks.push(block);
+    // }
 
     fn build(self) -> UndoMove {
         UndoMove::Cut {

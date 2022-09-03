@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    block::{Block, Color, Point, Rect, SimpleBlock},
-    moves::{Cost, Move},
-};
+use crate::{block::Color, moves::Move};
 
 use super::Solver;
 
@@ -24,9 +21,9 @@ impl Solver for TopColor {
         for x in 0..painting.width() {
             for y in 0..painting.height() {
                 let pixel = painting.get_color(x, y);
-                match colors.get(&pixel) {
+                match colors.get_mut(&pixel) {
                     Some(count) => {
-                        colors.insert(pixel, count + 1);
+                        *count += 1;
                     }
                     None => {
                         colors.insert(pixel, 0);

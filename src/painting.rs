@@ -35,10 +35,6 @@ impl Painting {
         self.image.get_pixel(x, y).into()
     }
 
-    pub fn set_color(&mut self, x: u32, y: u32, color: &Color) {
-        self.image.put_pixel(x, y, color.into());
-    }
-
     pub fn calculate_score(&self, target: &Painting) -> Cost {
         if target.width() != self.width() || target.height() != self.height() {
             panic!("comparing two images different in size");
