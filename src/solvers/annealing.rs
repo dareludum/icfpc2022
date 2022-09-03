@@ -23,7 +23,7 @@ impl Solver for Annealing {
         let mut applied_moves = vec![];
         let mut current_move_cost = Cost(0);
         let mut current_painting_score = painting.calculate_score_canvas(canvas);
-        const KMAX: u32 = 1000;
+        const KMAX: u32 = 5000;
         for k in 0..KMAX {
             let t = self.temperature(1.0 - (k as f32 + 1.0) / KMAX as f32);
             let budget = (current_painting_score.0 - current_move_cost.0) as i64;
@@ -63,7 +63,7 @@ impl Annealing {
         budget: i64,
     ) -> Vec<AppliedMove> {
         let viable_moves = self.get_viable_moves(canvas, &moves, budget);
-        let (undo_count, mov, _) = &viable_moves[rand::random::<usize>() % viable_moves.len()];
+        let (undo_count, mov) = &viable_moves[rand::random::<usize>() % viable_moves.len()];
 
         for _ in 0..*undo_count {
             let am = moves.pop().unwrap();
@@ -103,32 +103,23 @@ impl Annealing {
         canvas: &mut Canvas,
         current_moves: &Vec<AppliedMove>,
         mut budget: i64,
-    ) -> Vec<(u32, Move, Cost)> {
-        let mut moves = self.get_moves_for_budget(canvas, budget, 0);
+    ) -> Vec<(u32, Move)> {
+        let mut moves = vec![];
+        if budget > 0 {
+            for b in canvas.blocks_iter() {
+                self.get_moves_for_block(b, canvas, budget, &mut moves, 0);
+            }
+        }
         for i in 0..current_moves.len() {
             let am = &current_moves[current_moves.len() - i - 1];
             budget += am.cost.0 as i64;
-            if let UndoMoveOp::Cut { restore_blocks, .. } = &am.undo.operation {
-                for b in restore_blocks {
-                    self.get_moves_for_block(b, canvas, budget, &mut moves, i as u32 + 1);
+            if budget > 0 {
+                if let UndoMoveOp::Cut { restore_blocks, .. } = &am.undo.operation {
+                    for b in restore_blocks {
+                        self.get_moves_for_block(b, canvas, budget, &mut moves, i as u32 + 1);
+                    }
                 }
             }
-        }
-        moves
-    }
-
-    fn get_moves_for_budget(
-        &self,
-        canvas: &Canvas,
-        budget: i64,
-        undo_count: u32,
-    ) -> Vec<(u32, Move, Cost)> {
-        if budget < 0 {
-            return vec![];
-        }
-        let mut moves = vec![];
-        for b in canvas.blocks_iter() {
-            self.get_moves_for_block(b, canvas, budget, &mut moves, undo_count);
         }
         moves
     }
@@ -138,7 +129,7 @@ impl Annealing {
         b: &Block,
         canvas: &Canvas,
         budget: i64,
-        moves: &mut Vec<(u32, Move, Cost)>,
+        moves: &mut Vec<(u32, Move)>,
         undo_count: u32,
     ) {
         const STEP: usize = 10;
@@ -150,14 +141,12 @@ impl Annealing {
                 moves.push((
                     undo_count,
                     Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x),
-                    linear_cut_cost,
                 ));
             }
             for y in (1..r.height() - 1).step_by(STEP) {
                 moves.push((
                     undo_count,
                     Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y),
-                    linear_cut_cost,
                 ));
             }
         }
@@ -168,7 +157,6 @@ impl Annealing {
                     moves.push((
                         undo_count,
                         Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y),
-                        cross_cut_cost,
                     ));
                 }
             }
