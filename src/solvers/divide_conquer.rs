@@ -1,6 +1,7 @@
 use crate::{
     block::{BlockId, Point},
     canvas::Canvas,
+    color::Color,
     moves::{Cost, Move},
     painting::Painting,
 };
@@ -72,7 +73,7 @@ impl DivideConquerSolver {
         let counts = painting.count_colors(r);
 
         if counts.len() == 1 || r.width() < SMALLEST_SIZE || r.height() < SMALLEST_SIZE {
-            let best_color = counts.into_iter().max_by_key(|(_, v)| *v).unwrap().0;
+            let best_color = Color::find_most_common(&counts);
             let mov = Move::Color(id.to_owned(), best_color);
             *cost += mov.apply(canvas).unwrap().0;
             moves.push(mov);

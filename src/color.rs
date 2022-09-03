@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Color {
@@ -17,5 +17,9 @@ impl Display for Color {
 impl Color {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Color { r, g, b, a }
+    }
+
+    pub fn find_most_common(counts: &HashMap<Color, u32>) -> Self {
+        *counts.iter().max_by_key(|(_, v)| *v).unwrap().0
     }
 }
