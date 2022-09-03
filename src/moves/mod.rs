@@ -89,15 +89,15 @@ impl Move {
         }
     }
 
-    pub fn checked_apply(&self, canvas: &mut Canvas) -> Result<Cost, MoveError> {
+    pub fn checked_apply(&self, canvas: &mut Canvas) -> Result<(Cost, UndoMove), MoveError> {
         // make a copy of the canvas before the move
         let ref_canvas = canvas.clone();
         let (mov_cost, mov_undo) = self.apply(canvas)?;
 
         // check that applying undo to the current state reverts to the previous state
         let mut cur_canvas = canvas.clone();
-        mov_undo.apply(&mut cur_canvas);
+        mov_undo.clone().apply(&mut cur_canvas);
         assert_eq!(&ref_canvas, &cur_canvas, "failed to undo {:?}", self);
-        Ok(mov_cost)
+        Ok((mov_cost, mov_undo))
     }
 }
