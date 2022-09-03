@@ -88,7 +88,7 @@ impl Canvas {
 
         for (_, block) in self.blocks.iter() {
             match block {
-                Block::Simple(simple_block) => render_simple_block(&mut img, &simple_block),
+                Block::Simple(simple_block) => render_simple_block(&mut img, simple_block),
                 Block::Complex(ComplexBlock { bs: blocks, .. }) => {
                     blocks.iter().for_each(|b| render_simple_block(&mut img, b))
                 }

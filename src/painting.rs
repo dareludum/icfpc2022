@@ -18,17 +18,17 @@ impl Painting {
         let mut reader = BufReader::new(file);
         let dyn_img =
             image::load(&mut reader, image::ImageFormat::Png).expect("image loading failed");
-        return Painting {
+        Painting {
             image: dyn_img.into_rgba8(),
-        };
+        }
     }
 
     pub fn width(&self) -> u32 {
-        return self.image.width();
+        self.image.width()
     }
 
     pub fn height(&self) -> u32 {
-        return self.image.height();
+        self.image.height()
     }
 
     pub fn get_color(&self, x: u32, y: u32) -> Color {
@@ -54,7 +54,7 @@ impl Painting {
                 pixel_score.sqrt()
             })
             .sum::<f64>();
-        return Cost((image_score * 0.005) as u64);
+        Cost((image_score * 0.005) as u64)
     }
 
     pub fn write_to_file(&self, path: &std::path::Path) {

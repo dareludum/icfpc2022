@@ -29,7 +29,7 @@ pub trait Solver {
     }
 }
 
-pub const SOLVERS: &[&'static str] = &["no_op", "divide_conquer", "top_color"];
+pub const SOLVERS: &[&str] = &["no_op", "divide_conquer", "top_color"];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {

@@ -560,7 +560,7 @@ impl Move {
             };
             let new_id = canvas.next_merge_id();
             let undo = UndoMove::Merge {
-                merged_block_id: new_id.clone(),
+                merged_block_id: new_id,
                 initial_a: block_a.clone(),
                 initial_b: block_b.clone(),
             };
