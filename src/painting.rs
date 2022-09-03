@@ -73,6 +73,29 @@ impl Painting {
         counts
     }
 
+    pub fn calculate_average_color(&self, rect: &Rect) -> Color {
+        let total_pixels = rect.area() as u64;
+        let mut r = 0u64;
+        let mut g = 0u64;
+        let mut b = 0u64;
+        let mut a = 0u64;
+        for x in rect.x()..rect.top_right.x {
+            for y in rect.y()..rect.top_right.y {
+                let c = self.get_color(x, y);
+                r += c.r as u64;
+                g += c.g as u64;
+                b += c.b as u64;
+                a += c.a as u64;
+            }
+        }
+        Color {
+            r: (r / total_pixels) as u8,
+            g: (g / total_pixels) as u8,
+            b: (b / total_pixels) as u8,
+            a: (a / total_pixels) as u8,
+        }
+    }
+
     pub fn calculate_score(&self, target: &Painting) -> Cost {
         if target.width() != self.width() || target.height() != self.height() {
             panic!("comparing two images different in size");
