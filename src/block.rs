@@ -1,3 +1,7 @@
+use std::fmt::Display;
+
+use smartstring::{LazyCompact, SmartString};
+
 use crate::{color::Color, dto::BlockDto};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -100,7 +104,42 @@ impl Rect {
     }
 }
 
-pub type BlockId = String;
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct BlockId(SmartString<LazyCompact>);
+
+impl BlockId {
+    pub fn new(data: SmartString<LazyCompact>) -> Self {
+        BlockId(data)
+    }
+
+    pub fn initial_root() -> Self {
+        BlockId("0".into())
+    }
+
+    pub fn new_root(root: u32) -> Self {
+        // we can't easily get rid of the string allocation here
+        BlockId(root.to_string().into())
+    }
+
+    pub fn new_child(&self, child_name: &str) -> Self {
+        let mut new_id = self.0.clone();
+        new_id.push('.');
+        new_id.push_str(child_name);
+        BlockId(new_id)
+    }
+}
+
+impl From<&str> for BlockId {
+    fn from(data: &str) -> Self {
+        BlockId(data.into())
+    }
+}
+
+impl Display for BlockId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SimpleBlock {
@@ -114,13 +153,13 @@ impl SimpleBlock {
         SimpleBlock { id, r, c }
     }
 
-    pub fn split(&self, i: u32, r: Rect) -> Self {
-        Self::new(format!("{}.{}", self.id, i), r, self.c)
+    pub fn split(&self, child_name: &str, r: Rect) -> Self {
+        Self::new(self.id.new_child(child_name), r, self.c)
     }
 
     /// Called when splitting a complex block
     pub fn complex_split(&self, name: &'static str, r: Rect) -> Self {
-        Self::new(name.to_owned(), r, self.c)
+        Self::new(name.into(), r, self.c)
     }
 }
 
@@ -165,7 +204,7 @@ impl From<&BlockDto> for Block {
         } = dto;
 
         Block::Simple(SimpleBlock::new(
-            block_id.clone(),
+            BlockId::new(block_id.clone()),
             Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
             Color::new(*r, *g, *b, *a),
         ))

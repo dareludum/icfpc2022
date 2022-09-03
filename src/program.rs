@@ -41,11 +41,11 @@ mod tests {
     #[test]
     fn generate_isl_test() {
         let moves = vec![
-            Move::LineCut("0".to_string(), Orientation::Vertical, 12),
-            Move::PointCut("1".to_string(), 44, 44),
-            Move::LineCut("2".to_string(), Orientation::Horizontal, 1),
+            Move::LineCut("0".into(), Orientation::Vertical, 12),
+            Move::PointCut("1".into(), 44, 44),
+            Move::LineCut("2".into(), Orientation::Horizontal, 1),
             Move::Color(
-                "1.1".to_string(),
+                "1.1".into(),
                 Color {
                     r: 255,
                     g: 255,
@@ -53,8 +53,8 @@ mod tests {
                     a: 0,
                 },
             ),
-            Move::Merge("1".to_string(), "2".to_string()),
-            Move::Swap("3.0.0".to_string(), "0.0.1".to_string()),
+            Move::Merge("1".into(), "2".into()),
+            Move::Swap("3.0.0".into(), "0.0.1".into()),
         ];
 
         let expected = "\

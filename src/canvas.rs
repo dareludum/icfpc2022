@@ -35,10 +35,10 @@ impl From<CanvasDto> for Canvas {
 }
 
 impl Canvas {
-    pub fn next_merge_id(&mut self) -> String {
+    pub fn next_merge_id(&mut self) -> BlockId {
         let res = self.roots_count;
         self.roots_count += 1;
-        res.to_string()
+        BlockId::new_root(res)
     }
 
     pub fn prev_merge_id(&mut self) {
@@ -94,7 +94,7 @@ impl Canvas {
         blocks
     }
 
-    pub fn hit_test(&self, x: u32, y: u32) -> String {
+    pub fn hit_test(&self, x: u32, y: u32) -> BlockId {
         for b in self.blocks.values() {
             if b.rect().contains(x, y) {
                 return b.get_id().clone();

@@ -1,9 +1,10 @@
 use serde::Deserialize;
+use smartstring::{LazyCompact, SmartString};
 
 #[derive(Deserialize)]
 pub struct BlockDto {
     #[serde(rename(deserialize = "blockId"))]
-    pub block_id: String,
+    pub block_id: SmartString<LazyCompact>,
     #[serde(rename(deserialize = "bottomLeft"))]
     pub bottom_left: [u32; 2],
     #[serde(rename(deserialize = "topRight"))]

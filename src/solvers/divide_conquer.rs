@@ -33,7 +33,7 @@ impl Solver for DivideConquerSolver {
                 &Params { max_move_cost },
                 &mut canvas,
                 painting,
-                &"0".to_owned(),
+                &BlockId::initial_root(),
                 &mut iteration_moves,
                 &mut iteration_cost,
             );

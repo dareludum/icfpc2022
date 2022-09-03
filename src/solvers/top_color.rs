@@ -15,11 +15,11 @@ impl Solver for TopColor {
     }
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
-        let block = canvas.get_block(&"0".to_owned()).unwrap();
+        let block = canvas.get_block(&"0".into()).unwrap();
         let colors = painting.count_colors(block.rect());
         let top_color = Color::find_most_common(&colors);
 
-        let mov_id = "0".to_string();
+        let mov_id = "0".into();
         let mov = Move::Color(mov_id, top_color);
         let applied_move = mov
             .apply(canvas)

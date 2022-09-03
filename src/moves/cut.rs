@@ -69,8 +69,8 @@ pub fn vertical_cut(
     match block {
         Block::Simple(simple) => {
             let (left_r, right_r) = simple.r.vertical_cut(cut_offset_x);
-            builder.create(canvas, simple.split(0, left_r).into());
-            builder.create(canvas, simple.split(1, right_r).into());
+            builder.create(canvas, simple.split("0", left_r).into());
+            builder.create(canvas, simple.split("1", right_r).into());
         }
         Block::Complex(complex) => {
             let mut left_blocks: Vec<SimpleBlock> = vec![];
@@ -92,11 +92,11 @@ pub fn vertical_cut(
             let (left_r, right_r) = complex.r.vertical_cut(cut_offset_x);
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.to_owned() + ".0", left_r, left_blocks).into(),
+                ComplexBlock::new(block_id.new_child("0"), left_r, left_blocks).into(),
             );
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.to_owned() + ".1", right_r, right_blocks).into(),
+                ComplexBlock::new(block_id.new_child("1"), right_r, right_blocks).into(),
             );
         }
     }
@@ -125,8 +125,8 @@ pub fn horizontal_cut(
     match block {
         Block::Simple(simple) => {
             let (bottom_r, top_r) = simple.r.horizontal_cut(cut_offset_y);
-            builder.create(canvas, simple.split(0, bottom_r).into());
-            builder.create(canvas, simple.split(1, top_r).into());
+            builder.create(canvas, simple.split("0", bottom_r).into());
+            builder.create(canvas, simple.split("1", top_r).into());
         }
         Block::Complex(complex) => {
             let mut bottom_blocks: Vec<SimpleBlock> = vec![];
@@ -148,11 +148,11 @@ pub fn horizontal_cut(
             let (bottom_r, top_r) = complex.r.horizontal_cut(cut_offset_y);
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.to_owned() + ".0", bottom_r, bottom_blocks).into(),
+                ComplexBlock::new(block_id.new_child("0"), bottom_r, bottom_blocks).into(),
             );
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.to_owned() + ".1", top_r, top_blocks).into(),
+                ComplexBlock::new(block_id.new_child("1"), top_r, top_blocks).into(),
             );
         }
     }
@@ -186,10 +186,10 @@ pub fn point_cut(
         Block::Simple(simple) => {
             let (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl) =
                 simple.r.cross_cut(cut_x, cut_y);
-            builder.create(canvas, simple.split(0, bottom_left_bl).into());
-            builder.create(canvas, simple.split(1, bottom_right_bl).into());
-            builder.create(canvas, simple.split(2, top_right_bl).into());
-            builder.create(canvas, simple.split(3, top_left_bl).into());
+            builder.create(canvas, simple.split("0", bottom_left_bl).into());
+            builder.create(canvas, simple.split("1", bottom_right_bl).into());
+            builder.create(canvas, simple.split("2", top_right_bl).into());
+            builder.create(canvas, simple.split("3", top_left_bl).into());
             return Ok((cost, builder.build(canvas)));
         }
         Block::Complex(complex) => complex,
@@ -312,12 +312,12 @@ pub fn point_cut(
         }
     }
     let bottom_left_block = ComplexBlock::new(
-        block_id.to_owned() + ".0",
+        block_id.new_child("0"),
         Rect::new(complex_block.r.bottom_left, cut_point),
         bottom_left_blocks,
     );
     let bottom_right_block = ComplexBlock::new(
-        block_id.to_owned() + ".1",
+        block_id.new_child("1"),
         Rect::new(
             Point::new(cut_x, complex_block.r.bottom_left.y),
             Point::new(complex_block.r.top_right.x, cut_y),
@@ -325,12 +325,12 @@ pub fn point_cut(
         bottom_right_blocks,
     );
     let top_right_block = ComplexBlock::new(
-        block_id.to_owned() + ".2",
+        block_id.new_child("2"),
         Rect::new(cut_point, complex_block.r.top_right),
         top_right_blocks,
     );
     let top_left_block = ComplexBlock::new(
-        block_id.to_owned() + ".3",
+        block_id.new_child("3"),
         Rect::new(
             Point::new(complex_block.r.bottom_left.x, cut_y),
             Point::new(cut_x, complex_block.r.top_right.y),

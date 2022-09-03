@@ -41,7 +41,7 @@ fn make_test_canvas() -> Canvas {
 fn line_cut() -> Result<(), MoveError> {
     for orientation in [Orientation::Horizontal, Orientation::Vertical] {
         let mut canvas = Canvas::new(32, 32);
-        Move::LineCut("0".to_owned(), orientation, 16).checked_apply(&mut canvas)?;
+        Move::LineCut("0".into(), orientation, 16).checked_apply(&mut canvas)?;
     }
     Ok(())
 }
@@ -49,17 +49,17 @@ fn line_cut() -> Result<(), MoveError> {
 #[test]
 fn test_color() -> Result<(), MoveError> {
     let mut canvas = make_test_canvas();
-    Move::Color("0.0".to_owned(), Color::new(1, 2, 3, 4)).checked_apply(&mut canvas)?;
-    Move::Color("1".to_owned(), Color::new(2, 2, 3, 4)).checked_apply(&mut canvas)?;
+    Move::Color("0.0".into(), Color::new(1, 2, 3, 4)).checked_apply(&mut canvas)?;
+    Move::Color("1".into(), Color::new(2, 2, 3, 4)).checked_apply(&mut canvas)?;
     Ok(())
 }
 
 #[test]
 fn test_complicated() -> Result<(), MoveError> {
     let mut canvas = Canvas::new(32, 32);
-    Move::LineCut("0".to_owned(), Orientation::Vertical, 16).checked_apply(&mut canvas)?;
-    Move::PointCut("0.1".to_owned(), 24, 16).checked_apply(&mut canvas)?;
-    Move::Merge("0.1.2".to_owned(), "0.1.3".to_owned()).checked_apply(&mut canvas)?;
+    Move::LineCut("0".into(), Orientation::Vertical, 16).checked_apply(&mut canvas)?;
+    Move::PointCut("0.1".into(), 24, 16).checked_apply(&mut canvas)?;
+    Move::Merge("0.1.2".into(), "0.1.3".into()).checked_apply(&mut canvas)?;
     let ref_canvas = make_test_canvas();
     assert_eq!(&canvas, &ref_canvas);
     Ok(())
