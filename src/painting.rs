@@ -92,7 +92,7 @@ impl Painting {
                 pixel_score.sqrt()
             })
             .sum::<f64>();
-        Cost((image_score * 0.005) as u64)
+        Cost((image_score * 0.005).round() as u64)
     }
 
     pub fn write_to_file(&self, path: &std::path::Path) {
