@@ -3,7 +3,7 @@ use raylib::prelude::*;
 use crate::{
     block::{Point, Rect},
     canvas::Canvas,
-    moves::{Move, Orientation},
+    moves::{Move, Orientation, UndoMove},
     painting::Painting,
     program::to_isl,
 };
@@ -42,7 +42,6 @@ type Offset = (i32, i32);
 pub fn gui_main(problem_path: &std::path::Path) {
     let painting = Painting::load(problem_path);
     let mut canvas = Canvas::new(painting.width(), painting.height());
-    let mut moves = vec![];
 
     let (mut rl, thread) = raylib::init()
         .size(1000, 600)
@@ -63,12 +62,11 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let mut tool = Tool::CutVert;
     let mut color = crate::block::Color::new(255, 255, 255, 255);
     let mut marked_block = None;
+    let mut moves = vec![];
 
     const MARGIN: i32 = 20;
     const IMAGE_SIZE: i32 = 400;
     const COLOR_PREVIEW_SIZE: i32 = 50;
-    // const OFFSET_SOLUTION: Offset = (0, MARGIN);
-    // const OFFSET_TARGET: Offset = (MARGIN + IMAGE_SIZE, MARGIN);
     const SLN: Offset = (MARGIN, MARGIN);
     const TGT: Offset = (MARGIN + IMAGE_SIZE + MARGIN, MARGIN);
 
@@ -143,6 +141,13 @@ pub fn gui_main(problem_path: &std::path::Path) {
                     tool = Tool::Merge;
                     rl.set_mouse_cursor(MouseCursor::MOUSE_CURSOR_POINTING_HAND);
                     rl.show_cursor();
+                }
+                KeyboardKey::KEY_U => {
+                    if let Some((_, (_, undo))) = moves.pop() {
+                        // WTF?
+                        let undo: UndoMove = undo;
+                        undo.apply(&mut canvas);
+                    }
                 }
                 _ => {}
             },

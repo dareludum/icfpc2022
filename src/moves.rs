@@ -25,22 +25,22 @@ pub enum Move {
 #[derive(Debug, Clone)]
 pub enum UndoMove {
     Cut {
-        delete_blocks: Vec<BlockId>,
+        delete_block_ids: Vec<BlockId>,
         restore_blocks: Vec<Block>,
     },
     SimpleColor {
-        block: BlockId,
+        block_id: BlockId,
         prev_color: Color,
     },
     ComplexColor {
         old_block: Block,
     },
     Swap {
-        a: BlockId,
-        b: BlockId,
+        a_id: BlockId,
+        b_id: BlockId,
     },
     Merge {
-        merged_block: BlockId,
+        merged_block_id: BlockId,
         initial_a: Block,
         initial_b: Block,
     },
@@ -76,7 +76,7 @@ impl UndoCutBuilder {
 
     fn build(self) -> UndoMove {
         UndoMove::Cut {
-            delete_blocks: self.delete_blocks,
+            delete_block_ids: self.delete_blocks,
             restore_blocks: self.restore_blocks,
         }
     }
@@ -145,7 +145,7 @@ impl Move {
                 return Ok((
                     cost,
                     UndoMove::SimpleColor {
-                        block: block_id.clone(),
+                        block_id: block_id.clone(),
                         prev_color: old_color,
                     },
                 ));
@@ -502,8 +502,8 @@ impl Move {
         Ok((
             cost,
             UndoMove::Swap {
-                a: block_a_id.clone(),
-                b: block_b_id.clone(),
+                a_id: block_a_id.clone(),
+                b_id: block_b_id.clone(),
             },
         ))
     }
@@ -534,7 +534,7 @@ impl Move {
             };
             let new_id = canvas.next_merge_id();
             let undo = UndoMove::Merge {
-                merged_block: new_id.clone(),
+                merged_block_id: new_id.clone(),
                 initial_a: block_a.clone(),
                 initial_b: block_b.clone(),
             };
@@ -560,7 +560,7 @@ impl Move {
             };
             let new_id = canvas.next_merge_id();
             let undo = UndoMove::Merge {
-                merged_block: new_id.clone(),
+                merged_block_id: new_id.clone(),
                 initial_a: block_a.clone(),
                 initial_b: block_b.clone(),
             };
@@ -600,6 +600,40 @@ impl Canvas {
                 "missing block: {}",
                 block_id
             ))),
+        }
+    }
+}
+
+impl UndoMove {
+    pub fn apply(self, canvas: &mut Canvas) {
+        match self {
+            UndoMove::Cut {
+                delete_block_ids: delete_blocks,
+                restore_blocks,
+            } => {
+                for b in delete_blocks {
+                    canvas.remove_block(&b);
+                }
+                for b in restore_blocks {
+                    canvas.put_block(b);
+                }
+            }
+            UndoMove::SimpleColor {
+                block_id: block,
+                prev_color,
+            } => {
+                let block = canvas.get_block_mut(&block).unwrap();
+                if let Block::Simple(b) = block {
+                    b.c = prev_color;
+                } else {
+                    panic!("Invalid block")
+                }
+            }
+            UndoMove::ComplexColor { .. } => todo!(),
+            UndoMove::Swap { a_id, b_id } => {
+                Move::Swap(a_id, b_id).apply(canvas);
+            }
+            UndoMove::Merge { .. } => todo!(),
         }
     }
 }
