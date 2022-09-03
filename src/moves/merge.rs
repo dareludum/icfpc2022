@@ -58,14 +58,13 @@ pub fn merge(
         };
         let new_id = canvas.next_merge_id();
         let undo = UndoMove::Merge {
-            merged_block_id: new_id,
+            merged_block_id: new_id.clone(),
             initial_a: block_a.clone(),
             initial_b: block_b.clone(),
         };
         let mut children: Vec<SimpleBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());
-        let new_id = canvas.next_merge_id();
         canvas.put_block(
             ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children).into(),
         );
