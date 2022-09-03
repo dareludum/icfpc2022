@@ -3,8 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use image::{Rgba, RgbaImage};
-
 use crate::{
     block::{Block, BlockId, ComplexBlock, Point, Rect, SimpleBlock},
     color::Color,
@@ -15,8 +13,8 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Canvas {
     pub area: u32,
-    width: u32,
-    height: u32,
+    pub width: u32,
+    pub height: u32,
     blocks: HashMap<BlockId, Block>,
     roots_count: u32,
     pub generation: u32,
@@ -123,18 +121,36 @@ impl Canvas {
     }
 
     pub fn render(&self) -> Painting {
-        let mut img = RgbaImage::new(self.width, self.height);
+        let mut data = vec![];
+        data.resize((self.width * self.height) as usize, Color::new(0, 0, 0, 0));
 
         for (_, block) in self.blocks.iter() {
             match block {
-                Block::Simple(simple_block) => render_simple_block(&mut img, simple_block),
-                Block::Complex(ComplexBlock { bs: blocks, .. }) => {
-                    blocks.iter().for_each(|b| render_simple_block(&mut img, b))
-                }
+                Block::Simple(simple_block) => self.render_simple_block(&mut data, simple_block),
+                Block::Complex(ComplexBlock { bs: blocks, .. }) => blocks
+                    .iter()
+                    .for_each(|b| self.render_simple_block(&mut data, b)),
             }
         }
 
-        Painting::from_image(img)
+        Painting::new(self.width, self.height, data)
+    }
+
+    fn render_simple_block(&self, data: &mut [Color], block: &SimpleBlock) {
+        let SimpleBlock {
+            r: Rect {
+                bottom_left,
+                top_right,
+            },
+            c,
+            ..
+        } = block;
+
+        for x in bottom_left.x..top_right.x {
+            for y in bottom_left.y..top_right.y {
+                data[(x + self.width * y) as usize] = *c;
+            }
+        }
     }
 
     fn load_canvas(path: &Path) -> std::io::Result<Self> {
@@ -154,22 +170,5 @@ impl Canvas {
         };
 
         Ok(canvas)
-    }
-}
-
-fn render_simple_block(img: &mut RgbaImage, block: &SimpleBlock) {
-    let SimpleBlock {
-        r: Rect {
-            bottom_left,
-            top_right,
-        },
-        c: Color { r, g, b, a },
-        ..
-    } = block;
-
-    for x in bottom_left.x..top_right.x {
-        for y in bottom_left.y..top_right.y {
-            img.put_pixel(x, img.height() - 1 - y, Rgba([*r, *g, *b, *a]))
-        }
     }
 }

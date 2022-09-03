@@ -1,4 +1,5 @@
-use crate::block::Rect;
+use crate::block::{Rect, SimpleBlock};
+use crate::canvas::Canvas;
 use crate::color::Color;
 use crate::moves::Cost;
 use image::{Rgba, RgbaImage};
@@ -25,12 +26,35 @@ impl From<&Rgba<u8>> for Color {
 
 #[derive(Debug)]
 pub struct Painting {
-    image: RgbaImage,
+    pub width: u32,
+    pub height: u32,
+    data: Vec<Color>,
 }
 
 impl Painting {
     pub fn from_image(image: RgbaImage) -> Self {
-        Painting { image }
+        let mut data = vec![];
+        let width = image.width();
+        let height = image.height();
+        data.resize((width * height) as usize, Color::new(0, 0, 0, 0));
+        for x in 0..width {
+            for y in 0..image.height() {
+                data[(x + width * y) as usize] = image.get_pixel(x, height - y - 1).into();
+            }
+        }
+        Painting {
+            width,
+            height,
+            data,
+        }
+    }
+
+    pub fn new(width: u32, height: u32, data: Vec<Color>) -> Self {
+        Painting {
+            width,
+            height,
+            data,
+        }
     }
 
     pub fn load(path: &std::path::Path) -> Self {
@@ -41,21 +65,19 @@ impl Painting {
         let mut reader = BufReader::new(file);
         let dyn_img =
             image::load(&mut reader, image::ImageFormat::Png).expect("image loading failed");
-        Painting {
-            image: dyn_img.into_rgba8(),
-        }
+        Painting::from_image(dyn_img.into_rgba8())
     }
 
     pub fn width(&self) -> u32 {
-        self.image.width()
+        self.width
     }
 
     pub fn height(&self) -> u32 {
-        self.image.height()
+        self.height
     }
 
     pub fn get_color(&self, x: u32, y: u32) -> Color {
-        self.image.get_pixel(x, self.height() - 1 - y).into()
+        self.data[(x + y * self.width) as usize]
     }
 
     pub fn count_colors(&self, r: &Rect) -> HashMap<Color, u32> {
@@ -103,24 +125,67 @@ impl Painting {
 
         // compute the image difference score
         let image_score = self
-            .image
-            .pixels()
-            .zip(target.image.pixels())
-            .map(|(p0, p1)| {
+            .data
+            .iter()
+            .zip(target.data.iter())
+            .map(|(c0, c1)| {
                 let mut pixel_score = 0f64;
-                pixel_score += (p0.0[0].abs_diff(p1.0[0]) as f64).powi(2);
-                pixel_score += (p0.0[1].abs_diff(p1.0[1]) as f64).powi(2);
-                pixel_score += (p0.0[2].abs_diff(p1.0[2]) as f64).powi(2);
-                pixel_score += (p0.0[3].abs_diff(p1.0[3]) as f64).powi(2);
+                pixel_score += (c0.r.abs_diff(c1.r) as f64).powi(2);
+                pixel_score += (c0.g.abs_diff(c1.g) as f64).powi(2);
+                pixel_score += (c0.b.abs_diff(c1.b) as f64).powi(2);
+                pixel_score += (c0.a.abs_diff(c1.a) as f64).powi(2);
                 pixel_score.sqrt()
             })
             .sum::<f64>();
         Cost((image_score * 0.005).round() as u64)
     }
 
+    pub fn calculate_score_canvas(&self, target: &Canvas) -> Cost {
+        if target.width != self.width() || target.height != self.height() {
+            panic!("comparing two images different in size");
+        }
+
+        let mut image_score = 0.0;
+        for b in target.blocks_iter() {
+            match b {
+                crate::block::Block::Simple(b) => {
+                    image_score += self.calculate_block_score(b);
+                }
+                crate::block::Block::Complex(b) => {
+                    for b in b.bs.iter() {
+                        image_score += self.calculate_block_score(b);
+                    }
+                }
+            }
+        }
+        Cost((image_score * 0.005).round() as u64)
+    }
+
+    fn calculate_block_score(&self, b: &SimpleBlock) -> f64 {
+        let mut block_score = 0.0;
+        let bc = b.c;
+        for x in b.r.x()..b.r.top_right.x {
+            for y in b.r.y()..b.r.top_right.y {
+                let pc = self.get_color(x, y);
+                let mut pixel_score = 0f64;
+                pixel_score += (bc.r.abs_diff(pc.r) as f64).powi(2);
+                pixel_score += (bc.g.abs_diff(pc.g) as f64).powi(2);
+                pixel_score += (bc.b.abs_diff(pc.b) as f64).powi(2);
+                pixel_score += (bc.a.abs_diff(pc.a) as f64).powi(2);
+                block_score += pixel_score.sqrt();
+            }
+        }
+        block_score
+    }
+
     pub fn write_to_file(&self, path: &std::path::Path) {
-        self.image
-            .save_with_format(path, image::ImageFormat::Png)
-            .unwrap();
+        let mut img = RgbaImage::new(self.width, self.height);
+        for x in 0..self.width {
+            for y in 0..self.height {
+                img.put_pixel(x, self.height - y - 1, self.get_color(x, y).into());
+            }
+        }
+
+        img.save_with_format(path, image::ImageFormat::Png).unwrap();
     }
 }

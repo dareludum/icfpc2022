@@ -17,7 +17,7 @@ impl Solver for Annealing {
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
         let mut applied_moves = vec![];
         let mut current_move_cost = Cost(0);
-        let mut current_painting_score = painting.calculate_score(&canvas.render());
+        let mut current_painting_score = painting.calculate_score_canvas(&canvas);
         const KMAX: u32 = 1000;
         for k in 0..KMAX {
             let t = self.temperature(1.0 - (k as f32 + 1.0) / KMAX as f32);
@@ -29,7 +29,7 @@ impl Solver for Annealing {
                 applied_moves.clone(),
                 budget,
             );
-            let new_painting_score = painting.calculate_score(&iteration_canvas.render());
+            let new_painting_score = painting.calculate_score_canvas(&iteration_canvas);
             let new_move_cost = iteration_moves.iter().map(|am| am.cost).sum::<Cost>();
             let e_curr = (current_painting_score + current_move_cost).0 as f32;
             let e_new = (new_painting_score + new_move_cost).0 as f32;
@@ -74,11 +74,11 @@ impl Annealing {
             } => {
                 for b_id in delete_block_ids {
                     let b = canvas.get_block(&b_id).unwrap();
-                    let before = painting.calculate_score(&canvas.render());
+                    let before = painting.calculate_score_canvas(&canvas);
                     let color = painting.calculate_average_color(b.rect());
                     let mov = Move::Color(b_id, color);
                     let am = mov.apply(canvas).unwrap();
-                    let after = painting.calculate_score(&canvas.render());
+                    let after = painting.calculate_score_canvas(&canvas);
                     if after.0 >= before.0 {
                         am.undo(canvas);
                     } else {
