@@ -32,11 +32,7 @@ pub fn merge(
             (b_bottom_left, a_top_right)
         };
         let new_id = canvas.next_merge_id();
-        let undo = UndoMove::Merge {
-            merged_block_id: new_id.clone(),
-            initial_a: block_a.clone(),
-            initial_b: block_b.clone(),
-        };
+        let undo = UndoMove::merge(canvas, new_id.clone(), block_a.clone(), block_b.clone());
         let mut children: Vec<SimpleBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());
@@ -57,11 +53,7 @@ pub fn merge(
             (b_bottom_left, a_top_right)
         };
         let new_id = canvas.next_merge_id();
-        let undo = UndoMove::Merge {
-            merged_block_id: new_id.clone(),
-            initial_a: block_a.clone(),
-            initial_b: block_b.clone(),
-        };
+        let undo = UndoMove::merge(canvas, new_id.clone(), block_a.clone(), block_b.clone());
         let mut children: Vec<SimpleBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());

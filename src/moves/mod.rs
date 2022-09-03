@@ -78,7 +78,7 @@ impl Move {
         use merge::*;
         use swap::*;
 
-        match *self {
+        let res = match *self {
             Move::LineCut(ref block, orientation, offset) => {
                 line_cut(self, canvas, block, orientation, offset)
             }
@@ -86,7 +86,8 @@ impl Move {
             Move::Color(ref block, c) => color(self, canvas, block, c),
             Move::Swap(ref block_a, ref block_b) => swap(self, canvas, block_a, block_b),
             Move::Merge(ref block_a, ref block_b) => merge(self, canvas, block_a, block_b),
-        }
+        }?;
+        Ok(res)
     }
 
     pub fn checked_apply(&self, canvas: &mut Canvas) -> Result<(Cost, UndoMove), MoveError> {

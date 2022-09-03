@@ -33,7 +33,8 @@ fn make_test_canvas() -> Canvas {
         )
         .into(),
     );
-    return Canvas::from_blocks(32, 32, 2, blocks.into_iter());
+    // this is a 3rd generation canvas, as 3 moves were applied
+    return Canvas::from_blocks(32, 32, 2, 3, blocks.into_iter());
 }
 
 #[test]

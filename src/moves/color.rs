@@ -19,10 +19,7 @@ pub fn color(
             simple.c = new_color;
             return Ok((
                 cost,
-                UndoMove::SimpleColor {
-                    block_id: block_id.clone(),
-                    prev_color: old_color,
-                },
+                UndoMove::simple_color(canvas, block_id.clone(), old_color),
             ));
         }
         // if its complex, turn it into a simple block
@@ -30,5 +27,5 @@ pub fn color(
     };
     let old_block = block.clone();
     *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));
-    Ok((cost, UndoMove::ComplexColor { old_block }))
+    Ok((cost, UndoMove::complex_color(canvas, old_block)))
 }

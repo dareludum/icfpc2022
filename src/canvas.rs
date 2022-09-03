@@ -16,6 +16,7 @@ pub struct Canvas {
     height: u32,
     blocks: HashMap<BlockId, Block>,
     roots_count: u32,
+    pub generation: u32,
 }
 
 impl Canvas {
@@ -29,6 +30,15 @@ impl Canvas {
         self.roots_count -= 1
     }
 
+    pub fn next_generation(&mut self) -> u32 {
+        self.generation += 1;
+        self.generation
+    }
+
+    pub fn prev_generation(&mut self) {
+        self.generation -= 1
+    }
+
     pub fn new(w: u32, h: u32) -> Self {
         let blocks = [SimpleBlock::new(
             BlockId::from("0"),
@@ -36,13 +46,14 @@ impl Canvas {
             Color::new(255, 255, 255, 255),
         )
         .into()];
-        Self::from_blocks(w, h, 1, blocks.into_iter())
+        Self::from_blocks(w, h, 1, 0, blocks.into_iter())
     }
 
     pub fn from_blocks(
         w: u32,
         h: u32,
         roots_count: u32,
+        generation: u32,
         blocks: impl Iterator<Item = Block>,
     ) -> Self {
         let mut blocks_map = HashMap::new();
@@ -55,6 +66,7 @@ impl Canvas {
             area: w * h,
             blocks: blocks_map,
             roots_count,
+            generation,
         }
     }
 

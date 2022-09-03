@@ -32,9 +32,6 @@ pub fn swap(
     canvas.put_block(block_b);
     Ok((
         cost,
-        UndoMove::Swap {
-            a_id: block_a_id.clone(),
-            b_id: block_b_id.clone(),
-        },
+        UndoMove::swap(canvas, block_a_id.clone(), block_b_id.clone()),
     ))
 }

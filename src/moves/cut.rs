@@ -29,11 +29,8 @@ impl UndoCutBuilder {
         canvas.put_block(block)
     }
 
-    fn build(self) -> UndoMove {
-        UndoMove::Cut {
-            delete_block_ids: self.delete_blocks,
-            restore_blocks: self.restore_blocks,
-        }
+    fn build(self, canvas: &mut Canvas) -> UndoMove {
+        UndoMove::cut(canvas, self.delete_blocks, self.restore_blocks)
     }
 }
 
@@ -103,7 +100,7 @@ pub fn vertical_cut(
             );
         }
     }
-    Ok((cost, builder.build()))
+    Ok((cost, builder.build(canvas)))
 }
 
 pub fn horizontal_cut(
@@ -159,7 +156,7 @@ pub fn horizontal_cut(
             );
         }
     }
-    Ok((cost, builder.build()))
+    Ok((cost, builder.build(canvas)))
 }
 
 pub fn point_cut(
@@ -193,7 +190,7 @@ pub fn point_cut(
             builder.create(canvas, simple.split(1, bottom_right_bl).into());
             builder.create(canvas, simple.split(2, top_right_bl).into());
             builder.create(canvas, simple.split(3, top_left_bl).into());
-            return Ok((cost, builder.build()));
+            return Ok((cost, builder.build(canvas)));
         }
         Block::Complex(complex) => complex,
     };
@@ -345,5 +342,5 @@ pub fn point_cut(
     builder.create(canvas, bottom_right_block.into());
     builder.create(canvas, top_right_block.into());
     builder.create(canvas, top_left_block.into());
-    Ok((cost, builder.build()))
+    Ok((cost, builder.build(canvas)))
 }
