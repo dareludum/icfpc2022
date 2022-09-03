@@ -3,14 +3,15 @@ use derive_more::{Add, AddAssign};
 use std::fmt::Display;
 
 use crate::{
-    block::{Block, BlockId, ComplexBlock, Rect, SimpleBlock},
+    block::{Block, BlockId, ComplexBlock, SimpleBlock},
     canvas::Canvas,
     color::Color,
 };
 
+mod color;
 mod cut;
-
-pub use cut::*;
+mod merge;
+mod swap;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Orientation {
@@ -49,38 +50,6 @@ pub enum UndoMove {
         initial_a: Block,
         initial_b: Block,
     },
-}
-
-struct UndoCutBuilder {
-    delete_blocks: Vec<BlockId>,
-    restore_blocks: Vec<Block>,
-}
-
-impl UndoCutBuilder {
-    pub fn new() -> Self {
-        UndoCutBuilder {
-            delete_blocks: vec![],
-            restore_blocks: vec![],
-        }
-    }
-
-    pub fn remove(&mut self, canvas: &mut Canvas, block_id: &BlockId) -> Result<Block, MoveError> {
-        let block = canvas.remove_move_block(block_id)?;
-        self.restore_blocks.push(block.clone());
-        Ok(block)
-    }
-
-    pub fn create(&mut self, canvas: &mut Canvas, block: Block) {
-        self.delete_blocks.push(block.get_id().clone());
-        canvas.put_block(block)
-    }
-
-    fn build(self) -> UndoMove {
-        UndoMove::Cut {
-            delete_block_ids: self.delete_blocks,
-            restore_blocks: self.restore_blocks,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Add, AddAssign)]
@@ -127,146 +96,6 @@ impl Move {
 
     fn compute_cost(&self, block_area: u32, canvas_area: u32) -> Cost {
         Cost((self.base_cost() as f64 * (canvas_area as f64 / block_area as f64)).round() as u64)
-    }
-
-    fn color(
-        &self,
-        canvas: &mut Canvas,
-        block_id: &BlockId,
-        new_color: Color,
-    ) -> Result<(Cost, UndoMove), MoveError> {
-        let canvas_area = canvas.area;
-        let block = canvas.get_move_block_mut(block_id)?;
-        let cost = self.compute_cost(block.size(), canvas_area);
-        let (block_id, rect) = match block {
-            // if the block is simple, change its color
-            Block::Simple(ref mut simple) => {
-                let old_color = simple.c;
-                simple.c = new_color;
-                return Ok((
-                    cost,
-                    UndoMove::SimpleColor {
-                        block_id: block_id.clone(),
-                        prev_color: old_color,
-                    },
-                ));
-            }
-            // if its complex, turn it into a simple block
-            Block::Complex(ref mut complex) => (complex.id.clone(), complex.r.clone()),
-        };
-        let old_block = block.clone();
-        *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));
-        Ok((cost, UndoMove::ComplexColor { old_block }))
-    }
-
-    fn swap(
-        &self,
-        canvas: &mut Canvas,
-        block_a_id: &BlockId,
-        block_b_id: &BlockId,
-    ) -> Result<(Cost, UndoMove), MoveError> {
-        let mut block_a = canvas.remove_move_block(block_a_id)?;
-        let mut block_b = canvas.remove_move_block(block_b_id)?;
-
-        let cost = self.compute_cost(block_a.size(), canvas.area);
-
-        if block_a.rect().width() != block_b.rect().width()
-            || block_a.rect().height() != block_b.rect().height()
-        {
-            return Err(MoveError::InvalidInput(format!(
-                "Blocks are not the same size, [{}] has size [{},{}] while [{}] has size [{},{}]",
-                block_a_id,
-                block_a.rect().width(),
-                block_a.rect().height(),
-                block_b_id,
-                block_b.rect().width(),
-                block_b.rect().height(),
-            )));
-        }
-
-        std::mem::swap(block_a.get_id_mut(), block_b.get_id_mut());
-        canvas.put_block(block_a);
-        canvas.put_block(block_b);
-        Ok((
-            cost,
-            UndoMove::Swap {
-                a_id: block_a_id.clone(),
-                b_id: block_b_id.clone(),
-            },
-        ))
-    }
-
-    fn merge(
-        &self,
-        canvas: &mut Canvas,
-        block_a_id: &BlockId,
-        block_b_id: &BlockId,
-    ) -> Result<(Cost, UndoMove), MoveError> {
-        let block_a = canvas.remove_move_block(block_a_id)?;
-        let block_b = canvas.remove_move_block(block_b_id)?;
-        let cost = self.compute_cost(std::cmp::max(block_a.size(), block_b.size()), canvas.area);
-        let a_bottom_left = block_a.rect().bottom_left;
-        let b_bottom_left = block_b.rect().bottom_left;
-        let a_top_right = block_a.rect().top_right;
-        let b_top_right = block_b.rect().top_right;
-
-        // vertical merge
-        if (a_bottom_left.y == b_top_right.y || a_top_right.y == b_bottom_left.y)
-            && a_bottom_left.x == b_bottom_left.x
-            && a_top_right.x == b_top_right.x
-        {
-            let (new_bottom_left, new_top_right) = if a_bottom_left.y < b_bottom_left.y {
-                (a_bottom_left, b_top_right)
-            } else {
-                (b_bottom_left, a_top_right)
-            };
-            let new_id = canvas.next_merge_id();
-            let undo = UndoMove::Merge {
-                merged_block_id: new_id.clone(),
-                initial_a: block_a.clone(),
-                initial_b: block_b.clone(),
-            };
-            let mut children: Vec<SimpleBlock> = vec![];
-            children.extend(block_a.take_children().into_iter());
-            children.extend(block_b.take_children().into_iter());
-            canvas.put_block(
-                ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children)
-                    .into(),
-            );
-            return Ok((cost, undo));
-        }
-
-        // horizontal merge
-        if (b_top_right.x == a_bottom_left.x || a_top_right.x == b_bottom_left.x)
-            && a_bottom_left.y == b_bottom_left.y
-            && a_top_right.y == b_top_right.y
-        {
-            let (new_bottom_left, new_top_right) = if a_bottom_left.x < b_bottom_left.x {
-                (a_bottom_left, b_top_right)
-            } else {
-                (b_bottom_left, a_top_right)
-            };
-            let new_id = canvas.next_merge_id();
-            let undo = UndoMove::Merge {
-                merged_block_id: new_id,
-                initial_a: block_a.clone(),
-                initial_b: block_b.clone(),
-            };
-            let mut children: Vec<SimpleBlock> = vec![];
-            children.extend(block_a.take_children().into_iter());
-            children.extend(block_b.take_children().into_iter());
-            let new_id = canvas.next_merge_id();
-            canvas.put_block(
-                ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children)
-                    .into(),
-            );
-            return Ok((cost, undo));
-        }
-
-        Err(MoveError::LogicError(format!(
-            "Blocks [{}] and [{}] are not mergable",
-            block_a_id, block_b_id
-        )))
     }
 }
 

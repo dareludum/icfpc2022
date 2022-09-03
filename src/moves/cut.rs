@@ -2,8 +2,40 @@ use crate::block::BlockId;
 use crate::block::{Point, Rect};
 use crate::canvas::Canvas;
 use crate::moves::{
-    Block, ComplexBlock, Cost, Move, MoveError, Orientation, SimpleBlock, UndoCutBuilder, UndoMove,
+    Block, ComplexBlock, Cost, Move, MoveError, Orientation, SimpleBlock, UndoMove,
 };
+
+struct UndoCutBuilder {
+    delete_blocks: Vec<BlockId>,
+    restore_blocks: Vec<Block>,
+}
+
+impl UndoCutBuilder {
+    pub fn new() -> Self {
+        UndoCutBuilder {
+            delete_blocks: vec![],
+            restore_blocks: vec![],
+        }
+    }
+
+    pub fn remove(&mut self, canvas: &mut Canvas, block_id: &BlockId) -> Result<Block, MoveError> {
+        let block = canvas.remove_move_block(block_id)?;
+        self.restore_blocks.push(block.clone());
+        Ok(block)
+    }
+
+    pub fn create(&mut self, canvas: &mut Canvas, block: Block) {
+        self.delete_blocks.push(block.get_id().clone());
+        canvas.put_block(block)
+    }
+
+    fn build(self) -> UndoMove {
+        UndoMove::Cut {
+            delete_block_ids: self.delete_blocks,
+            restore_blocks: self.restore_blocks,
+        }
+    }
+}
 
 impl Move {
     pub fn line_cut(
