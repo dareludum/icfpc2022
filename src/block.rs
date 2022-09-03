@@ -105,9 +105,9 @@ impl Color {
     }
 }
 
-impl Into<Rgba<u8>> for &Color {
-    fn into(self) -> Rgba<u8> {
-        Rgba([self.r, self.g, self.b, self.a])
+impl From<Color> for Rgba<u8> {
+    fn from(c: Color) -> Self {
+        Rgba([c.r, c.g, c.b, c.a])
     }
 }
 
@@ -171,15 +171,15 @@ pub enum Block {
     Complex(ComplexBlock),
 }
 
-impl Into<Block> for SimpleBlock {
-    fn into(self) -> Block {
-        Block::Simple(self)
+impl From<SimpleBlock> for Block {
+    fn from(b: SimpleBlock) -> Self {
+        Block::Simple(b)
     }
 }
 
-impl Into<Block> for ComplexBlock {
-    fn into(self) -> Block {
-        Block::Complex(self)
+impl From<ComplexBlock> for Block {
+    fn from(b: ComplexBlock) -> Self {
+        Block::Complex(b)
     }
 }
 

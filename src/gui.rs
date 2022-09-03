@@ -1,3 +1,4 @@
+#![allow(clippy::collapsible_if)]
 use raylib::prelude::*;
 
 use crate::{
