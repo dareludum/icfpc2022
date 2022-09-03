@@ -62,7 +62,7 @@ impl Painting {
                 if let Some(v) = counts.get_mut(&color) {
                     *v += 1;
                 } else {
-                    counts.insert(color, 0);
+                    counts.insert(color, 1);
                 }
             }
         }
