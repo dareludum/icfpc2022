@@ -1,4 +1,5 @@
 use crate::{
+    block::Block,
     canvas::Canvas,
     moves::{AppliedMove, Cost, Move, MoveType, Orientation, UndoMoveOp},
     painting::Painting,
@@ -14,9 +15,14 @@ impl Solver for Annealing {
     }
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
+        let block = canvas.get_block(&"0".into()).unwrap();
+        let best_avg_color = painting.calculate_average_color(block.rect());
+        let static_move = Move::Color("0".into(), best_avg_color);
+        let applied_static_move = static_move.apply(canvas).unwrap();
+
         let mut applied_moves = vec![];
         let mut current_move_cost = Cost(0);
-        let mut current_painting_score = painting.calculate_score_canvas(&canvas);
+        let mut current_painting_score = painting.calculate_score_canvas(canvas);
         const KMAX: u32 = 1000;
         for k in 0..KMAX {
             let t = self.temperature(1.0 - (k as f32 + 1.0) / KMAX as f32);
@@ -39,6 +45,7 @@ impl Solver for Annealing {
                 current_painting_score = new_painting_score;
             }
         }
+        applied_moves.insert(0, applied_static_move);
         applied_moves
     }
 }
@@ -73,12 +80,12 @@ impl Annealing {
             } => {
                 for b_id in delete_block_ids {
                     let b = canvas.get_block(&b_id).unwrap();
-                    let before = painting.calculate_score_canvas(&canvas);
+                    let before = painting.calculate_score_canvas(canvas);
                     let color = painting.calculate_average_color(b.rect());
                     let mov = Move::Color(b_id, color);
                     let am = mov.apply(canvas).unwrap();
-                    let after = painting.calculate_score_canvas(&canvas);
-                    if after.0 >= before.0 {
+                    let after = painting.calculate_score_canvas(canvas);
+                    if (after.0 + am.cost.0) > before.0 {
                         am.undo(canvas);
                     } else {
                         moves.push(am);
@@ -98,21 +105,14 @@ impl Annealing {
         mut budget: i64,
     ) -> Vec<(u32, Move, Cost)> {
         let mut moves = self.get_moves_for_budget(canvas, budget, 0);
-        let mut redo_stack = vec![];
         for i in 0..current_moves.len() {
             let am = &current_moves[current_moves.len() - i - 1];
             budget += am.cost.0 as i64;
-            let mov = am.clone().undo(canvas);
-            match mov {
-                Move::LineCut(_, _, _) | Move::PointCut(_, _, _) => {
-                    moves.extend(self.get_moves_for_budget(canvas, budget, i as u32 + 1));
+            if let UndoMoveOp::Cut { restore_blocks, .. } = &am.undo.operation {
+                for b in restore_blocks {
+                    self.get_moves_for_block(b, canvas, budget, &mut moves, i as u32 + 1);
                 }
-                _ => {}
             }
-            redo_stack.push(mov);
-        }
-        for mov in redo_stack.into_iter().rev() {
-            mov.apply(canvas).unwrap();
         }
         moves
     }
@@ -123,54 +123,56 @@ impl Annealing {
         budget: i64,
         undo_count: u32,
     ) -> Vec<(u32, Move, Cost)> {
-        const STEP: usize = 16;
-
         if budget < 0 {
             return vec![];
         }
         let mut moves = vec![];
         for b in canvas.blocks_iter() {
-            let r = b.rect();
-            let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
-            if (linear_cut_cost.0 as i64) < budget {
-                for x in (1..r.width() - 1).step_by(STEP) {
-                    moves.push((
-                        undo_count,
-                        Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x),
-                        linear_cut_cost,
-                    ));
-                }
+            self.get_moves_for_block(b, canvas, budget, &mut moves, undo_count);
+        }
+        moves
+    }
+
+    fn get_moves_for_block(
+        &self,
+        b: &Block,
+        canvas: &Canvas,
+        budget: i64,
+        moves: &mut Vec<(u32, Move, Cost)>,
+        undo_count: u32,
+    ) {
+        const STEP: usize = 10;
+
+        let r = b.rect();
+        let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
+        if (linear_cut_cost.0 as i64) < budget {
+            for x in (1..r.width() - 1).step_by(STEP) {
+                moves.push((
+                    undo_count,
+                    Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x),
+                    linear_cut_cost,
+                ));
+            }
+            for y in (1..r.height() - 1).step_by(STEP) {
+                moves.push((
+                    undo_count,
+                    Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y),
+                    linear_cut_cost,
+                ));
+            }
+        }
+        let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
+        if (cross_cut_cost.0 as i64) < budget {
+            for x in (1..r.width() - 1).step_by(STEP) {
                 for y in (1..r.height() - 1).step_by(STEP) {
                     moves.push((
                         undo_count,
-                        Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y),
-                        linear_cut_cost,
+                        Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y),
+                        cross_cut_cost,
                     ));
                 }
             }
-            let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
-            if (cross_cut_cost.0 as i64) < budget {
-                for x in (1..r.width() - 1).step_by(STEP) {
-                    for y in (1..r.height() - 1).step_by(STEP) {
-                        moves.push((
-                            undo_count,
-                            Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y),
-                            cross_cut_cost,
-                        ));
-                    }
-                }
-            }
-            // let color_cost = Move::get_cost(MoveType::Color, r.area(), canvas.area);
-            // if (color_cost.0 as i64) < budget {
-            //     let counts = painting.count_colors(r);
-            //     moves.push((
-            //         undo_count,
-            //         Move::Color(b.get_id().clone(), Color::find_average(&counts)),
-            //         color_cost,
-            //     ));
-            // }
         }
-        moves
     }
 
     fn p(&self, e_curr: f32, e_new: f32, t: f32) -> f32 {
