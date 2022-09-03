@@ -149,11 +149,11 @@ impl Painting {
         for b in target.blocks_iter() {
             match b {
                 crate::block::Block::Simple(b) => {
-                    image_score += self.calculate_block_score(b);
+                    image_score += self.calculate_score_block(b);
                 }
                 crate::block::Block::Complex(b) => {
                     for b in b.bs.iter() {
-                        image_score += self.calculate_block_score(b);
+                        image_score += self.calculate_score_block(b);
                     }
                 }
             }
@@ -161,7 +161,7 @@ impl Painting {
         Cost((image_score * 0.005).round() as u64)
     }
 
-    fn calculate_block_score(&self, b: &SimpleBlock) -> f64 {
+    pub fn calculate_score_block(&self, b: &SimpleBlock) -> f64 {
         let mut block_score = 0.0;
         let bc = b.c;
         for x in b.r.x()..b.r.top_right.x {

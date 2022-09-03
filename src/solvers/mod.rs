@@ -2,6 +2,7 @@ mod annealing;
 mod divide_conquer;
 mod no_op;
 mod simple;
+mod swapper;
 mod top_color;
 
 use crate::{
@@ -42,6 +43,7 @@ pub const SOLVERS: &[&str] = &[
     "no_op",
     "simple",
     "simple_no_x",
+    "swapper",
     "top_color",
 ];
 
@@ -56,6 +58,7 @@ pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
         "simple_no_x" => Box::new(simple::Simple {
             allow_cross_cut: false,
         }),
+        "swapper" => Box::new(swapper::Swapper {}),
         "top_color" => Box::new(top_color::TopColor {}),
         n => panic!("Unknown solver `{}`", n),
     }
