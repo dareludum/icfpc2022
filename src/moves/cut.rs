@@ -233,7 +233,7 @@ pub fn point_cut(
             continue;
         }
         // Case 5
-        if child.r.contains(cut_x, cut_y) {
+        if child.r.strictly_contains(cut_x, cut_y) {
             let (bl, br, tr, tl) = child.r.cross_cut(cut_x, cut_y);
             bottom_left_blocks.push(child.complex_split("bl_child", bl));
             bottom_right_blocks.push(child.complex_split("br_child", br));
@@ -245,7 +245,7 @@ pub fn point_cut(
         // Case 2
         if child.r.bottom_left.x <= cut_x
             && cut_x <= child.r.top_right.x
-            && cut_y < child.r.bottom_left.y
+            && cut_y <= child.r.bottom_left.y
         {
             top_left_blocks.push(SimpleBlock::new(
                 "case2_tl_child".into(),
@@ -262,7 +262,7 @@ pub fn point_cut(
         // Case 8
         if child.r.bottom_left.x <= cut_x
             && cut_x <= child.r.top_right.x
-            && cut_y > child.r.top_right.y
+            && cut_y >= child.r.top_right.y
         {
             bottom_left_blocks.push(SimpleBlock::new(
                 "case8_bl_child".into(),
@@ -279,7 +279,7 @@ pub fn point_cut(
         // Case 4
         if child.r.bottom_left.y <= cut_y
             && cut_y <= child.r.top_right.y
-            && cut_x < child.r.bottom_left.x
+            && cut_x <= child.r.bottom_left.x
         {
             bottom_right_blocks.push(SimpleBlock::new(
                 "case4_br_child".into(),
@@ -296,7 +296,7 @@ pub fn point_cut(
         // Case 6
         if child.r.bottom_left.y <= cut_y
             && cut_y <= child.r.top_right.y
-            && cut_x > child.r.top_right.x
+            && cut_x >= child.r.top_right.x
         {
             bottom_left_blocks.push(SimpleBlock::new(
                 "case6_bl_child".into(),

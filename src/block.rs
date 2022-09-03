@@ -16,7 +16,7 @@ impl Point {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rect {
     /// inclusive lower bound
     pub bottom_left: Point,
@@ -33,6 +33,8 @@ impl Rect {
     }
 
     pub const fn new(bottom_left: Point, top_right: Point) -> Self {
+        assert!(bottom_left.x < top_right.x);
+        assert!(bottom_left.y < top_right.y);
         Rect {
             bottom_left,
             top_right,
@@ -80,6 +82,13 @@ impl Rect {
             && y < self.top_right.y
     }
 
+    pub fn strictly_contains(&self, x: u32, y: u32) -> bool {
+        x > self.bottom_left.x
+            && x + 1 < self.top_right.x
+            && y > self.bottom_left.y
+            && y + 1 < self.top_right.y
+    }
+
     pub fn vertical_cut(&self, x: u32) -> (Self, Self) {
         let left = Rect::new(self.bottom_left, Point::new(x, self.top_right.y));
         let right = Rect::new(Point::new(x, self.bottom_left.y), self.top_right);
@@ -121,7 +130,6 @@ impl BlockId {
         let mut buffer = [b'0'; BUFFER_SIZE];
         let bytes = lexical_core::write(root, &mut buffer);
         let str = unsafe { std::str::from_utf8_unchecked(bytes) };
-        // we can't easily get rid of the string allocation here
         BlockId(str.into())
     }
 
