@@ -9,7 +9,7 @@ pub struct BlockDto {
     pub bottom_left: [u32; 2],
     #[serde(rename(deserialize = "topRight"))]
     pub top_right: [u32; 2],
-    pub color: [u8; 4],
+    pub color: Option<[u8; 4]>,
 }
 
 #[derive(Deserialize)]

@@ -220,13 +220,16 @@ impl From<&BlockDto> for Block {
             block_id,
             bottom_left: [bl_x, bl_y],
             top_right: [tr_x, tr_y],
-            color: [r, g, b, a],
+            color, // color: [r, g, b, a],
         } = dto;
+
+        // TODO proper logic
+        let [r, g, b, a] = color.unwrap_or([0, 0, 0, 0]);
 
         Block::new_simple(
             BlockId::new(block_id.clone()),
             Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
-            Color::new(*r, *g, *b, *a),
+            Color::new(r, g, b, a),
         )
     }
 }
