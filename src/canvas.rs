@@ -103,6 +103,10 @@ impl Canvas {
         self.blocks.values()
     }
 
+    pub fn blocks_count(&self) -> usize {
+        self.blocks.len()
+    }
+
     pub fn hit_test(&self, x: u32, y: u32) -> BlockId {
         for b in self.blocks.values() {
             if b.r.contains(x, y) {
