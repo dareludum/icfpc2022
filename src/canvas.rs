@@ -7,13 +7,14 @@ use crate::{
     block::{Block, BlockData, BlockId, Point, Rect},
     color::Color,
     dto::CanvasDto,
+    moves::{Cost, MoveType},
     painting::Painting,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Canvas {
     pub v2: bool, // Whether to use new costs or not
-    pub area: u32,
+    area: u32,
     pub width: u32,
     pub height: u32,
     blocks: HashMap<BlockId, Block>,
@@ -135,6 +136,32 @@ impl Canvas {
 
     pub fn remove_block(&mut self, block: &BlockId) -> Option<Block> {
         self.blocks.remove(block)
+    }
+
+    fn base_cost(&self, move_type: MoveType) -> f64 {
+        match move_type {
+            MoveType::LineCut => {
+                if self.v2 {
+                    2.0
+                } else {
+                    7.0
+                }
+            }
+            MoveType::PointCut => {
+                if self.v2 {
+                    3.0
+                } else {
+                    10.0
+                }
+            }
+            MoveType::Color => 5.0,
+            MoveType::Swap => 3.0,
+            MoveType::Merge => 1.0,
+        }
+    }
+
+    pub fn compute_cost(&self, mov: MoveType, block_area: u32) -> Cost {
+        Cost((self.base_cost(mov) * (self.area as f64 / block_area as f64)).round() as u64)
     }
 
     pub fn render(&self) -> Painting {

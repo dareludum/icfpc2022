@@ -59,7 +59,7 @@ pub fn vertical_cut(
 
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
+    let cost = canvas.compute_cost(MoveType::LineCut, block.area());
 
     match block.data {
         BlockData::Simple(_) => {
@@ -113,7 +113,7 @@ pub fn horizontal_cut(
 
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
+    let cost = canvas.compute_cost(MoveType::LineCut, block.area());
 
     match block.data {
         BlockData::Simple(_) => {
@@ -169,7 +169,7 @@ pub fn point_cut(
     let cut_point = Point::new(cut_x, cut_y);
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(MoveType::PointCut, block.size(), canvas.area);
+    let cost = canvas.compute_cost(MoveType::PointCut, block.area());
 
     let bs = match block.data {
         BlockData::Simple(_) => {

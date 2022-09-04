@@ -25,7 +25,7 @@ pub fn swap_noundo(
     let mut block_a = canvas.remove_move_block(block_a_id)?;
     let mut block_b = canvas.remove_move_block(block_b_id)?;
 
-    let cost = Cost::compute(MoveType::Swap, block_a.size(), canvas.area);
+    let cost = canvas.compute_cost(MoveType::Swap, block_a.area());
 
     let x_diff = block_a
         .r

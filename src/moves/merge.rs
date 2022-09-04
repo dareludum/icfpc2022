@@ -9,10 +9,9 @@ pub fn merge(
 ) -> Result<(Cost, UndoMove), MoveError> {
     let block_a = canvas.get_move_block(block_a_id)?;
     let block_b = canvas.get_move_block(block_b_id)?;
-    let cost = Cost::compute(
+    let cost = canvas.compute_cost(
         MoveType::Merge,
-        std::cmp::max(block_a.size(), block_b.size()),
-        canvas.area,
+        std::cmp::max(block_a.area(), block_b.area()),
     );
     let a_bottom_left = block_a.r.bottom_left;
     let b_bottom_left = block_b.r.bottom_left;

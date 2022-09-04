@@ -195,7 +195,7 @@ impl Block {
         }
     }
 
-    pub fn size(&self) -> u32 {
+    pub fn area(&self) -> u32 {
         self.r.width() * self.r.height()
     }
 
