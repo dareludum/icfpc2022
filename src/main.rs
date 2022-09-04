@@ -36,7 +36,7 @@ struct Args {
     solver: Option<String>,
 }
 
-fn fcopy_to(current_dir: &PathBuf, target_dir: &PathBuf, filename: &str) -> std::io::Result<()> {
+fn fcopy_to(current_dir: &Path, target_dir: &Path, filename: &str) -> std::io::Result<()> {
     let fname_from = current_dir.join(filename);
     let fname_to = target_dir.join(filename);
 
@@ -73,7 +73,7 @@ fn copy_output(
 
 fn get_best_solution(
     current_solution: &SolvedSolutionDto,
-    base_dir: &PathBuf,
+    base_dir: &Path,
     problem_num: &str,
 ) -> std::io::Result<(SolvedSolutionDto, bool)> {
     read_current_best(base_dir, problem_num).map(|best| match best {
@@ -89,7 +89,7 @@ fn get_best_solution(
 }
 
 fn read_current_best(
-    base_dir: &PathBuf,
+    base_dir: &Path,
     problem_num: &str,
 ) -> std::io::Result<Option<SolvedSolutionDto>> {
     let meta_fname = &format!("{problem_num}_meta.json");
@@ -108,7 +108,7 @@ fn read_current_best(
 }
 
 fn write_best(
-    base_dir: &PathBuf,
+    base_dir: &Path,
     problem_num: &str,
     solution: &SolvedSolutionDto,
 ) -> std::io::Result<()> {
@@ -116,7 +116,7 @@ fn write_best(
     let current_solution_dir = base_dir.join("current").join(solution.solver_name.clone());
 
     std::fs::create_dir_all(&target_dir)?;
-    let best = get_best_solution(solution, &base_dir, problem_num)?;
+    let best = get_best_solution(solution, base_dir, problem_num)?;
     match best {
         (_, false) => Ok(()),
         _ => copy_output(current_solution_dir, target_dir, problem_num),
@@ -136,7 +136,7 @@ fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
                 solver_name: current_best_solver,
                 ..
             } = read_current_best(&base_solution_dir, problem_num)?
-                .unwrap_or(SolvedSolutionDto::not_solved());
+                .unwrap_or_else(SolvedSolutionDto::not_solved);
 
             for solver_name in solvers {
                 let solver = create_solver(solver_name);

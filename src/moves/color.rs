@@ -23,7 +23,7 @@ pub fn color(
             ));
         }
         // if its complex, turn it into a simple block
-        Block::Complex(ref mut complex) => (complex.id.clone(), complex.r.clone()),
+        Block::Complex(ref mut complex) => (complex.id.clone(), complex.r),
     };
     let old_block = block.clone();
     *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));

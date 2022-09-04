@@ -84,7 +84,7 @@ impl Canvas {
     }
 
     pub fn blocks_iter(&self) -> impl Iterator<Item = &Block> {
-        self.blocks.values().into_iter()
+        self.blocks.values()
     }
 
     pub fn hit_test(&self, x: u32, y: u32) -> BlockId {

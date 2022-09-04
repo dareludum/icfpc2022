@@ -22,12 +22,10 @@ impl Solver for Simple {
             } else {
                 "simple_no_x"
             }
+        } else if self.allow_cross_cut {
+            "simple_s1"
         } else {
-            if self.allow_cross_cut {
-                "simple_s1"
-            } else {
-                "simple_no_x_s1"
-            }
+            "simple_no_x_s1"
         }
     }
 
