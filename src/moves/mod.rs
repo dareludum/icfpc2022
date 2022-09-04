@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
-    block::{Block, BlockId, SubBlock},
+    block::{Block, BlockId},
     canvas::Canvas,
     color::Color,
 };
@@ -97,12 +97,12 @@ impl Move {
 
         let (cost, undo) = match self {
             Move::LineCut(ref block, orientation, offset) => {
-                line_cut(&self, canvas, block, orientation, offset)
+                line_cut(canvas, block, orientation, offset)
             }
-            Move::PointCut(ref block, x, y) => point_cut(&self, canvas, block, x, y),
-            Move::Color(ref block, c) => color(&self, canvas, block, c),
-            Move::Swap(ref block_a, ref block_b) => swap(&self, canvas, block_a, block_b),
-            Move::Merge(ref block_a, ref block_b) => merge(&self, canvas, block_a, block_b),
+            Move::PointCut(ref block, x, y) => point_cut(canvas, block, x, y),
+            Move::Color(ref block, c) => color(canvas, block, c),
+            Move::Swap(ref block_a, ref block_b) => swap(canvas, block_a, block_b),
+            Move::Merge(ref block_a, ref block_b) => merge(canvas, block_a, block_b),
         }?;
 
         Ok(AppliedMove {
@@ -123,18 +123,6 @@ impl Move {
         applied_move.undo.clone().apply(&mut cur_canvas);
         assert_eq!(&ref_canvas, &cur_canvas, "failed to undo");
         Ok(applied_move)
-    }
-
-    // TODO: refactor this duplication :/
-    pub fn get_cost(typ: MoveType, block_area: u32, canvas_area: u32) -> Cost {
-        let base_cost = match typ {
-            MoveType::LineCut => 7.0,
-            MoveType::PointCut => 10.0,
-            MoveType::Color => 5.0,
-            MoveType::Swap => 3.0,
-            MoveType::Merge => 1.0,
-        };
-        Cost((base_cost * (canvas_area as f64 / block_area as f64)).round() as u64)
     }
 }
 

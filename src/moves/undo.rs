@@ -1,7 +1,8 @@
 use crate::block::{Block, BlockData, BlockId};
 use crate::canvas::Canvas;
 use crate::color::Color;
-use crate::moves::Move;
+
+use super::swap::swap_noundo;
 
 #[derive(Debug, Clone)]
 pub struct UndoMove {
@@ -120,7 +121,7 @@ impl UndoMove {
                 canvas.put_block(old_block);
             }
             UndoMoveOp::Swap { a_id, b_id } => {
-                Move::Swap(a_id, b_id).apply(canvas).ok();
+                swap_noundo(canvas, &a_id, &b_id).ok();
             }
             UndoMoveOp::Merge {
                 merged_block_id,

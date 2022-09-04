@@ -1,7 +1,7 @@
-use crate::block::{BlockData, BlockId};
+use crate::block::{BlockData, BlockId, SubBlock};
 use crate::block::{Point, Rect};
 use crate::canvas::Canvas;
-use crate::moves::{Block, Cost, Move, MoveError, Orientation, SubBlock, UndoMove};
+use crate::moves::{Block, Cost, MoveError, MoveType, Orientation, UndoMove};
 
 struct UndoCutBuilder {
     delete_blocks: Vec<BlockId>,
@@ -33,27 +33,25 @@ impl UndoCutBuilder {
 }
 
 pub fn line_cut(
-    mov: &Move,
     canvas: &mut Canvas,
     block: &BlockId,
     orientation: Orientation,
     offset: u32,
 ) -> Result<(Cost, UndoMove), MoveError> {
     match orientation {
-        Orientation::Horizontal => horizontal_cut(mov, canvas, block, offset),
-        Orientation::Vertical => vertical_cut(mov, canvas, block, offset),
+        Orientation::Horizontal => horizontal_cut(canvas, block, offset),
+        Orientation::Vertical => vertical_cut(canvas, block, offset),
     }
 }
 
 pub fn vertical_cut(
-    mov: &Move,
     canvas: &mut Canvas,
     block_id: &BlockId,
     cut_offset_x: u32,
 ) -> Result<(Cost, UndoMove), MoveError> {
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(mov, block.size(), canvas.area);
+    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
     if !(block.r.bottom_left.x <= cut_offset_x && cut_offset_x < block.r.top_right.x) {
         return Err(MoveError::LogicError(format!(
             "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
@@ -99,14 +97,13 @@ pub fn vertical_cut(
 }
 
 pub fn horizontal_cut(
-    mov: &Move,
     canvas: &mut Canvas,
     block_id: &BlockId,
     cut_offset_y: u32,
 ) -> Result<(Cost, UndoMove), MoveError> {
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(mov, block.size(), canvas.area);
+    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
     if !(block.r.bottom_left.y <= cut_offset_y && cut_offset_y < block.r.top_right.y) {
         return Err(MoveError::LogicError(format!(
             "Col number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
@@ -152,7 +149,6 @@ pub fn horizontal_cut(
 }
 
 pub fn point_cut(
-    mov: &Move,
     canvas: &mut Canvas,
     block_id: &BlockId,
     cut_x: u32,
@@ -161,7 +157,7 @@ pub fn point_cut(
     let cut_point = Point::new(cut_x, cut_y);
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(mov, block.size(), canvas.area);
+    let cost = Cost::compute(MoveType::PointCut, block.size(), canvas.area);
 
     if !block.r.contains(cut_x, cut_y) {
         return Err(MoveError::LogicError(format!(

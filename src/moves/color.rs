@@ -1,17 +1,16 @@
 use crate::block::{BlockData, BlockId};
 use crate::canvas::Canvas;
 use crate::color::Color;
-use crate::moves::{Block, Cost, Move, MoveError, UndoMove};
+use crate::moves::{Block, Cost, MoveError, MoveType, UndoMove};
 
 pub fn color(
-    mov: &Move,
     canvas: &mut Canvas,
     block_id: &BlockId,
     new_color: Color,
 ) -> Result<(Cost, UndoMove), MoveError> {
     let canvas_area = canvas.area;
     let block = canvas.get_move_block_mut(block_id)?;
-    let cost = Cost::compute(mov, block.size(), canvas_area);
+    let cost = Cost::compute(MoveType::Color, block.size(), canvas_area);
     let (block_id, rect) = match block.data {
         // if the block is simple, change its color
         BlockData::Simple(ref mut c) => {

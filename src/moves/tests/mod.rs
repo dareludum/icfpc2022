@@ -57,6 +57,13 @@ fn test_reproduce_complicated() -> Result<(), MoveError> {
     Ok(())
 }
 
+#[test]
+fn test_swap() -> Result<(), MoveError> {
+    let mut canvas = make_complicated_canvas();
+    Move::Swap("0.1.0".into(), "0.1.1".into()).checked_apply(&mut canvas)?;
+    Ok(())
+}
+
 ///  0,32         16,32         32,32
 ///   +-------------+-------------+
 ///   |             |             |

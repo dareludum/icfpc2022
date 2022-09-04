@@ -1,11 +1,8 @@
-use crate::block::Block;
-use crate::block::BlockId;
-use crate::block::Rect;
+use crate::block::{Block, BlockId, Rect, SubBlock};
 use crate::canvas::Canvas;
-use crate::moves::{Cost, Move, MoveError, SubBlock, UndoMove};
+use crate::moves::{Cost, MoveError, MoveType, UndoMove};
 
 pub fn merge(
-    mov: &Move,
     canvas: &mut Canvas,
     block_a_id: &BlockId,
     block_b_id: &BlockId,
@@ -13,7 +10,7 @@ pub fn merge(
     let block_a = canvas.remove_move_block(block_a_id)?;
     let block_b = canvas.remove_move_block(block_b_id)?;
     let cost = Cost::compute(
-        mov,
+        MoveType::Merge,
         std::cmp::max(block_a.size(), block_b.size()),
         canvas.area,
     );

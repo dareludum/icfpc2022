@@ -144,7 +144,7 @@ impl Annealing {
         let xstep = self.step * 2;
 
         let r = b.r;
-        let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
+        let linear_cut_cost = Cost::compute(MoveType::LineCut, r.area(), canvas.area);
         if (linear_cut_cost.0 as i64) < budget {
             for x in (step..r.width() - 1).step_by(step as usize) {
                 moves.push((
@@ -159,7 +159,7 @@ impl Annealing {
                 ));
             }
         }
-        let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
+        let cross_cut_cost = Cost::compute(MoveType::PointCut, r.area(), canvas.area);
         if (cross_cut_cost.0 as i64) < budget {
             for x in (xstep..r.width() - 1).step_by(xstep as usize) {
                 for y in (xstep..r.height() - 1).step_by(xstep as usize) {

@@ -1,17 +1,14 @@
 use crate::block::{BlockData, BlockId};
 use crate::canvas::Canvas;
-use crate::moves::{Cost, Move, MoveError, UndoMove};
+use crate::moves::{Cost, MoveError, MoveType, UndoMove};
 
-pub fn swap(
-    mov: &Move,
+pub fn swap_noundo(
     canvas: &mut Canvas,
     block_a_id: &BlockId,
     block_b_id: &BlockId,
-) -> Result<(Cost, UndoMove), MoveError> {
+) -> Result<Cost, MoveError> {
     let mut block_a = canvas.remove_move_block(block_a_id)?;
     let mut block_b = canvas.remove_move_block(block_b_id)?;
-
-    let cost = Cost::compute(mov, block_a.size(), canvas.area);
 
     if block_a.r.width() != block_b.r.width() || block_a.r.height() != block_b.r.height() {
         return Err(MoveError::InvalidInput(format!(
@@ -24,6 +21,8 @@ pub fn swap(
             block_b.r.height(),
         )));
     }
+
+    let cost = Cost::compute(MoveType::Swap, block_a.size(), canvas.area);
 
     let x_diff = block_a
         .r
@@ -56,6 +55,15 @@ pub fn swap(
 
     canvas.put_block(block_a);
     canvas.put_block(block_b);
+    Ok(cost)
+}
+
+pub fn swap(
+    canvas: &mut Canvas,
+    block_a_id: &BlockId,
+    block_b_id: &BlockId,
+) -> Result<(Cost, UndoMove), MoveError> {
+    let cost = swap_noundo(canvas, block_a_id, block_b_id)?;
     Ok((
         cost,
         UndoMove::swap(canvas, block_a_id.clone(), block_b_id.clone()),
