@@ -1,6 +1,6 @@
 {
-  "solver_name": "annealing%recolor",
-  "total_score": 33187,
-  "score": 30441,
-  "solution_cost": 2746
+  "solver_name": "simple_no_x%recolor",
+  "total_score": 32547,
+  "score": 30444,
+  "solution_cost": 2103
 }
