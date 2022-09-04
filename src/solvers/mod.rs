@@ -1,4 +1,5 @@
 mod annealing;
+mod chain;
 mod divide_conquer;
 mod erase;
 mod no_op;
@@ -12,6 +13,8 @@ use crate::{
     painting::Painting,
 };
 
+use self::chain::Chain;
+
 pub struct Solution {
     pub result: Painting,
     pub moves: Vec<Move>,
@@ -19,7 +22,7 @@ pub struct Solution {
 }
 
 pub trait Solver {
-    fn name(&self) -> &'static str;
+    fn name(&self) -> &str;
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove>;
 
     fn solve(&self, canvas: &mut Canvas, painting: &Painting) -> Solution {
@@ -53,6 +56,18 @@ pub const SOLVERS: &[&str] = &[
 ];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
+    if solver_name.contains('+') {
+        let mut solvers = vec![];
+        for name in solver_name.split('+') {
+            solvers.push(create_individual_solver(name))
+        }
+        Box::new(Chain::new(solvers))
+    } else {
+        create_individual_solver(solver_name)
+    }
+}
+
+fn create_individual_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {
         "annealing" => Box::new(annealing::Annealing { step: 10 }),
         "annealing_s4" => Box::new(annealing::Annealing { step: 4 }),
