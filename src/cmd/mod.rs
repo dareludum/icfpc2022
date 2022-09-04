@@ -11,6 +11,8 @@ pub struct Args {
     #[clap(short, long, value_parser)]
     pub problems: Vec<u8>,
     #[clap(short, long)]
+    pub input_moves: Option<String>,
+    #[clap(short, long)]
     pub solvers: Vec<String>,
     #[clap(subcommand)]
     pub command: Option<Commands>,

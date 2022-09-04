@@ -2,6 +2,8 @@ extern crate derive_more;
 extern crate nalgebra as na;
 extern crate nom;
 
+use std::fs::File;
+use std::io::{prelude::*, BufReader};
 use std::{ffi::OsString, fs::DirEntry, path::PathBuf};
 
 use clap::Parser;
@@ -10,7 +12,10 @@ use cmd::stats::*;
 use cmd::Args;
 use cmd::Commands;
 use helpers::*;
+use moves::Move;
 use solvers::SOLVERS;
+
+use crate::parser::parse_move_line;
 
 mod block;
 mod canvas;
@@ -88,6 +93,25 @@ fn list_current_solvers() -> Vec<String> {
     current_solvers
 }
 
+fn parse_input_moves(file_path: &String) -> std::io::Result<Vec<Move>> {
+    let file = File::open(file_path)?;
+    let reader = BufReader::new(file);
+
+    let mut moves = vec![];
+    for line_res in reader.lines() {
+        let line = line_res?;
+        let res = parse_move_line(line.as_str());
+        match res {
+            Ok(("", mov)) => moves.push(mov),
+            Ok((remainder, _)) => {
+                panic!("parser finished before the end of the line: {line}, {remainder}")
+            }
+            Err(err) => panic!("failed to parse line: {err}"),
+        }
+    }
+    Ok(moves)
+}
+
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     let solvers = get_solvers(&args);
@@ -105,8 +129,12 @@ fn main() -> std::io::Result<()> {
             stats(&problems, &solvers.unwrap_or_else(list_current_solvers))
         }
         _ => {
+            let input_moves = match &args.input_moves {
+                Some(input_moves_path) => Some(parse_input_moves(input_moves_path)?),
+                None => None,
+            };
             let problem_paths = get_problem_paths(&args, false)?;
-            default_command(&problem_paths, solvers)
+            default_command(input_moves, &problem_paths, solvers)
         }
     }
 }

@@ -1,9 +1,9 @@
 use crate::block::BlockId;
 use crate::color::Color;
 use crate::moves::{Move, Orientation};
-use nom::character::complete::one_of;
+use nom::character::complete::{newline, one_of};
 use nom::multi::many1;
-use nom::sequence::{preceded, separated_pair};
+use nom::sequence::{preceded, separated_pair, terminated};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_until},
@@ -93,7 +93,7 @@ fn move_swap(input: &str) -> IResult<&str, Move> {
     Ok((rem, Move::Swap(id_a, id_b)))
 }
 
-fn parse(input: &str) -> IResult<&str, Move> {
+fn parse_move(input: &str) -> IResult<&str, Move> {
     alt((
         move_line_cut,
         move_point_cut,
@@ -103,10 +103,14 @@ fn parse(input: &str) -> IResult<&str, Move> {
     ))(input)
 }
 
+pub fn parse_move_line(input: &str) -> IResult<&str, Move> {
+    terminated(parse_move, newline)(input)
+}
+
 #[test]
 fn test_parse_isl() {
     fn assert_isl(line: &str, mov: Move) {
-        match parse(line) {
+        match parse_move(line) {
             Ok((remainder, result)) => {
                 assert_eq!(remainder, "", "expected an empty remainder");
                 assert_eq!(&result, &mov);

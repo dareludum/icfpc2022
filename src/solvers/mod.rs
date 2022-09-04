@@ -67,7 +67,7 @@ pub const SOLVERS: &[&str] = &[
     "top_color",
 ];
 
-pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
+pub fn create_solver(input_moves: Option<Vec<Move>>, solver_name: &str) -> Box<dyn Solver> {
     if solver_name.contains(&['+', '%']) {
         let (solver_name, processor_name) = if solver_name.contains('%') {
             let parts = solver_name.split_at(solver_name.find('%').unwrap());
@@ -85,7 +85,7 @@ pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
                 processors.push(create_processor(name))
             }
         }
-        Box::new(Chain::new(solvers, processors))
+        Box::new(Chain::new(input_moves, solvers, processors))
     } else {
         create_individual_solver(solver_name)
     }

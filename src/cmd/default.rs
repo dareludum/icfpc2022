@@ -4,12 +4,16 @@ use std::{
 };
 
 use crate::{
-    canvas::Canvas, dto::SolvedSolutionDto, gui::gui_main, helpers::*, painting::Painting, program,
-    solvers::create_solver,
+    canvas::Canvas, dto::SolvedSolutionDto, gui::gui_main, helpers::*, moves::Move,
+    painting::Painting, program, solvers::create_solver,
 };
 use rayon::prelude::*;
 
-fn solve(solvers: &[String], problem_paths: &[PathBuf]) -> std::io::Result<()> {
+fn solve(
+    input_moves: Option<Vec<Move>>,
+    solvers: &[String],
+    problem_paths: &[PathBuf],
+) -> std::io::Result<()> {
     let base_solution_dir = PathBuf::from("./solutions/");
 
     problem_paths
@@ -25,7 +29,7 @@ fn solve(solvers: &[String], problem_paths: &[PathBuf]) -> std::io::Result<()> {
                 .unwrap_or_else(SolvedSolutionDto::not_solved);
 
             for solver_name in solvers {
-                let solver = create_solver(solver_name);
+                let solver = create_solver(input_moves.clone(), solver_name);
 
                 let current_solution_dir = &base_solution_dir.join("current").join(solver.name());
                 std::fs::create_dir_all(current_solution_dir)?;
@@ -176,6 +180,7 @@ fn read_current_best(
 }
 
 pub fn default_command(
+    input_moves: Option<Vec<Move>>,
     problem_paths: &[PathBuf],
     solvers: Option<Vec<String>>,
 ) -> Result<(), std::io::Error> {
@@ -184,7 +189,7 @@ pub fn default_command(
             gui_main(&std::path::PathBuf::from(problem_path));
             Ok(())
         }
-        (paths, Some(solvers)) => solve(&solvers, paths),
+        (paths, Some(solvers)) => solve(input_moves, &solvers, paths),
         (_, None) => panic!("No problem paths and solvers provided"),
     }
 }
