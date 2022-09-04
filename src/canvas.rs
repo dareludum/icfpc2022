@@ -27,7 +27,7 @@ impl From<CanvasDto> for Canvas {
         let max_root: Option<u32> = blocks
             .iter()
             .filter_map(|block| {
-                let id = &block.get_id().0;
+                let id = &block.id.0;
                 let root_id_str = match id.find('.') {
                     Some(dot_off) => &id.as_str()[0..dot_off],
                     None => id.as_str(),
