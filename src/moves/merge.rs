@@ -18,8 +18,6 @@ pub fn merge(
     let b_bottom_left = block_b.r.bottom_left;
     let a_top_right = block_a.r.top_right;
     let b_top_right = block_b.r.top_right;
-    drop(block_a);
-    drop(block_b);
 
     // vertical merge
     if (a_bottom_left.y == b_top_right.y || a_top_right.y == b_bottom_left.y)
