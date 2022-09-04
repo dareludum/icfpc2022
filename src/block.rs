@@ -231,13 +231,6 @@ impl Block {
         }
     }
 
-    pub fn get_id_mut(&mut self) -> &mut BlockId {
-        match self {
-            Block::Simple(b) => &mut b.id,
-            Block::Complex(b) => &mut b.id,
-        }
-    }
-
     pub fn rect(&self) -> &Rect {
         match self {
             Block::Simple(b) => &b.r,
