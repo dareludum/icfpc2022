@@ -10,21 +10,27 @@ impl Display for Color {
     }
 }
 
+impl From<Point4<f32>> for Color {
+    fn from(data: Point4<f32>) -> Self {
+        Color(na::convert_unchecked::<Point4<f32>, Point4<u8>>(data))
+    }
+}
+
 impl Color {
     pub fn r(&self) -> u8 {
-        return self.0[0];
+        self.0[0]
     }
 
     pub fn g(&self) -> u8 {
-        return self.0[1];
+        self.0[1]
     }
 
     pub fn b(&self) -> u8 {
-        return self.0[2];
+        self.0[2]
     }
 
     pub fn a(&self) -> u8 {
-        return self.0[3];
+        self.0[3]
     }
 
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
@@ -55,6 +61,95 @@ impl Color {
             (a / total_pixels) as u8,
         )
     }
+
+    /// taken from https://github.com/liborty/rstats
+    pub fn gmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Self {
+        let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
+
+        let mut g = find_centroid(colors);
+        let mut recsum = 0f32;
+        for _ in 0..max_iterations {
+            let mut nextg = Vector4::<f32>::zeros();
+            let mut nextrecsum = 0_f32;
+            for v in fcolors.iter() {
+                let mag = na::distance(v, &g);
+                if mag > eps {
+                    let rec = 1.0_f32 / mag.sqrt();
+                    // vsum increment by components
+                    nextg += v.coords * rec;
+                    nextrecsum += rec // add separately the reciprocals for final scaling
+                } // else simply ignore this point should its distance from g be zero
+            }
+            nextg /= nextrecsum;
+            if nextrecsum - recsum < eps {
+                break;
+            }
+            g = Point4::from(nextg);
+            recsum = nextrecsum;
+        }
+        g.into()
+    }
+
+    /// taken from https://github.com/liborty/rstats
+    pub fn pmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Self {
+        let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
+        let mut g = find_centroid(colors);
+        // running global sum of reciprocals
+        let mut recsum = 0f32;
+
+        // running global sum of unit vectors
+        let mut vsum = Vector4::<f32>::zeros();
+        // previous reciprocals for each point
+        let mut precs: Vec<f32> = Vec::with_capacity(colors.len());
+        // termination flag triggered by any one point
+        let mut terminate = true;
+
+        // initial vsum,recsum and precs
+        for p in &fcolors {
+            // square magnitude of p - g
+            let magsq = (p - g).norm_squared();
+            if magsq < eps {
+                precs.push(0.);
+                continue;
+            }; // skip this point, it is too close
+            let rec = 1.0 / (magsq.sqrt());
+            // vsum incremented by components of unit vector
+            vsum += rec * p.coords;
+            precs.push(rec); // store rec for this p
+            recsum += rec;
+        }
+
+        // first iteration done, update g
+        g = Point4::from(vsum / recsum);
+        for _ in 0..max_iterations {
+            // vector iteration till accuracy eps is exceeded
+            for (p, rec) in fcolors.iter().zip(&mut precs) {
+                let magsq = (p - g).norm_squared();
+                if magsq < eps {
+                    *rec = 0.0;
+                    continue;
+                }; // skip this point, it is too close
+                let recip = 1.0 / (magsq.sqrt());
+                let recdelta = recip - *rec; // change in reciprocal for p
+                *rec = recip; // update rec for this p for next time
+                              // vsum updated by components
+                vsum += recdelta * p.coords;
+                // update recsum
+                recsum += recdelta;
+                // update g immediately for each point p
+                g = Point4::from(vsum / recsum);
+                // termination condition detected but do the rest of the points anyway
+                if terminate && recdelta.abs() > eps {
+                    terminate = false
+                };
+            }
+            if terminate {
+                break;
+            }; // termination reached
+            terminate = true
+        }
+        g.into()
+    }
 }
 
 fn find_centroid(colors: &Vec<Color>) -> Point4<f32> {
@@ -77,99 +172,4 @@ fn find_centroid(colors: &Vec<Color>) -> Point4<f32> {
         (a / total_pixels) as f32,
     ]
     .into()
-}
-
-impl From<Point4<f32>> for Color {
-    fn from(data: Point4<f32>) -> Self {
-        Color(na::convert_unchecked::<Point4<f32>, Point4<u8>>(data))
-    }
-}
-
-/// taken from https://github.com/liborty/rstats
-fn gmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Color {
-    let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
-
-    let mut g = find_centroid(colors);
-    let mut recsum = 0f32;
-    for _ in 0..max_iterations {
-        let mut nextg = Vector4::<f32>::zeros();
-        let mut nextrecsum = 0_f32;
-        for v in fcolors.iter() {
-            let mag = na::distance(&v, &g);
-            if mag > eps {
-                let rec = 1.0_f32 / mag.sqrt();
-                // vsum increment by components
-                nextg += v.coords * rec;
-                nextrecsum += rec // add separately the reciprocals for final scaling
-            } // else simply ignore this point should its distance from g be zero
-        }
-        nextg /= nextrecsum;
-        if nextrecsum - recsum < eps {
-            break;
-        }
-        g = Point4::from(nextg);
-        recsum = nextrecsum;
-    }
-    g.into()
-}
-
-/// taken from https://github.com/liborty/rstats
-fn pmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Color {
-    let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
-    let mut g = find_centroid(colors);
-    // running global sum of reciprocals
-    let mut recsum = 0f32;
-
-    // running global sum of unit vectors
-    let mut vsum = Vector4::<f32>::zeros();
-    // previous reciprocals for each point
-    let mut precs: Vec<f32> = Vec::with_capacity(colors.len());
-    // termination flag triggered by any one point
-    let mut terminate = true;
-
-    // initial vsum,recsum and precs
-    for p in &fcolors {
-        // square magnitude of p - g
-        let magsq = (p - g).norm_squared();
-        if magsq < eps {
-            precs.push(0.);
-            continue;
-        }; // skip this point, it is too close
-        let rec = 1.0 / (magsq.sqrt());
-        // vsum incremented by components of unit vector
-        vsum += rec * p.coords;
-        precs.push(rec); // store rec for this p
-        recsum += rec;
-    }
-
-    // first iteration done, update g
-    g = Point4::from(vsum / recsum);
-    for _ in 0..max_iterations {
-        // vector iteration till accuracy eps is exceeded
-        for (p, rec) in fcolors.iter().zip(&mut precs) {
-            let magsq = (p - g).norm_squared();
-            if magsq < eps {
-                *rec = 0.0;
-                continue;
-            }; // skip this point, it is too close
-            let recip = 1.0 / (magsq.sqrt());
-            let recdelta = recip - *rec; // change in reciprocal for p
-            *rec = recip; // update rec for this p for next time
-                          // vsum updated by components
-            vsum += recdelta * p.coords;
-            // update recsum
-            recsum += recdelta;
-            // update g immediately for each point p
-            g = Point4::from(vsum / recsum);
-            // termination condition detected but do the rest of the points anyway
-            if terminate && recdelta.abs() > eps {
-                terminate = false
-            };
-        }
-        if terminate {
-            break;
-        }; // termination reached
-        terminate = true
-    }
-    g.into()
 }

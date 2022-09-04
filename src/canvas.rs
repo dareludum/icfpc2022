@@ -98,7 +98,7 @@ impl Canvas {
             blocks_map.insert(block.id.clone(), block);
         }
         Canvas {
-            v2: v2,
+            v2,
             width: w,
             height: h,
             area: w * h,

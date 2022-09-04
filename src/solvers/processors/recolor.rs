@@ -27,15 +27,25 @@ impl Processor for Recolor {
                     if let BlockData::Simple(_) = b.data {
                         // Assign a new color based on the current, and not initial, block size
                         let counts = painting.count_colors(&b.r);
-                        let avg_color = Color::find_average(&counts);
-                        let top_color = Color::find_most_common(&counts);
-                        *c = if painting.calculate_score_rect(&b.r, avg_color)
-                            < painting.calculate_score_rect(&b.r, top_color)
-                        {
-                            avg_color
-                        } else {
-                            top_color
-                        };
+                        let mut colors = vec![];
+                        for (c, cnt) in &counts {
+                            for _ in 0..*cnt {
+                                colors.push(*c);
+                            }
+                        }
+                        const EPS: f32 = 0.2;
+                        const MAX_ITERATIONS: u32 = 1000;
+                        let color_options = &[
+                            Color::find_average(&counts),
+                            Color::find_most_common(&counts),
+                            Color::gmedian(&colors, EPS, MAX_ITERATIONS),
+                            Color::pmedian(&colors, EPS, MAX_ITERATIONS),
+                        ];
+                        // dbg!(color_options);
+                        *c = *color_options
+                            .iter()
+                            .min_by_key(|c| painting.calculate_score_rect(&b.r, **c) as i64)
+                            .unwrap();
                     }
                 }
             }
