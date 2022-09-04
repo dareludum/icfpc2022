@@ -61,6 +61,16 @@ pub enum MoveType {
 }
 
 impl Canvas {
+    fn get_move_block(&self, block_id: &BlockId) -> Result<&Block, MoveError> {
+        match self.get_block(block_id) {
+            Some(block) => Ok(block),
+            None => Err(MoveError::LogicError(format!(
+                "missing block: {}",
+                block_id
+            ))),
+        }
+    }
+
     fn get_move_block_mut(&mut self, block_id: &BlockId) -> Result<&mut Block, MoveError> {
         match self.get_block_mut(block_id) {
             Some(block) => Ok(block),

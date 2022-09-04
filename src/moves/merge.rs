@@ -7,8 +7,8 @@ pub fn merge(
     block_a_id: &BlockId,
     block_b_id: &BlockId,
 ) -> Result<(Cost, UndoMove), MoveError> {
-    let block_a = canvas.remove_move_block(block_a_id)?;
-    let block_b = canvas.remove_move_block(block_b_id)?;
+    let block_a = canvas.get_move_block(block_a_id)?;
+    let block_b = canvas.get_move_block(block_b_id)?;
     let cost = Cost::compute(
         MoveType::Merge,
         std::cmp::max(block_a.size(), block_b.size()),
@@ -18,12 +18,16 @@ pub fn merge(
     let b_bottom_left = block_b.r.bottom_left;
     let a_top_right = block_a.r.top_right;
     let b_top_right = block_b.r.top_right;
+    drop(block_a);
+    drop(block_b);
 
     // vertical merge
     if (a_bottom_left.y == b_top_right.y || a_top_right.y == b_bottom_left.y)
         && a_bottom_left.x == b_bottom_left.x
         && a_top_right.x == b_top_right.x
     {
+        let block_a = canvas.remove_block(block_a_id).unwrap();
+        let block_b = canvas.remove_block(block_b_id).unwrap();
         let (new_bottom_left, new_top_right) = if a_bottom_left.y < b_bottom_left.y {
             (a_bottom_left, b_top_right)
         } else {
@@ -47,6 +51,8 @@ pub fn merge(
         && a_bottom_left.y == b_bottom_left.y
         && a_top_right.y == b_top_right.y
     {
+        let block_a = canvas.remove_block(block_a_id).unwrap();
+        let block_b = canvas.remove_block(block_b_id).unwrap();
         let (new_bottom_left, new_top_right) = if a_bottom_left.x < b_bottom_left.x {
             (a_bottom_left, b_top_right)
         } else {

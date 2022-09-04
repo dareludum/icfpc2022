@@ -49,15 +49,17 @@ pub fn vertical_cut(
     block_id: &BlockId,
     cut_offset_x: u32,
 ) -> Result<(Cost, UndoMove), MoveError> {
-    let mut builder = UndoCutBuilder::new();
-    let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
+    let block = canvas.get_move_block(block_id)?;
     if !(block.r.bottom_left.x <= cut_offset_x && cut_offset_x < block.r.top_right.x) {
         return Err(MoveError::LogicError(format!(
             "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
             block_id, block.r.bottom_left, block.r.top_right, cut_offset_x
         )));
     }
+
+    let mut builder = UndoCutBuilder::new();
+    let block = builder.remove(canvas, block_id)?;
+    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
 
     match block.data {
         BlockData::Simple(_) => {
@@ -101,15 +103,17 @@ pub fn horizontal_cut(
     block_id: &BlockId,
     cut_offset_y: u32,
 ) -> Result<(Cost, UndoMove), MoveError> {
-    let mut builder = UndoCutBuilder::new();
-    let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
+    let block = canvas.get_move_block(block_id)?;
     if !(block.r.bottom_left.y <= cut_offset_y && cut_offset_y < block.r.top_right.y) {
         return Err(MoveError::LogicError(format!(
             "Col number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
             block_id, block.r.bottom_left, block.r.top_right, cut_offset_y
         )));
     }
+
+    let mut builder = UndoCutBuilder::new();
+    let block = builder.remove(canvas, block_id)?;
+    let cost = Cost::compute(MoveType::LineCut, block.size(), canvas.area);
 
     match block.data {
         BlockData::Simple(_) => {
@@ -154,17 +158,18 @@ pub fn point_cut(
     cut_x: u32,
     cut_y: u32,
 ) -> Result<(Cost, UndoMove), MoveError> {
-    let cut_point = Point::new(cut_x, cut_y);
-    let mut builder = UndoCutBuilder::new();
-    let block = builder.remove(canvas, block_id)?;
-    let cost = Cost::compute(MoveType::PointCut, block.size(), canvas.area);
-
+    let block = canvas.get_move_block(block_id)?;
     if !block.r.contains(cut_x, cut_y) {
         return Err(MoveError::LogicError(format!(
             "Point is out of [{}]! Block is from {:?} to {:?}, point is at {} {}!",
             block_id, block.r.bottom_left, block.r.top_right, cut_x, cut_y
         )));
     }
+
+    let cut_point = Point::new(cut_x, cut_y);
+    let mut builder = UndoCutBuilder::new();
+    let block = builder.remove(canvas, block_id)?;
+    let cost = Cost::compute(MoveType::PointCut, block.size(), canvas.area);
 
     let bs = match block.data {
         BlockData::Simple(_) => {

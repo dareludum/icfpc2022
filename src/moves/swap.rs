@@ -7,8 +7,8 @@ pub fn swap_noundo(
     block_a_id: &BlockId,
     block_b_id: &BlockId,
 ) -> Result<Cost, MoveError> {
-    let mut block_a = canvas.remove_move_block(block_a_id)?;
-    let mut block_b = canvas.remove_move_block(block_b_id)?;
+    let block_a = canvas.get_move_block(block_a_id)?;
+    let block_b = canvas.get_move_block(block_b_id)?;
 
     if block_a.r.width() != block_b.r.width() || block_a.r.height() != block_b.r.height() {
         return Err(MoveError::InvalidInput(format!(
@@ -21,6 +21,9 @@ pub fn swap_noundo(
             block_b.r.height(),
         )));
     }
+
+    let mut block_a = canvas.remove_move_block(block_a_id)?;
+    let mut block_b = canvas.remove_move_block(block_b_id)?;
 
     let cost = Cost::compute(MoveType::Swap, block_a.size(), canvas.area);
 
