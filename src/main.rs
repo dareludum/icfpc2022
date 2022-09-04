@@ -3,10 +3,11 @@ extern crate nalgebra as na;
 
 use std::{ffi::OsString, fs::DirEntry, path::PathBuf};
 
-use clap::{Parser, Subcommand};
-
+use clap::Parser;
 use cmd::default::*;
 use cmd::stats::*;
+use cmd::Args;
+use cmd::Commands;
 use helpers::*;
 use solvers::SOLVERS;
 
@@ -21,24 +22,6 @@ mod moves;
 mod painting;
 mod program;
 mod solvers;
-
-#[derive(Parser, Debug)]
-#[clap()]
-struct Args {
-    #[clap(long)]
-    batch: bool,
-    #[clap(short, long, value_parser)]
-    problems: Vec<u8>,
-    #[clap(short, long)]
-    solvers: Vec<String>,
-    #[clap(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    Stats,
-}
 
 fn get_problem_paths(args: &Args, force_batch: bool) -> Result<Vec<PathBuf>, std::io::Error> {
     if !args.problems.is_empty() {
@@ -81,6 +64,28 @@ fn get_solvers(args: &Args) -> Option<Vec<String>> {
     }
 }
 
+fn list_current_solvers() -> Vec<String> {
+    let mut current_solvers = vec![];
+    let solvers_dir = std::fs::read_dir(PathBuf::from("./solutions/current"))
+        .expect("Can't list solutions current dir");
+
+    for solver in solvers_dir {
+        let (id_dir, file_name) = solver
+            .and_then(|x| {
+                let ftype = x.file_type()?;
+                Ok((ftype, x.file_name()))
+            })
+            .map(|(typ, fname)| (typ.is_dir(), fname))
+            .unwrap_or((false, OsString::new()));
+
+        if id_dir {
+            current_solvers.push(os_str_to_str(Some(&file_name)));
+        }
+    }
+
+    current_solvers
+}
+
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     let solvers = get_solvers(&args);
@@ -102,26 +107,4 @@ fn main() -> std::io::Result<()> {
             default_command(&problem_paths, solvers)
         }
     }
-}
-
-fn list_current_solvers() -> Vec<String> {
-    let mut current_solvers = vec![];
-    let solvers_dir = std::fs::read_dir(PathBuf::from("./solutions/current"))
-        .expect("Can't list solutions current dir");
-
-    for solver in solvers_dir {
-        let (id_dir, file_name) = solver
-            .and_then(|x| {
-                let ftype = x.file_type()?;
-                Ok((ftype, x.file_name()))
-            })
-            .map(|(typ, fname)| (typ.is_dir(), fname))
-            .unwrap_or((false, OsString::new()));
-
-        if id_dir {
-            current_solvers.push(os_str_to_str(Some(&file_name)));
-        }
-    }
-
-    current_solvers
 }
