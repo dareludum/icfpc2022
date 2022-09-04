@@ -25,8 +25,7 @@ impl Solver for TopColor {
             let colors = painting.count_colors(&block.r);
             let top_color = Color::find_most_common(&colors);
 
-            let mov_id = "0".into();
-            let mov = Move::Color(mov_id, top_color);
+            let mov = Move::Color(block.id.clone(), top_color);
 
             moves.push(mov);
         }
