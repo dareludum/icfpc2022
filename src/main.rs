@@ -1,7 +1,7 @@
 extern crate derive_more;
 
 use std::{
-    ffi::OsStr,
+    ffi::{OsStr, OsString},
     fs::{self, DirEntry},
     path::{Path, PathBuf},
 };
@@ -41,6 +41,13 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Commands {
     Stats,
+}
+
+fn os_str_to_str(str: Option<&OsStr>) -> String {
+    str.expect("OsStr is None")
+        .to_str()
+        .expect("Can't convert OsStr to String")
+        .to_string()
 }
 
 fn fcopy_to(current_dir: &Path, target_dir: &Path, filename: &str) -> std::io::Result<()> {
@@ -136,13 +143,13 @@ fn solve(solvers: &[String], problem_paths: &[PathBuf]) -> std::io::Result<()> {
     problem_paths
         .par_iter()
         .map(|problem_path| {
-            let problem_num = problem_path.file_stem().unwrap().to_str().unwrap();
+            let problem_num = os_str_to_str(problem_path.file_stem());
             let painting = Painting::load(problem_path);
             let SolvedSolutionDto {
                 total_score: current_best_total,
                 solver_name: current_best_solver,
                 ..
-            } = read_current_best(&base_solution_dir, problem_num)?
+            } = read_current_best(&base_solution_dir, &problem_num)?
                 .unwrap_or_else(SolvedSolutionDto::not_solved);
 
             for solver_name in solvers {
@@ -154,12 +161,16 @@ fn solve(solvers: &[String], problem_paths: &[PathBuf]) -> std::io::Result<()> {
                 let initial_config_path = problem_path.with_extension("json");
                 let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
                 let solution = solver.solve(&mut canvas, &painting);
-                let isl_path = current_solution_dir.join(problem_num).with_extension("txt");
+                let isl_path = current_solution_dir
+                    .join(&problem_num)
+                    .with_extension("txt");
 
                 program::write_to_file(&isl_path, &solution.moves)?;
-                solution
-                    .result
-                    .write_to_file(&current_solution_dir.join(problem_num).with_extension("png"));
+                solution.result.write_to_file(
+                    &current_solution_dir
+                        .join(&problem_num)
+                        .with_extension("png"),
+                );
 
                 let score = painting.calculate_score(&solution.result);
                 let total = score + solution.cost;
@@ -177,7 +188,7 @@ fn solve(solvers: &[String], problem_paths: &[PathBuf]) -> std::io::Result<()> {
                     solution_meta_json,
                 )?;
 
-                write_best(&base_solution_dir, problem_num, &solution_meta)?;
+                write_best(&base_solution_dir, &problem_num, &solution_meta)?;
 
                 println!(
                     "{:15}{}: {} ({} + {}); best: {} {} {}",
@@ -252,7 +263,7 @@ fn default_command(
     }
 }
 
-fn stats(problems_n: &[&str], solvers: &[String]) -> Result<(), std::io::Error> {
+fn stats(problems_n: &[String], solvers: &[String]) -> Result<(), std::io::Error> {
     let mut sum_best: u64 = 0;
 
     for n in problems_n {
@@ -299,16 +310,13 @@ fn main() -> std::io::Result<()> {
         Some(Commands::Stats) => {
             let problem_paths = get_problem_paths(&args, true)?;
 
-            let mut problems: Vec<&str> = problem_paths
+            let mut problems: Vec<String> = problem_paths
                 .iter()
-                .map(|p| p.file_stem().unwrap().to_str().unwrap())
+                .map(|p| os_str_to_str(p.file_stem()))
                 .collect();
 
             problems.sort_by_key(|x| x.parse::<u8>().unwrap());
-            stats(
-                &problems,
-                &solvers.unwrap_or_else(|| list_current_solvers()),
-            )
+            stats(&problems, &solvers.unwrap_or_else(list_current_solvers))
         }
         _ => {
             let problem_paths = get_problem_paths(&args, false)?;
@@ -321,13 +329,18 @@ fn list_current_solvers() -> Vec<String> {
     let mut current_solvers = vec![];
     let solvers_dir = std::fs::read_dir(PathBuf::from("./solutions/current"))
         .expect("Can't list solutions current dir");
-    for s in solvers_dir {
-        if let Ok(dir) = s {
-            if let Ok(file_type) = dir.file_type() {
-                if file_type.is_dir() {
-                    current_solvers.push(dir.file_name().to_str().unwrap().to_string());
-                }
-            }
+
+    for solver in solvers_dir {
+        let (id_dir, file_name) = solver
+            .and_then(|x| {
+                let ftype = x.file_type()?;
+                Ok((ftype, x.file_name()))
+            })
+            .map(|(typ, fname)| (typ.is_dir(), fname))
+            .unwrap_or((false, OsString::new()));
+
+        if id_dir {
+            current_solvers.push(os_str_to_str(Some(&file_name)));
         }
     }
 
