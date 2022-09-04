@@ -24,7 +24,11 @@ pub struct Canvas {
 
 impl From<CanvasDto> for Canvas {
     fn from(dto: CanvasDto) -> Self {
-        let blocks: Vec<Block> = dto.blocks.iter().map(|bdto| bdto.into()).collect();
+        let blocks: Vec<Block> = dto
+            .blocks
+            .iter()
+            .map(|bdto| Block::from_dto(bdto, dto.source_png.clone()))
+            .collect();
 
         let max_root: Option<u32> = blocks
             .iter()
@@ -47,6 +51,7 @@ impl From<CanvasDto> for Canvas {
             initial_root_count,
             0,
             blocks.into_iter(),
+            dto.source_png.is_some(),
         )
     }
 }
@@ -77,7 +82,7 @@ impl Canvas {
             Rect::from_dimensions(Point::new(0, 0), w, h),
             Color::new(255, 255, 255, 255),
         )];
-        Self::from_blocks(w, h, 1, 0, blocks.into_iter())
+        Self::from_blocks(w, h, 1, 0, blocks.into_iter(), false)
     }
 
     pub fn from_blocks(
@@ -86,13 +91,14 @@ impl Canvas {
         roots_count: u32,
         generation: u32,
         blocks: impl Iterator<Item = Block>,
+        v2: bool,
     ) -> Self {
         let mut blocks_map = HashMap::new();
         for block in blocks {
             blocks_map.insert(block.id.clone(), block);
         }
         Canvas {
-            v2: false,
+            v2: v2,
             width: w,
             height: h,
             area: w * h,

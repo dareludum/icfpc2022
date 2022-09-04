@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use smartstring::{LazyCompact, SmartString};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct BlockDto {
     #[serde(rename(deserialize = "blockId"))]
     pub block_id: SmartString<LazyCompact>,
@@ -10,16 +10,20 @@ pub struct BlockDto {
     #[serde(rename(deserialize = "topRight"))]
     pub top_right: [u32; 2],
     pub color: Option<[u8; 4]>,
+    #[serde(rename(deserialize = "pngBottomLeftPoint"))]
+    pub png_bottom_left: Option<[u32; 2]>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct CanvasDto {
     pub width: u32,
     pub height: u32,
+    #[serde(rename(deserialize = "sourcePngPNG"))]
+    pub source_png: Option<String>,
     pub blocks: Vec<BlockDto>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct SolvedSolutionDto {
     pub solver_name: String,
     pub total_score: u64,

@@ -1,8 +1,8 @@
 {
     "width": 400,
     "height": 400,
-    "sourcePngJSON": "36.source.json",
-    "sourcePngPNG": "36.source.png",
+    "sourcePngJSON": "./problems/36.source.json",
+    "sourcePngPNG": "./problems/36.source.png",
     "blocks": [
         {
             "blockId": "0",

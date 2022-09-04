@@ -43,7 +43,7 @@ fn make_complicated_canvas() -> Canvas {
         ],
     ));
     // this is a 3rd generation canvas, as 3 moves were applied
-    return Canvas::from_blocks(32, 32, 2, 3, blocks.into_iter());
+    return Canvas::from_blocks(32, 32, 2, 3, blocks.into_iter(), false);
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn make_cross_canvas() -> Canvas {
     blocks.push(Block::new_complex("3.2".into(), tr, vec![SubBlock::new(tr, bg)]).into());
     blocks.push(Block::new_complex("3.3".into(), tl, vec![SubBlock::new(tl, bg)]).into());
     // this is a 3rd generation canvas, as 3 moves were applied
-    return Canvas::from_blocks(32, 32, 4, 5, blocks.into_iter());
+    return Canvas::from_blocks(32, 32, 4, 5, blocks.into_iter(), false);
 }
 
 #[test]

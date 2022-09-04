@@ -1,8 +1,8 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::PathBuf};
 
 use smartstring::{LazyCompact, SmartString};
 
-use crate::{color::Color, dto::BlockDto};
+use crate::{color::Color, dto::BlockDto, painting::Painting};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Point {
@@ -212,24 +212,40 @@ impl Block {
             BlockData::Complex(_) => panic!("Can't simple-split a complex block"),
         }
     }
-}
 
-impl From<&BlockDto> for Block {
-    fn from(dto: &BlockDto) -> Self {
+    pub fn from_dto(dto: &BlockDto, source_png_path: Option<String>) -> Self {
         let BlockDto {
             block_id,
             bottom_left: [bl_x, bl_y],
             top_right: [tr_x, tr_y],
-            color, // color: [r, g, b, a],
+            color,
+            png_bottom_left,
         } = dto;
 
-        // TODO proper logic
-        let [r, g, b, a] = color.unwrap_or([0, 0, 0, 0]);
+        match (color, png_bottom_left) {
+            (Some([r, g, b, a]), None) => Block::new_simple(
+                BlockId::new(block_id.clone()),
+                Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
+                Color::new(*r, *g, *b, *a),
+            ),
+            (None, Some([png_bl_x, png_bl_y])) => {
+                let path = PathBuf::from(source_png_path.expect("Missing source_png_path"));
+                let painting = Painting::load(&path);
+                let mut blocks = vec![];
 
-        Block::new_simple(
-            BlockId::new(block_id.clone()),
-            Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
-            Color::new(r, g, b, a),
-        )
+                for x in *png_bl_x..*tr_x {
+                    for y in *png_bl_y..*tr_y {
+                        let color = painting.get_color(x, y);
+                        let block = SubBlock::new(Rect::from_coords([x, y, x + 1, y + 1]), color);
+
+                        blocks.push(block);
+                    }
+                }
+
+                let rect = Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]);
+                Block::new_complex(BlockId::new(block_id.clone()), rect, blocks)
+            }
+            _ => panic!("Invalid initial JSON"),
+        }
     }
 }
