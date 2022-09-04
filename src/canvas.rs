@@ -12,6 +12,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Canvas {
+    pub v2: bool, // Whether to use new costs or not
     pub area: u32,
     pub width: u32,
     pub height: u32,
@@ -90,6 +91,7 @@ impl Canvas {
             blocks_map.insert(block.id.clone(), block);
         }
         Canvas {
+            v2: false,
             width: w,
             height: h,
             area: w * h,
