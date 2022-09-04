@@ -34,7 +34,7 @@ impl Chain {
         }
         name = name.trim_end_matches('+').to_owned();
         if !processors.is_empty() {
-            name.push('!');
+            name.push('%');
             for p in &processors {
                 name.push_str(p.name());
                 name.push('+');

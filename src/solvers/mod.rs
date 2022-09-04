@@ -3,6 +3,7 @@ mod chain;
 mod divide_conquer;
 mod erase;
 mod no_op;
+mod processors;
 mod simple;
 mod swapper;
 mod top_color;
@@ -67,10 +68,10 @@ pub const SOLVERS: &[&str] = &[
 ];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
-    if solver_name.contains(&['+', '!']) {
-        let (solver_name, processor_name) = if solver_name.contains('!') {
-            let parts = solver_name.split_at(solver_name.find('!').unwrap());
-            (parts.0, Some(parts.1))
+    if solver_name.contains(&['+', '%']) {
+        let (solver_name, processor_name) = if solver_name.contains('%') {
+            let parts = solver_name.split_at(solver_name.find('%').unwrap());
+            (parts.0, Some(&parts.1[1..]))
         } else {
             (solver_name, None)
         };
@@ -122,6 +123,7 @@ fn create_individual_solver(solver_name: &str) -> Box<dyn Solver> {
 
 fn create_processor(processor_name: &str) -> Box<dyn Processor> {
     match processor_name {
+        "recolor" => Box::new(processors::recolor::Recolor {}),
         n => panic!("Unknown procesor `{}`", n),
     }
 }
