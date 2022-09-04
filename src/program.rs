@@ -40,7 +40,7 @@ pub fn write_to_file(path: &Path, moves: &Vec<Move>) -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::moves::Orientation;
+    use crate::{color::Color, moves::Orientation};
 
     use super::*;
 

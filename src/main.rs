@@ -235,9 +235,13 @@ fn get_all_problem_paths() -> Result<Vec<PathBuf>, std::io::Error> {
     let paths: Vec<PathBuf> = std::fs::read_dir("./problems")?
         .collect::<Result<Vec<DirEntry>, _>>()?
         .iter()
-        .filter_map(|f| match f.path().extension() {
-            Some(ext) if ext == OsStr::new("png") => Some(f.path()),
-            _ => None,
+        .filter_map(|f| {
+            let x = os_str_to_str(f.path().file_name());
+            if x.ends_with(".png") && !x.ends_with(".source.png") {
+                Some(f.path())
+            } else {
+                None
+            }
         })
         .collect();
 
