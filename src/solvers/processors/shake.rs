@@ -80,7 +80,7 @@ impl Processor for Shake {
                     }
                     let score = painting.calculate_score_canvas(&attempt_canvas);
                     if score.0 < best_score.0 {
-                        println!("Updating score: {} -> {}", best_score.0, score.0);
+                        // println!("Updating score: {} -> {}", best_score.0, score.0);
                         best_score = score;
                         *applied_moves = new_applied_moves;
                         *canvas = attempt_canvas;
