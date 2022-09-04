@@ -44,7 +44,6 @@ impl Solver for Swapper {
                 }
             }
             if let Some(mov) = best_move {
-                dbg!(&mov);
                 let am = mov.apply(canvas).unwrap();
                 applied_moves.push(am);
             } else {
