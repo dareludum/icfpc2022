@@ -1,4 +1,4 @@
-use crate::block::{Block, BlockId};
+use crate::block::BlockId;
 use crate::canvas::Canvas;
 use crate::moves::{Cost, Move, MoveError, UndoMove};
 
@@ -13,27 +13,19 @@ pub fn swap(
 
     let cost = Cost::compute(mov, block_a.size(), canvas.area);
 
-    if block_a.rect().width() != block_b.rect().width()
-        || block_a.rect().height() != block_b.rect().height()
-    {
+    if block_a.r.width() != block_b.r.width() || block_a.r.height() != block_b.r.height() {
         return Err(MoveError::InvalidInput(format!(
             "Blocks are not the same size, [{}] has size [{},{}] while [{}] has size [{},{}]",
             block_a_id,
-            block_a.rect().width(),
-            block_a.rect().height(),
+            block_a.r.width(),
+            block_a.r.height(),
             block_b_id,
-            block_b.rect().width(),
-            block_b.rect().height(),
+            block_b.r.width(),
+            block_b.r.height(),
         )));
     }
 
-    if let (&mut Block::Simple(ref mut b_a), &mut Block::Simple(ref mut b_b)) =
-        (&mut block_a, &mut block_b)
-    {
-        std::mem::swap(&mut b_a.c, &mut b_b.c);
-    } else {
-        todo!("Swap for complex blocks is not implemented")
-    }
+    std::mem::swap(&mut block_a.data, &mut block_b.data);
 
     canvas.put_block(block_a);
     canvas.put_block(block_b);

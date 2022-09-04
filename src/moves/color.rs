@@ -1,7 +1,7 @@
-use crate::block::BlockId;
+use crate::block::{BlockData, BlockId};
 use crate::canvas::Canvas;
 use crate::color::Color;
-use crate::moves::{Block, Cost, Move, MoveError, SimpleBlock, UndoMove};
+use crate::moves::{Block, Cost, Move, MoveError, UndoMove};
 
 pub fn color(
     mov: &Move,
@@ -12,20 +12,20 @@ pub fn color(
     let canvas_area = canvas.area;
     let block = canvas.get_move_block_mut(block_id)?;
     let cost = Cost::compute(mov, block.size(), canvas_area);
-    let (block_id, rect) = match block {
+    let (block_id, rect) = match block.data {
         // if the block is simple, change its color
-        Block::Simple(ref mut simple) => {
-            let old_color = simple.c;
-            simple.c = new_color;
+        BlockData::Simple(ref mut c) => {
+            let old_color = *c;
+            *c = new_color;
             return Ok((
                 cost,
                 UndoMove::simple_color(canvas, block_id.clone(), old_color),
             ));
         }
         // if its complex, turn it into a simple block
-        Block::Complex(ref mut complex) => (complex.id.clone(), complex.r),
+        BlockData::Complex(_) => (block.id.clone(), block.r),
     };
     let old_block = block.clone();
-    *block = Block::Simple(SimpleBlock::new(block_id, rect, new_color));
+    *block = Block::new_simple(block_id, rect, new_color);
     Ok((cost, UndoMove::complex_color(canvas, old_block)))
 }

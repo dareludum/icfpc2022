@@ -1,7 +1,8 @@
+use crate::block::Block;
 use crate::block::BlockId;
 use crate::block::Rect;
 use crate::canvas::Canvas;
-use crate::moves::{ComplexBlock, Cost, Move, MoveError, SimpleBlock, UndoMove};
+use crate::moves::{Cost, Move, MoveError, SimpleBlock, UndoMove};
 
 pub fn merge(
     mov: &Move,
@@ -16,10 +17,10 @@ pub fn merge(
         std::cmp::max(block_a.size(), block_b.size()),
         canvas.area,
     );
-    let a_bottom_left = block_a.rect().bottom_left;
-    let b_bottom_left = block_b.rect().bottom_left;
-    let a_top_right = block_a.rect().top_right;
-    let b_top_right = block_b.rect().top_right;
+    let a_bottom_left = block_a.r.bottom_left;
+    let b_bottom_left = block_b.r.bottom_left;
+    let a_top_right = block_a.r.top_right;
+    let b_top_right = block_b.r.top_right;
 
     // vertical merge
     if (a_bottom_left.y == b_top_right.y || a_top_right.y == b_bottom_left.y)
@@ -36,9 +37,11 @@ pub fn merge(
         let mut children: Vec<SimpleBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());
-        canvas.put_block(
-            ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children).into(),
-        );
+        canvas.put_block(Block::new_complex(
+            new_id,
+            Rect::new(new_bottom_left, new_top_right),
+            children,
+        ));
         return Ok((cost, undo));
     }
 
@@ -57,9 +60,11 @@ pub fn merge(
         let mut children: Vec<SimpleBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());
-        canvas.put_block(
-            ComplexBlock::new(new_id, Rect::new(new_bottom_left, new_top_right), children).into(),
-        );
+        canvas.put_block(Block::new_complex(
+            new_id,
+            Rect::new(new_bottom_left, new_top_right),
+            children,
+        ));
         return Ok((cost, undo));
     }
 

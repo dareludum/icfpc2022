@@ -41,11 +41,11 @@ impl Solver for Simple {
 
             let mut best_moves = vec![];
             for b in canvas.blocks_iter() {
-                let mov = match best_moves_cache.get(b.get_id()) {
+                let mov = match best_moves_cache.get(&b.id) {
                     Some(v) => v.clone(),
                     None => {
                         let mov = self.get_best_move_for_block(b, canvas, painting, budget);
-                        best_moves_cache.insert(b.get_id().to_owned(), mov.clone());
+                        best_moves_cache.insert(b.id.to_owned(), mov.clone());
                         mov
                     }
                 };
@@ -71,7 +71,7 @@ impl Solver for Simple {
                 for b_id in delete_block_ids {
                     let b = canvas.get_block(&b_id).unwrap();
                     let before = painting.calculate_score_canvas(canvas);
-                    let color = painting.calculate_average_color(b.rect());
+                    let color = painting.calculate_average_color(&b.r);
                     let mov = Move::Color(b_id.to_owned(), color);
                     let am = mov.apply(canvas).unwrap();
                     let after = painting.calculate_score_canvas(canvas);
@@ -104,11 +104,11 @@ impl Simple {
         let mut best_move = None;
         let mut best_result = i64::MAX;
 
-        let r = b.rect();
+        let r = &b.r;
         let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
         if (linear_cut_cost.0 as i64) < budget {
             for x in (step..r.width()).step_by(step as usize) {
-                let mov = Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x);
+                let mov = Move::LineCut(b.id.clone(), Orientation::Vertical, r.x() + x);
                 let result = self.assess_move(&mov, canvas, painting);
                 if result < best_result {
                     best_result = result;
@@ -116,7 +116,7 @@ impl Simple {
                 }
             }
             for y in (step..r.height()).step_by(step as usize) {
-                let mov = Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y);
+                let mov = Move::LineCut(b.id.clone(), Orientation::Horizontal, r.y() + y);
                 let result = self.assess_move(&mov, canvas, painting);
                 if result < best_result {
                     best_result = result;
@@ -129,7 +129,7 @@ impl Simple {
             if (cross_cut_cost.0 as i64) < budget {
                 for x in (xstep..r.width() - 1).step_by(xstep as usize) {
                     for y in (xstep..r.height() - 1).step_by(xstep as usize) {
-                        let mov = Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y);
+                        let mov = Move::PointCut(b.id.clone(), r.x() + x, r.y() + y);
                         let result = self.assess_move(&mov, canvas, painting);
                         if result < best_result {
                             best_result = result;
@@ -159,7 +159,7 @@ impl Simple {
             for b_id in delete_block_ids {
                 let b = canvas_temp.get_block(b_id).unwrap();
                 let before = painting.calculate_score_canvas(&canvas_temp);
-                let color = painting.calculate_average_color(b.rect());
+                let color = painting.calculate_average_color(&b.r);
                 let mov = Move::Color(b_id.to_owned(), color);
                 let am = mov.apply(&mut canvas_temp).unwrap();
                 let after = painting.calculate_score_canvas(&canvas_temp);

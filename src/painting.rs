@@ -1,4 +1,4 @@
-use crate::block::{Block, BlockId, Rect, SimpleBlock};
+use crate::block::{Block, BlockData, BlockId, Rect};
 use crate::canvas::Canvas;
 use crate::color::Color;
 use crate::moves::Cost;
@@ -122,12 +122,10 @@ impl Painting {
         let mut worst_block = None;
         let mut worst_score = 0.0;
         for b in canvas.blocks_iter() {
-            if let Block::Simple(b) = b {
-                let score = self.calculate_score_block(b);
-                if score > worst_score {
-                    worst_score = score;
-                    worst_block = Some(&b.id);
-                }
+            let score = self.calculate_score_block(b);
+            if score > worst_score {
+                worst_score = score;
+                worst_block = Some(&b.id);
             }
         }
         worst_block.unwrap()
@@ -162,31 +160,36 @@ impl Painting {
 
         let mut image_score = 0.0;
         for b in target.blocks_iter() {
-            match b {
-                crate::block::Block::Simple(b) => {
-                    image_score += self.calculate_score_block(b);
-                }
-                crate::block::Block::Complex(b) => {
-                    for b in b.bs.iter() {
-                        image_score += self.calculate_score_block(b);
-                    }
-                }
-            }
+            image_score += self.calculate_score_block(b);
         }
         Cost((image_score * 0.005).round() as u64)
     }
 
-    pub fn calculate_score_block(&self, b: &SimpleBlock) -> f64 {
+    pub fn calculate_score_block(&self, b: &Block) -> f64 {
         let mut block_score = 0.0;
-        let bc = b.c;
-        for x in b.r.x()..b.r.top_right.x {
-            for y in b.r.y()..b.r.top_right.y {
+        match &b.data {
+            BlockData::Simple(c) => {
+                block_score += self.calculate_score_rect(&b.r, *c);
+            }
+            BlockData::Complex(bs) => {
+                for b in bs {
+                    block_score += self.calculate_score_rect(&b.r, b.c);
+                }
+            }
+        }
+        block_score
+    }
+
+    pub fn calculate_score_rect(&self, r: &Rect, c: Color) -> f64 {
+        let mut block_score = 0.0;
+        for x in r.x()..r.top_right.x {
+            for y in r.y()..r.top_right.y {
                 let pc = self.get_color(x, y);
                 let mut pixel_score = 0f64;
-                pixel_score += (bc.r.abs_diff(pc.r) as f64).powi(2);
-                pixel_score += (bc.g.abs_diff(pc.g) as f64).powi(2);
-                pixel_score += (bc.b.abs_diff(pc.b) as f64).powi(2);
-                pixel_score += (bc.a.abs_diff(pc.a) as f64).powi(2);
+                pixel_score += (c.r.abs_diff(pc.r) as f64).powi(2);
+                pixel_score += (c.g.abs_diff(pc.g) as f64).powi(2);
+                pixel_score += (c.b.abs_diff(pc.b) as f64).powi(2);
+                pixel_score += (c.a.abs_diff(pc.a) as f64).powi(2);
                 block_score += pixel_score.sqrt();
             }
         }

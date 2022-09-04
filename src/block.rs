@@ -165,10 +165,6 @@ impl SimpleBlock {
         SimpleBlock { id, r, c }
     }
 
-    pub fn split(&self, child_name: &str, r: Rect) -> Self {
-        Self::new(self.id.new_child(child_name), r, self.c)
-    }
-
     /// Called when splitting a complex block
     pub fn complex_split(&self, name: &'static str, r: Rect) -> Self {
         Self::new(name.into(), r, self.c)
@@ -176,33 +172,40 @@ impl SimpleBlock {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ComplexBlock {
-    pub id: BlockId,
-    pub r: Rect,
-    pub bs: Vec<SimpleBlock>,
-}
-
-impl ComplexBlock {
-    pub fn new(id: BlockId, r: Rect, bs: Vec<SimpleBlock>) -> Self {
-        ComplexBlock { id, r, bs }
-    }
+pub enum BlockData {
+    Simple(Color),
+    Complex(Vec<SimpleBlock>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Block {
-    Simple(SimpleBlock),
-    Complex(ComplexBlock),
+pub struct Block {
+    pub id: BlockId,
+    pub r: Rect,
+    pub data: BlockData,
 }
 
-impl From<SimpleBlock> for Block {
-    fn from(b: SimpleBlock) -> Self {
-        Block::Simple(b)
+impl Block {
+    pub fn new_simple(id: BlockId, r: Rect, c: Color) -> Self {
+        Block {
+            id,
+            r,
+            data: BlockData::Simple(c),
+        }
     }
-}
 
-impl From<ComplexBlock> for Block {
-    fn from(b: ComplexBlock) -> Self {
-        Block::Complex(b)
+    pub fn new_complex(id: BlockId, r: Rect, bs: Vec<SimpleBlock>) -> Self {
+        Block {
+            id,
+            r,
+            data: BlockData::Complex(bs),
+        }
+    }
+
+    pub fn split(&self, child_name: &str, r: Rect) -> Self {
+        match self.data {
+            BlockData::Simple(c) => Self::new_simple(self.id.new_child(child_name), r, c),
+            BlockData::Complex(_) => todo!(),
+        }
     }
 }
 
@@ -215,37 +218,23 @@ impl From<&BlockDto> for Block {
             color: [r, g, b, a],
         } = dto;
 
-        Block::Simple(SimpleBlock::new(
+        Block::new_simple(
             BlockId::new(block_id.clone()),
             Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
             Color::new(*r, *g, *b, *a),
-        ))
+        )
     }
 }
 
 impl Block {
-    pub fn get_id(&self) -> &BlockId {
-        match self {
-            Block::Simple(b) => &b.id,
-            Block::Complex(b) => &b.id,
-        }
-    }
-
-    pub fn rect(&self) -> &Rect {
-        match self {
-            Block::Simple(b) => &b.r,
-            Block::Complex(b) => &b.r,
-        }
+    pub fn size(&self) -> u32 {
+        self.r.width() * self.r.height()
     }
 
     pub fn take_children(self) -> Vec<SimpleBlock> {
-        match self {
-            Block::Simple(b) => vec![b],
-            Block::Complex(b) => b.bs,
+        match self.data {
+            BlockData::Simple(c) => vec![SimpleBlock::new(self.id, self.r, c)],
+            BlockData::Complex(bs) => bs,
         }
-    }
-
-    pub fn size(&self) -> u32 {
-        self.rect().width() * self.rect().height()
     }
 }

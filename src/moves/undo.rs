@@ -1,4 +1,4 @@
-use crate::block::{Block, BlockId};
+use crate::block::{Block, BlockData, BlockId};
 use crate::canvas::Canvas;
 use crate::color::Color;
 use crate::moves::Move;
@@ -109,14 +109,14 @@ impl UndoMove {
                 prev_color,
             } => {
                 let block = canvas.get_block_mut(&block).unwrap();
-                if let Block::Simple(b) = block {
-                    b.c = prev_color;
+                if let BlockData::Simple(ref mut c) = block.data {
+                    *c = prev_color;
                 } else {
                     panic!("Invalid block")
                 }
             }
             UndoMoveOp::ComplexColor { old_block } => {
-                canvas.remove_block(old_block.get_id());
+                canvas.remove_block(&old_block.id);
                 canvas.put_block(old_block);
             }
             UndoMoveOp::Swap { a_id, b_id } => {

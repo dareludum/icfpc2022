@@ -1,9 +1,7 @@
-use crate::block::BlockId;
+use crate::block::{BlockData, BlockId};
 use crate::block::{Point, Rect};
 use crate::canvas::Canvas;
-use crate::moves::{
-    Block, ComplexBlock, Cost, Move, MoveError, Orientation, SimpleBlock, UndoMove,
-};
+use crate::moves::{Block, Cost, Move, MoveError, Orientation, SimpleBlock, UndoMove};
 
 struct UndoCutBuilder {
     delete_blocks: Vec<BlockId>,
@@ -25,7 +23,7 @@ impl UndoCutBuilder {
     }
 
     pub fn create(&mut self, canvas: &mut Canvas, block: Block) {
-        self.delete_blocks.push(block.get_id().clone());
+        self.delete_blocks.push(block.id.clone());
         canvas.put_block(block)
     }
 
@@ -56,26 +54,23 @@ pub fn vertical_cut(
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
     let cost = Cost::compute(mov, block.size(), canvas.area);
-    if !(block.rect().bottom_left.x <= cut_offset_x && cut_offset_x < block.rect().top_right.x) {
+    if !(block.r.bottom_left.x <= cut_offset_x && cut_offset_x < block.r.top_right.x) {
         return Err(MoveError::LogicError(format!(
             "Line number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
-            block_id,
-            block.rect().bottom_left,
-            block.rect().top_right,
-            cut_offset_x
+            block_id, block.r.bottom_left, block.r.top_right, cut_offset_x
         )));
     }
 
-    match block {
-        Block::Simple(simple) => {
-            let (left_r, right_r) = simple.r.vertical_cut(cut_offset_x);
-            builder.create(canvas, simple.split("0", left_r).into());
-            builder.create(canvas, simple.split("1", right_r).into());
+    match block.data {
+        BlockData::Simple(_) => {
+            let (left_r, right_r) = block.r.vertical_cut(cut_offset_x);
+            builder.create(canvas, block.split("0", left_r));
+            builder.create(canvas, block.split("1", right_r));
         }
-        Block::Complex(complex) => {
+        BlockData::Complex(bs) => {
             let mut left_blocks: Vec<SimpleBlock> = vec![];
             let mut right_blocks: Vec<SimpleBlock> = vec![];
-            for child in complex.bs {
+            for child in bs {
                 if child.r.bottom_left.x >= cut_offset_x {
                     right_blocks.push(child);
                     continue;
@@ -89,14 +84,14 @@ pub fn vertical_cut(
                 right_blocks.push(child.complex_split("right", right_r));
             }
 
-            let (left_r, right_r) = complex.r.vertical_cut(cut_offset_x);
+            let (left_r, right_r) = block.r.vertical_cut(cut_offset_x);
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.new_child("0"), left_r, left_blocks).into(),
+                Block::new_complex(block_id.new_child("0"), left_r, left_blocks),
             );
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.new_child("1"), right_r, right_blocks).into(),
+                Block::new_complex(block_id.new_child("1"), right_r, right_blocks),
             );
         }
     }
@@ -112,26 +107,23 @@ pub fn horizontal_cut(
     let mut builder = UndoCutBuilder::new();
     let block = builder.remove(canvas, block_id)?;
     let cost = Cost::compute(mov, block.size(), canvas.area);
-    if !(block.rect().bottom_left.y <= cut_offset_y && cut_offset_y < block.rect().top_right.y) {
+    if !(block.r.bottom_left.y <= cut_offset_y && cut_offset_y < block.r.top_right.y) {
         return Err(MoveError::LogicError(format!(
             "Col number is out of the [{:?}]! Block is from {:?} to {:?}, point is at {:?}",
-            block_id,
-            block.rect().bottom_left,
-            block.rect().top_right,
-            cut_offset_y
+            block_id, block.r.bottom_left, block.r.top_right, cut_offset_y
         )));
     }
 
-    match block {
-        Block::Simple(simple) => {
-            let (bottom_r, top_r) = simple.r.horizontal_cut(cut_offset_y);
-            builder.create(canvas, simple.split("0", bottom_r).into());
-            builder.create(canvas, simple.split("1", top_r).into());
+    match block.data {
+        BlockData::Simple(_) => {
+            let (bottom_r, top_r) = block.r.horizontal_cut(cut_offset_y);
+            builder.create(canvas, block.split("0", bottom_r));
+            builder.create(canvas, block.split("1", top_r));
         }
-        Block::Complex(complex) => {
+        BlockData::Complex(bs) => {
             let mut bottom_blocks: Vec<SimpleBlock> = vec![];
             let mut top_blocks: Vec<SimpleBlock> = vec![];
-            for child in complex.bs {
+            for child in bs {
                 if child.r.bottom_left.y >= cut_offset_y {
                     top_blocks.push(child);
                     continue;
@@ -145,14 +137,14 @@ pub fn horizontal_cut(
                 top_blocks.push(child.complex_split("top", top_r));
             }
 
-            let (bottom_r, top_r) = complex.r.horizontal_cut(cut_offset_y);
+            let (bottom_r, top_r) = block.r.horizontal_cut(cut_offset_y);
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.new_child("0"), bottom_r, bottom_blocks).into(),
+                Block::new_complex(block_id.new_child("0"), bottom_r, bottom_blocks),
             );
             builder.create(
                 canvas,
-                ComplexBlock::new(block_id.new_child("1"), top_r, top_blocks).into(),
+                Block::new_complex(block_id.new_child("1"), top_r, top_blocks),
             );
         }
     }
@@ -171,35 +163,31 @@ pub fn point_cut(
     let block = builder.remove(canvas, block_id)?;
     let cost = Cost::compute(mov, block.size(), canvas.area);
 
-    if !block.rect().contains(cut_x, cut_y) {
+    if !block.r.contains(cut_x, cut_y) {
         return Err(MoveError::LogicError(format!(
             "Point is out of [{}]! Block is from {:?} to {:?}, point is at {} {}!",
-            block_id,
-            block.rect().bottom_left,
-            block.rect().top_right,
-            cut_x,
-            cut_y
+            block_id, block.r.bottom_left, block.r.top_right, cut_x, cut_y
         )));
     }
 
-    let complex_block = match block {
-        Block::Simple(simple) => {
+    let bs = match block.data {
+        BlockData::Simple(_) => {
             let (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl) =
-                simple.r.cross_cut(cut_x, cut_y);
-            builder.create(canvas, simple.split("0", bottom_left_bl).into());
-            builder.create(canvas, simple.split("1", bottom_right_bl).into());
-            builder.create(canvas, simple.split("2", top_right_bl).into());
-            builder.create(canvas, simple.split("3", top_left_bl).into());
+                block.r.cross_cut(cut_x, cut_y);
+            builder.create(canvas, block.split("0", bottom_left_bl));
+            builder.create(canvas, block.split("1", bottom_right_bl));
+            builder.create(canvas, block.split("2", top_right_bl));
+            builder.create(canvas, block.split("3", top_left_bl));
             return Ok((cost, builder.build(canvas)));
         }
-        Block::Complex(complex) => complex,
+        BlockData::Complex(bs) => bs,
     };
 
     let mut bottom_left_blocks: Vec<SimpleBlock> = vec![];
     let mut bottom_right_blocks: Vec<SimpleBlock> = vec![];
     let mut top_right_blocks: Vec<SimpleBlock> = vec![];
     let mut top_left_blocks: Vec<SimpleBlock> = vec![];
-    for child in complex_block.bs {
+    for child in bs {
         /*
          * __________________________
          * |        |       |       |
@@ -311,36 +299,36 @@ pub fn point_cut(
             continue;
         }
     }
-    let bottom_left_block = ComplexBlock::new(
+    let bottom_left_block = Block::new_complex(
         block_id.new_child("0"),
-        Rect::new(complex_block.r.bottom_left, cut_point),
+        Rect::new(block.r.bottom_left, cut_point),
         bottom_left_blocks,
     );
-    let bottom_right_block = ComplexBlock::new(
+    let bottom_right_block = Block::new_complex(
         block_id.new_child("1"),
         Rect::new(
-            Point::new(cut_x, complex_block.r.bottom_left.y),
-            Point::new(complex_block.r.top_right.x, cut_y),
+            Point::new(cut_x, block.r.bottom_left.y),
+            Point::new(block.r.top_right.x, cut_y),
         ),
         bottom_right_blocks,
     );
-    let top_right_block = ComplexBlock::new(
+    let top_right_block = Block::new_complex(
         block_id.new_child("2"),
-        Rect::new(cut_point, complex_block.r.top_right),
+        Rect::new(cut_point, block.r.top_right),
         top_right_blocks,
     );
-    let top_left_block = ComplexBlock::new(
+    let top_left_block = Block::new_complex(
         block_id.new_child("3"),
         Rect::new(
-            Point::new(complex_block.r.bottom_left.x, cut_y),
-            Point::new(cut_x, complex_block.r.top_right.y),
+            Point::new(block.r.bottom_left.x, cut_y),
+            Point::new(cut_x, block.r.top_right.y),
         ),
         top_left_blocks,
     );
 
-    builder.create(canvas, bottom_left_block.into());
-    builder.create(canvas, bottom_right_block.into());
-    builder.create(canvas, top_right_block.into());
-    builder.create(canvas, top_left_block.into());
+    builder.create(canvas, bottom_left_block);
+    builder.create(canvas, bottom_right_block);
+    builder.create(canvas, top_right_block);
+    builder.create(canvas, top_left_block);
     Ok((cost, builder.build(canvas)))
 }

@@ -19,20 +19,29 @@ use crate::block::*;
 fn make_complicated_canvas() -> Canvas {
     let bg = Color::new(255, 255, 255, 255);
     let mut blocks: Vec<Block> = vec![];
-    blocks.push(SimpleBlock::new("0.0".into(), Rect::from_coords([0, 0, 16, 32]), bg).into());
-    blocks.push(SimpleBlock::new("0.1.0".into(), Rect::from_coords([16, 0, 24, 16]), bg).into());
-    blocks.push(SimpleBlock::new("0.1.1".into(), Rect::from_coords([24, 0, 32, 16]), bg).into());
-    blocks.push(
-        ComplexBlock::new(
-            "1".into(),
-            Rect::from_coords([16, 16, 32, 32]),
-            vec![
-                SimpleBlock::new("0.1.2".into(), Rect::from_coords([24, 16, 32, 32]), bg),
-                SimpleBlock::new("0.1.3".into(), Rect::from_coords([16, 16, 24, 32]), bg),
-            ],
-        )
-        .into(),
-    );
+    blocks.push(Block::new_simple(
+        "0.0".into(),
+        Rect::from_coords([0, 0, 16, 32]),
+        bg,
+    ));
+    blocks.push(Block::new_simple(
+        "0.1.0".into(),
+        Rect::from_coords([16, 0, 24, 16]),
+        bg,
+    ));
+    blocks.push(Block::new_simple(
+        "0.1.1".into(),
+        Rect::from_coords([24, 0, 32, 16]),
+        bg,
+    ));
+    blocks.push(Block::new_complex(
+        "1".into(),
+        Rect::from_coords([16, 16, 32, 32]),
+        vec![
+            SimpleBlock::new("0.1.2".into(), Rect::from_coords([24, 16, 32, 32]), bg),
+            SimpleBlock::new("0.1.3".into(), Rect::from_coords([16, 16, 24, 32]), bg),
+        ],
+    ));
     // this is a 3rd generation canvas, as 3 moves were applied
     return Canvas::from_blocks(32, 32, 2, 3, blocks.into_iter());
 }
@@ -70,7 +79,7 @@ fn make_cross_canvas() -> Canvas {
     let tr = Rect::from_coords([16, 16, 32, 32]);
     let tl = Rect::from_coords([0, 16, 16, 32]);
     blocks.push(
-        ComplexBlock::new(
+        Block::new_complex(
             "3.0".into(),
             bl,
             vec![SimpleBlock::new("0.0".into(), bl, bg)],
@@ -78,7 +87,7 @@ fn make_cross_canvas() -> Canvas {
         .into(),
     );
     blocks.push(
-        ComplexBlock::new(
+        Block::new_complex(
             "3.1".into(),
             br,
             vec![SimpleBlock::new("0.1".into(), br, bg)],
@@ -86,7 +95,7 @@ fn make_cross_canvas() -> Canvas {
         .into(),
     );
     blocks.push(
-        ComplexBlock::new(
+        Block::new_complex(
             "3.2".into(),
             tr,
             vec![SimpleBlock::new("0.2".into(), tr, bg)],
@@ -94,7 +103,7 @@ fn make_cross_canvas() -> Canvas {
         .into(),
     );
     blocks.push(
-        ComplexBlock::new(
+        Block::new_complex(
             "3.3".into(),
             tl,
             vec![SimpleBlock::new("0.3".into(), tl, bg)],

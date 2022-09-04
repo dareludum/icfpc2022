@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    block::{Block, BlockId, ComplexBlock, Point, Rect, SimpleBlock},
+    block::{Block, BlockData, BlockId, Point, Rect},
     color::Color,
     dto::CanvasDto,
     painting::Painting,
@@ -53,12 +53,11 @@ impl Canvas {
     }
 
     pub fn new(w: u32, h: u32) -> Self {
-        let blocks = [SimpleBlock::new(
+        let blocks = [Block::new_simple(
             BlockId::from("0"),
             Rect::from_dimensions(Point::new(0, 0), w, h),
             Color::new(255, 255, 255, 255),
-        )
-        .into()];
+        )];
         Self::from_blocks(w, h, 1, 0, blocks.into_iter())
     }
 
@@ -71,7 +70,7 @@ impl Canvas {
     ) -> Self {
         let mut blocks_map = HashMap::new();
         for block in blocks {
-            blocks_map.insert(block.get_id().clone(), block);
+            blocks_map.insert(block.id.clone(), block);
         }
         Canvas {
             width: w,
@@ -89,8 +88,8 @@ impl Canvas {
 
     pub fn hit_test(&self, x: u32, y: u32) -> BlockId {
         for b in self.blocks.values() {
-            if b.rect().contains(x, y) {
-                return b.get_id().clone();
+            if b.r.contains(x, y) {
+                return b.id.clone();
             }
         }
         panic!(
@@ -104,7 +103,7 @@ impl Canvas {
     }
 
     pub fn put_block(&mut self, block: Block) {
-        self.blocks.insert(block.get_id().clone(), block);
+        self.blocks.insert(block.id.clone(), block);
     }
 
     pub fn get_block_mut(&mut self, block: &BlockId) -> Option<&mut Block> {
@@ -120,30 +119,26 @@ impl Canvas {
         data.resize((self.width * self.height) as usize, Color::new(0, 0, 0, 0));
 
         for (_, block) in self.blocks.iter() {
-            match block {
-                Block::Simple(simple_block) => self.render_simple_block(&mut data, simple_block),
-                Block::Complex(ComplexBlock { bs: blocks, .. }) => blocks
+            match &block.data {
+                BlockData::Simple(c) => self.render_rect(&mut data, &block.r, *c),
+                BlockData::Complex(blocks) => blocks
                     .iter()
-                    .for_each(|b| self.render_simple_block(&mut data, b)),
+                    .for_each(|b| self.render_rect(&mut data, &b.r, b.c)),
             }
         }
 
         Painting::new(self.width, self.height, data)
     }
 
-    fn render_simple_block(&self, data: &mut [Color], block: &SimpleBlock) {
-        let SimpleBlock {
-            r: Rect {
-                bottom_left,
-                top_right,
-            },
-            c,
-            ..
-        } = block;
+    fn render_rect(&self, data: &mut [Color], r: &Rect, c: Color) {
+        let Rect {
+            bottom_left,
+            top_right,
+        } = r;
 
         for x in bottom_left.x..top_right.x {
             for y in bottom_left.y..top_right.y {
-                data[(x + self.width * y) as usize] = *c;
+                data[(x + self.width * y) as usize] = c;
             }
         }
     }

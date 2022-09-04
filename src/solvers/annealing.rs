@@ -24,7 +24,7 @@ impl Solver for Annealing {
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
         let block = canvas.get_block(&"0".into()).unwrap();
-        let best_avg_color = painting.calculate_average_color(block.rect());
+        let best_avg_color = painting.calculate_average_color(&block.r);
         let static_move = Move::Color("0".into(), best_avg_color);
         let applied_static_move = static_move.apply(canvas).unwrap();
 
@@ -89,7 +89,7 @@ impl Annealing {
                 for b_id in delete_block_ids {
                     let b = canvas.get_block(&b_id).unwrap();
                     let before = painting.calculate_score_canvas(canvas);
-                    let color = painting.calculate_average_color(b.rect());
+                    let color = painting.calculate_average_color(&b.r);
                     let mov = Move::Color(b_id, color);
                     let am = mov.apply(canvas).unwrap();
                     let after = painting.calculate_score_canvas(canvas);
@@ -143,19 +143,19 @@ impl Annealing {
         let step: u32 = self.step;
         let xstep = self.step * 2;
 
-        let r = b.rect();
+        let r = b.r;
         let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
         if (linear_cut_cost.0 as i64) < budget {
             for x in (step..r.width() - 1).step_by(step as usize) {
                 moves.push((
                     undo_count,
-                    Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x),
+                    Move::LineCut(b.id.clone(), Orientation::Vertical, r.x() + x),
                 ));
             }
             for y in (step..r.height() - 1).step_by(step as usize) {
                 moves.push((
                     undo_count,
-                    Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y),
+                    Move::LineCut(b.id.clone(), Orientation::Horizontal, r.y() + y),
                 ));
             }
         }
@@ -165,7 +165,7 @@ impl Annealing {
                 for y in (xstep..r.height() - 1).step_by(xstep as usize) {
                     moves.push((
                         undo_count,
-                        Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y),
+                        Move::PointCut(b.id.clone(), r.x() + x, r.y() + y),
                     ));
                 }
             }

@@ -4,7 +4,7 @@ use std::fmt::Write;
 use raylib::prelude::*;
 
 use crate::{
-    block::{Block, Point, Rect},
+    block::{BlockData, Point, Rect},
     canvas::Canvas,
     moves::{AppliedMove, Cost, Move, Orientation, UndoMove},
     painting::Painting,
@@ -261,15 +261,15 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         // Draw the in-progress solution
         for b in canvas.blocks_iter() {
-            let id = b.get_id();
-            match b {
-                Block::Simple(b) => {
+            let id = &b.id;
+            match &b.data {
+                BlockData::Simple(c) => {
                     d.draw_rectangle(
                         MARGIN + b.r.bottom_left.x as i32,
                         MARGIN + b.r.bottom_left.y as i32,
                         b.r.width() as i32,
                         b.r.height() as i32,
-                        b.c,
+                        *c,
                     );
                     double_draw_rectangle_lines(
                         &mut d,
@@ -284,8 +284,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         },
                     );
                 }
-                Block::Complex(b) => {
-                    for b in b.bs.iter() {
+                BlockData::Complex(bs) => {
+                    for b in bs {
                         d.draw_rectangle(
                             MARGIN + b.r.bottom_left.x as i32,
                             MARGIN + b.r.bottom_left.y as i32,
@@ -315,7 +315,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
             let x = mx - MARGIN;
             let y = my - MARGIN;
             let b = canvas.get_block(&b_id).unwrap();
-            let r = b.rect();
+            let r = &b.r;
             double_draw_rectangle_lines(
                 &mut d,
                 MARGIN + r.bottom_left.x as i32,
@@ -325,7 +325,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 Color::GREEN,
             );
             if let Some(mb) = marked_block.clone() {
-                let mr = canvas.get_block(&mb).unwrap().rect();
+                let mr = &canvas.get_block(&mb).unwrap().r;
                 double_draw_rectangle_lines(
                     &mut d,
                     MARGIN + mr.bottom_left.x as i32,

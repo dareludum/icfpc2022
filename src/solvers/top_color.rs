@@ -16,7 +16,7 @@ impl Solver for TopColor {
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
         let block = canvas.get_block(&"0".into()).unwrap();
-        let colors = painting.count_colors(block.rect());
+        let colors = painting.count_colors(&block.r);
         let top_color = Color::find_most_common(&colors);
 
         let mov_id = "0".into();

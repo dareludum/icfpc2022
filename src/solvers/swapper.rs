@@ -1,5 +1,5 @@
 use crate::{
-    block::Block,
+    block::BlockData,
     canvas::Canvas,
     moves::{AppliedMove, Move},
     painting::Painting,
@@ -22,14 +22,11 @@ impl Solver for Swapper {
             let b0_id = painting.find_worst_block_id(canvas);
             let b0 = canvas.get_block(b0_id).unwrap();
             for b1 in canvas.blocks_iter() {
-                if b0.get_id() == b1.get_id() {
+                if b0.id == b1.id {
                     continue;
                 }
-                if let (Block::Simple(b0), Block::Simple(b1)) = (b0, b1) {
-                    if b0.c == b1.c
-                        || b0.r.width() != b1.r.width()
-                        || b0.r.height() != b1.r.height()
-                    {
+                if let (BlockData::Simple(c0), BlockData::Simple(c1)) = (&b0.data, &b1.data) {
+                    if c0 == c1 || b0.r.width() != b1.r.width() || b0.r.height() != b1.r.height() {
                         continue;
                     }
 
