@@ -13,7 +13,7 @@ impl Solver for Erase {
         "erase"
     }
 
-    fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
+    fn solve_core(&self, canvas: &mut Canvas, _painting: &Painting) -> Vec<AppliedMove> {
         let mut applied_moves = vec![];
 
         // Detect block size
@@ -39,12 +39,7 @@ impl Solver for Erase {
             applied_moves.push(am);
         }
 
-        assert!(canvas.blocks_count() == 1);
-
-        let b = canvas.blocks_iter().next().unwrap();
-        let mov = Move::Color(b.id.clone(), painting.calculate_average_color(&b.r));
-        let am = mov.apply(canvas).unwrap();
-        applied_moves.push(am);
+        // If default coloring is needed, use +top_color
 
         applied_moves
     }

@@ -23,10 +23,7 @@ impl Solver for Annealing {
     }
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
-        let block = canvas.get_block(&"0".into()).unwrap();
-        let best_avg_color = painting.calculate_average_color(&block.r);
-        let static_move = Move::Color("0".into(), best_avg_color);
-        let applied_static_move = static_move.apply(canvas).unwrap();
+        // If default coloring is needed, use top_color+
 
         let mut applied_moves = vec![];
         let mut current_move_cost = Cost(0);
@@ -53,7 +50,6 @@ impl Solver for Annealing {
                 current_painting_score = new_painting_score;
             }
         }
-        applied_moves.insert(0, applied_static_move);
         applied_moves
     }
 }
