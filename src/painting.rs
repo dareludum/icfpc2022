@@ -19,7 +19,7 @@ impl From<&Rgba<u8>> for Color {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Painting {
     pub width: u32,
     pub height: u32,

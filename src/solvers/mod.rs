@@ -2,6 +2,7 @@ mod annealing;
 mod chain;
 mod divide_conquer;
 mod erase;
+mod genetic;
 mod no_op;
 mod processors;
 mod simple;
@@ -65,6 +66,7 @@ pub const SOLVERS: &[&str] = &[
     "simple_no_x_s1",
     "swapper",
     "top_color",
+    "genetic",
 ];
 
 pub fn create_solver(input_moves: Option<Vec<Move>>, solver_name: &str) -> Box<dyn Solver> {
@@ -117,6 +119,7 @@ fn create_individual_solver(solver_name: &str) -> Box<dyn Solver> {
         }),
         "swapper" => Box::new(swapper::Swapper {}),
         "top_color" => Box::new(top_color::TopColor { use_avg: false }),
+        "genetic" => Box::new(genetic::Genetic::new()),
         n => panic!("Unknown solver `{}`", n),
     }
 }
