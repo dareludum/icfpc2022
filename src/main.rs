@@ -106,7 +106,7 @@ fn parse_input_moves(file_path: &String) -> std::io::Result<Vec<Move>> {
             Ok((remainder, _)) => {
                 panic!("parser finished before the end of the line: {line}, {remainder}")
             }
-            Err(err) => panic!("failed to parse line: {err}"),
+            Err(err) => panic!("failed to parse line {line:?}: {err}"),
         }
     }
     Ok(moves)

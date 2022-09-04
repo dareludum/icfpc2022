@@ -1,7 +1,8 @@
 use crate::block::BlockId;
 use crate::color::Color;
 use crate::moves::{Move, Orientation};
-use nom::character::complete::{newline, one_of};
+use nom::character::complete::{line_ending, one_of};
+use nom::combinator::opt;
 use nom::multi::many1;
 use nom::sequence::{preceded, separated_pair, terminated};
 use nom::{
@@ -104,7 +105,7 @@ fn parse_move(input: &str) -> IResult<&str, Move> {
 }
 
 pub fn parse_move_line(input: &str) -> IResult<&str, Move> {
-    terminated(parse_move, newline)(input)
+    terminated(parse_move, opt(line_ending))(input)
 }
 
 #[test]

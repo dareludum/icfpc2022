@@ -75,14 +75,12 @@ const TARGET_RECT: Rect = Rect::new(
     ),
 );
 
-pub fn gui_main(problem_path: &std::path::Path) {
+pub fn gui_main(input_moves: Option<Vec<Move>>, problem_path: &std::path::Path) {
     let painting = Painting::load(problem_path);
     let initial_config_path = problem_path.with_extension("json");
     let mut canvas = Canvas::try_create(initial_config_path, &painting)
         .expect("gui_main: Error while creating Canvas");
     let initial_painting_score = painting.calculate_score_canvas(&canvas);
-    let mut current_painting_score = initial_painting_score;
-    let mut current_tool_score = Cost(0);
     let mut current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
     let mut show_alt_data = false;
 
@@ -119,7 +117,21 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let mut tool = Tool::CutVert;
     let mut color = crate::color::Color::new(255, 255, 255, 255);
     let mut marked_block = None;
-    let mut moves: Vec<AppliedMove> = vec![];
+
+    // apply the initial moves
+    let mut moves: Vec<AppliedMove> = match input_moves {
+        Some(input_moves) => input_moves
+            .into_iter()
+            .map(|mov| {
+                mov.apply(&mut canvas)
+                    .expect("failed to apply an inital move. were these moves for this canvas?")
+            })
+            .collect(),
+        None => vec![],
+    };
+
+    let mut current_painting_score = painting.calculate_score_canvas(&canvas);
+    let mut current_tool_score: Cost = moves.iter().map(|mov| mov.cost).sum();
 
     while !rl.window_should_close() {
         // ===== HIT TEST =====

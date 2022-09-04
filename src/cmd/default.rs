@@ -186,7 +186,7 @@ pub fn default_command(
 ) -> Result<(), std::io::Error> {
     match (problem_paths, solvers) {
         ([problem_path], None) => {
-            gui_main(&std::path::PathBuf::from(problem_path));
+            gui_main(input_moves, &std::path::PathBuf::from(problem_path));
             Ok(())
         }
         (paths, Some(solvers)) => solve(input_moves, &solvers, paths),
