@@ -4,7 +4,7 @@ use std::fmt::Write;
 use raylib::prelude::*;
 
 use crate::{
-    block::{Point, Rect},
+    block::{Block, Point, Rect},
     canvas::Canvas,
     moves::{AppliedMove, Cost, Move, Orientation, UndoMove},
     painting::Painting,
@@ -42,6 +42,30 @@ impl Tool {
 
 type Offset = (i32, i32);
 
+const MARGIN: i32 = 20;
+const IMAGE_SIZE: i32 = 400;
+const COLOR_PREVIEW_SIZE: i32 = 50;
+const SLN: Offset = (MARGIN, MARGIN);
+const TGT: Offset = (MARGIN + IMAGE_SIZE + MARGIN, MARGIN);
+
+const COLOR_BLOCK_BORDER: Color = Color {
+    a: 32,
+    ..Color::GRAY
+};
+const COLOR_WORST_BLOCK: Color = Color::RED;
+
+const SOLUTION_RECT: Rect = Rect::new(
+    Point::new(MARGIN as u32, MARGIN as u32),
+    Point::new((MARGIN + IMAGE_SIZE) as u32, (MARGIN + IMAGE_SIZE) as u32),
+);
+const TARGET_RECT: Rect = Rect::new(
+    Point::new((MARGIN * 2 + IMAGE_SIZE) as u32, MARGIN as u32),
+    Point::new(
+        (MARGIN * 2 + IMAGE_SIZE * 2) as u32,
+        (MARGIN + IMAGE_SIZE) as u32,
+    ),
+);
+
 pub fn gui_main(problem_path: &std::path::Path) {
     let painting = Painting::load(problem_path);
     let initial_config_path = problem_path.with_extension("json");
@@ -72,30 +96,6 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let mut color = crate::color::Color::new(255, 255, 255, 255);
     let mut marked_block = None;
     let mut moves: Vec<AppliedMove> = vec![];
-
-    const MARGIN: i32 = 20;
-    const IMAGE_SIZE: i32 = 400;
-    const COLOR_PREVIEW_SIZE: i32 = 50;
-    const SLN: Offset = (MARGIN, MARGIN);
-    const TGT: Offset = (MARGIN + IMAGE_SIZE + MARGIN, MARGIN);
-
-    const COLOR_BLOCK_BORDER: Color = Color {
-        a: 32,
-        ..Color::GRAY
-    };
-    const COLOR_WORST_BLOCK: Color = Color::RED;
-
-    const SOLUTION_RECT: Rect = Rect::new(
-        Point::new(MARGIN as u32, MARGIN as u32),
-        Point::new((MARGIN + IMAGE_SIZE) as u32, (MARGIN + IMAGE_SIZE) as u32),
-    );
-    const TARGET_RECT: Rect = Rect::new(
-        Point::new((MARGIN * 2 + IMAGE_SIZE) as u32, MARGIN as u32),
-        Point::new(
-            (MARGIN * 2 + IMAGE_SIZE * 2) as u32,
-            (MARGIN + IMAGE_SIZE) as u32,
-        ),
-    );
 
     while !rl.window_should_close() {
         // ===== HIT TEST =====
@@ -234,26 +234,28 @@ pub fn gui_main(problem_path: &std::path::Path) {
         d.clear_background(Color::WHITE);
 
         // Draw the borders
-        d.draw_rectangle_lines(
+        double_draw_rectangle_lines(
+            &mut d,
             MARGIN - 1,
-            MARGIN - 1,
-            IMAGE_SIZE + 2,
-            IMAGE_SIZE + 2,
-            Color::BLACK,
-        );
-        d.draw_rectangle_lines(
-            MARGIN + IMAGE_SIZE + MARGIN - 1,
             MARGIN - 1,
             IMAGE_SIZE + 2,
             IMAGE_SIZE + 2,
             Color::BLACK,
         );
 
+        // Draw the target
+        d.draw_texture(
+            &target_texture,
+            MARGIN + IMAGE_SIZE + MARGIN,
+            MARGIN,
+            Color::WHITE,
+        );
+
         // Draw the in-progress solution
         for b in canvas.blocks_iter() {
             let id = b.get_id();
             match b {
-                crate::block::Block::Simple(b) => {
+                Block::Simple(b) => {
                     d.draw_rectangle(
                         MARGIN + b.r.bottom_left.x as i32,
                         MARGIN + b.r.bottom_left.y as i32,
@@ -261,7 +263,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         b.r.height() as i32,
                         b.c,
                     );
-                    d.draw_rectangle_lines(
+                    double_draw_rectangle_lines(
+                        &mut d,
                         MARGIN + b.r.bottom_left.x as i32,
                         MARGIN + b.r.bottom_left.y as i32,
                         b.r.width() as i32,
@@ -273,7 +276,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         },
                     );
                 }
-                crate::block::Block::Complex(b) => {
+                Block::Complex(b) => {
                     for b in b.bs.iter() {
                         d.draw_rectangle(
                             MARGIN + b.r.bottom_left.x as i32,
@@ -283,7 +286,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                             b.c,
                         );
                     }
-                    d.draw_rectangle_lines(
+                    double_draw_rectangle_lines(
+                        &mut d,
                         MARGIN + b.r.bottom_left.x as i32,
                         MARGIN + b.r.bottom_left.y as i32,
                         b.r.width() as i32,
@@ -298,21 +302,14 @@ pub fn gui_main(problem_path: &std::path::Path) {
             }
         }
 
-        // Draw the target
-        d.draw_texture(
-            &target_texture,
-            MARGIN + IMAGE_SIZE + MARGIN,
-            MARGIN,
-            Color::WHITE,
-        );
-
         // Draw the overlays
         if let Some(b_id) = b_id.clone() {
             let x = mx - MARGIN;
             let y = my - MARGIN;
             let b = canvas.get_block(&b_id).unwrap();
             let r = b.rect();
-            d.draw_rectangle_lines(
+            double_draw_rectangle_lines(
+                &mut d,
                 MARGIN + r.bottom_left.x as i32,
                 MARGIN + r.bottom_left.y as i32,
                 r.width() as i32,
@@ -321,7 +318,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
             );
             if let Some(mb) = marked_block.clone() {
                 let mr = canvas.get_block(&mb).unwrap().rect();
-                d.draw_rectangle_lines(
+                double_draw_rectangle_lines(
+                    &mut d,
                     MARGIN + mr.bottom_left.x as i32,
                     MARGIN + mr.bottom_left.y as i32,
                     mr.width() as i32,
@@ -408,6 +406,18 @@ pub fn gui_main(problem_path: &std::path::Path) {
             Color::BLACK,
         );
     }
+}
+
+fn double_draw_rectangle_lines(
+    d: &mut RaylibDrawHandle,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    color: Color,
+) {
+    d.draw_rectangle_lines(x, y, width, height, color);
+    d.draw_rectangle_lines(x + IMAGE_SIZE + MARGIN, y, width, height, color);
 }
 
 fn draw_notch_horz(
