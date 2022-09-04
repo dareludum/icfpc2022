@@ -1,6 +1,6 @@
 {
-  "solver_name": "simple_s1",
-  "total_score": 33607,
-  "score": 29870,
-  "solution_cost": 3737
+  "solver_name": "simple_no_x%recolor",
+  "total_score": 32894,
+  "score": 31088,
+  "solution_cost": 1806
 }
