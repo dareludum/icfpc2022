@@ -11,14 +11,23 @@ use super::Solver;
 
 pub struct Simple {
     pub allow_cross_cut: bool,
+    pub step_1: bool,
 }
 
 impl Solver for Simple {
     fn name(&self) -> &'static str {
-        if self.allow_cross_cut {
-            "simple"
+        if !self.step_1 {
+            if self.allow_cross_cut {
+                "simple"
+            } else {
+                "simple_no_x"
+            }
         } else {
-            "simple_no_x"
+            if self.allow_cross_cut {
+                "simple_s1"
+            } else {
+                "simple_no_x_s1"
+            }
         }
     }
 
@@ -92,8 +101,7 @@ impl Simple {
         painting: &Painting,
         budget: i64,
     ) -> Option<(Move, i64)> {
-        const STEP: u32 = 2;
-        const XSTEP: u32 = 20;
+        let (step, xstep) = if self.step_1 { (1, 1) } else { (2, 20) };
 
         let mut best_move = None;
         let mut best_result = i64::MAX;
@@ -101,7 +109,7 @@ impl Simple {
         let r = b.rect();
         let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
         if (linear_cut_cost.0 as i64) < budget {
-            for x in (STEP..r.width()).step_by(STEP as usize) {
+            for x in (step..r.width()).step_by(step as usize) {
                 let mov = Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x);
                 let result = self.assess_move(&mov, canvas, painting);
                 if result < best_result {
@@ -109,7 +117,7 @@ impl Simple {
                     best_move = Some(mov);
                 }
             }
-            for y in (STEP..r.height()).step_by(STEP as usize) {
+            for y in (step..r.height()).step_by(step as usize) {
                 let mov = Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y);
                 let result = self.assess_move(&mov, canvas, painting);
                 if result < best_result {
@@ -121,8 +129,8 @@ impl Simple {
         if self.allow_cross_cut {
             let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
             if (cross_cut_cost.0 as i64) < budget {
-                for x in (XSTEP..r.width() - 1).step_by(XSTEP as usize) {
-                    for y in (XSTEP..r.height() - 1).step_by(XSTEP as usize) {
+                for x in (xstep..r.width() - 1).step_by(xstep as usize) {
+                    for y in (xstep..r.height() - 1).step_by(xstep as usize) {
                         let mov = Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y);
                         let result = self.assess_move(&mov, canvas, painting);
                         if result < best_result {

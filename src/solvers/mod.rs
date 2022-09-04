@@ -44,6 +44,8 @@ pub const SOLVERS: &[&str] = &[
     "no_op",
     "simple",
     "simple_no_x",
+    "simple_s1",
+    "simple_no_x_s1",
     "swapper",
     "top_color",
 ];
@@ -56,9 +58,19 @@ pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
         "no_op" => Box::new(no_op::NoOp {}),
         "simple" => Box::new(simple::Simple {
             allow_cross_cut: true,
+            step_1: false,
         }),
         "simple_no_x" => Box::new(simple::Simple {
             allow_cross_cut: false,
+            step_1: false,
+        }),
+        "simple_s1" => Box::new(simple::Simple {
+            allow_cross_cut: true,
+            step_1: true,
+        }),
+        "simple_no_x_s1" => Box::new(simple::Simple {
+            allow_cross_cut: false,
+            step_1: true,
         }),
         "swapper" => Box::new(swapper::Swapper {}),
         "top_color" => Box::new(top_color::TopColor {}),
