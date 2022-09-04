@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
 use gui::gui_main;
 use painting::Painting;
@@ -34,6 +34,13 @@ struct Args {
     problem: Option<String>,
     #[clap(short, long)]
     solver: Option<String>,
+    #[clap(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Stats,
 }
 
 fn fcopy_to(current_dir: &Path, target_dir: &Path, filename: &str) -> std::io::Result<()> {
@@ -123,7 +130,7 @@ fn write_best(
     }
 }
 
-fn solve(solvers: &[String], problem_paths: &[&Path]) -> std::io::Result<()> {
+fn solve(solvers: &[String], problem_paths: &[PathBuf]) -> std::io::Result<()> {
     let base_solution_dir = PathBuf::from("./solutions/");
 
     problem_paths
@@ -202,19 +209,23 @@ fn get_problem_paths(args: &Args) -> Result<Vec<PathBuf>, std::io::Error> {
     if let Some(problem) = args.problem.clone() {
         Ok(vec![PathBuf::from(&problem)])
     } else if args.batch {
-        let paths: Vec<PathBuf> = std::fs::read_dir("./problems")?
-            .collect::<Result<Vec<DirEntry>, _>>()?
-            .iter()
-            .filter_map(|f| match f.path().extension() {
-                Some(ext) if ext == OsStr::new("png") => Some(f.path()),
-                _ => None,
-            })
-            .collect();
-
-        Ok(paths)
+        Ok(get_all_problem_paths()?)
     } else {
         Ok(vec![PathBuf::from("./problems/3.png")])
     }
+}
+
+fn get_all_problem_paths() -> Result<Vec<PathBuf>, std::io::Error> {
+    let paths: Vec<PathBuf> = std::fs::read_dir("./problems")?
+        .collect::<Result<Vec<DirEntry>, _>>()?
+        .iter()
+        .filter_map(|f| match f.path().extension() {
+            Some(ext) if ext == OsStr::new("png") => Some(f.path()),
+            _ => None,
+        })
+        .collect();
+
+    Ok(paths)
 }
 
 fn get_solvers(args: &Args) -> Option<Vec<String>> {
@@ -227,23 +238,55 @@ fn get_solvers(args: &Args) -> Option<Vec<String>> {
     }
 }
 
-fn main() -> std::io::Result<()> {
-    let args = Args::parse();
-
-    let problem_paths_buf = get_problem_paths(&args)?;
-    let problem_paths: Vec<&Path> = problem_paths_buf
-        .iter()
-        .map(|path| path.as_path())
-        .collect();
-
-    let solvers = get_solvers(&args);
-
-    match (&problem_paths[..], solvers) {
+fn default_command(
+    problem_paths: &[PathBuf],
+    solvers: Option<Vec<String>>,
+) -> Result<(), std::io::Error> {
+    match (problem_paths, solvers) {
         ([problem_path], None) => {
             gui_main(&std::path::PathBuf::from(problem_path));
             Ok(())
         }
         (paths, Some(solvers)) => solve(&solvers, paths),
         (_, None) => panic!("No problem paths and solvers provided"),
+    }
+}
+
+fn stats(problems_n: &[&str]) -> Result<(), std::io::Error> {
+    for n in problems_n {
+        let best_fname = format!("./solutions/best/{n}_meta.json");
+        let best_path = Path::new(&best_fname);
+
+        let best: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(best_path)?)?;
+        println!("Problem {n}");
+        println!("------------------------------------");
+        println!("best: {} score={}", best.solver_name, best.total_score);
+        println!("------------------------------------");
+    }
+
+    Ok(())
+}
+
+fn main() -> std::io::Result<()> {
+    let args = Args::parse();
+
+    match &args.command {
+        Some(Commands::Stats) => {
+            let problem_paths = get_all_problem_paths()?;
+
+            let mut problems: Vec<&str> = problem_paths
+                .iter()
+                .map(|p| p.file_stem().unwrap().to_str().unwrap())
+                .collect();
+
+            problems.sort_by_key(|x| x.parse::<u8>().unwrap());
+
+            stats(&problems)
+        }
+        _ => {
+            let problem_paths = get_problem_paths(&args)?;
+            let solvers = get_solvers(&args);
+            default_command(&problem_paths, solvers)
+        }
     }
 }
