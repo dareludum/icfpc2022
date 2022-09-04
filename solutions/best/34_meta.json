@@ -1,6 +1,6 @@
 {
-  "solver_name": "erase",
-  "total_score": 132531,
-  "score": 118890,
+  "solver_name": "erase+top_color",
+  "total_score": 109626,
+  "score": 95985,
   "solution_cost": 13641
 }
