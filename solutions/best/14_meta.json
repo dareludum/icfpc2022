@@ -1,6 +1,6 @@
 {
-  "solver_name": "no_op",
-  "total_score": 45199,
-  "score": 45199,
-  "solution_cost": 0
+  "solver_name": "annealing_s4",
+  "total_score": 42340,
+  "score": 42191,
+  "solution_cost": 149
 }
