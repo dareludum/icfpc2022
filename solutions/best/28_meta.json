@@ -1,6 +1,6 @@
 {
-  "solver_name": "swapper",
-  "total_score": 67252,
-  "score": 62752,
-  "solution_cost": 4500
+  "solver_name": "erase+top_color+annealing%recolor",
+  "total_score": 46268,
+  "score": 36081,
+  "solution_cost": 10187
 }
