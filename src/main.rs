@@ -31,9 +31,9 @@ struct Args {
     #[clap(long)]
     batch: bool,
     #[clap(short, long, value_parser)]
-    problem: Option<u8>,
+    problems: Vec<u8>,
     #[clap(short, long)]
-    solver: Option<String>,
+    solvers: Vec<String>,
     #[clap(subcommand)]
     command: Option<Commands>,
 }
@@ -217,8 +217,12 @@ fn win_indicator_str(old: u64, new: u64) -> String {
 }
 
 fn get_problem_paths(args: &Args, force_batch: bool) -> Result<Vec<PathBuf>, std::io::Error> {
-    if let Some(problem) = args.problem {
-        Ok(vec![PathBuf::from(format!("./problems/{problem}.png"))])
+    if !args.problems.is_empty() {
+        Ok(args
+            .problems
+            .iter()
+            .map(|p| PathBuf::from(format!("./problems/{p}.png")))
+            .collect())
     } else if args.batch || force_batch {
         Ok(get_all_problem_paths()?)
     } else {
@@ -240,8 +244,8 @@ fn get_all_problem_paths() -> Result<Vec<PathBuf>, std::io::Error> {
 }
 
 fn get_solvers(args: &Args) -> Option<Vec<String>> {
-    if let Some(solver) = args.solver.clone() {
-        Some(vec![solver])
+    if !args.solvers.is_empty() {
+        Some(args.solvers.clone())
     } else if args.batch {
         Some(SOLVERS.iter().map(|s| s.to_string()).collect())
     } else {
