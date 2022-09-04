@@ -1,6 +1,6 @@
 {
-  "solver_name": "no_op",
-  "total_score": 142205,
-  "score": 142205,
-  "solution_cost": 0
+  "solver_name": "swapper",
+  "total_score": 113708,
+  "score": 82220,
+  "solution_cost": 31488
 }
