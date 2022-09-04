@@ -1,4 +1,6 @@
 #![allow(clippy::collapsible_if)]
+use std::fmt::Write;
+
 use raylib::prelude::*;
 
 use crate::{
@@ -50,7 +52,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let mut current_tool_score = Cost(0);
 
     let (mut rl, thread) = raylib::init()
-        .size(1000, 600)
+        .size(1080, 600)
         .title("ICFPC2022 - dare ludum")
         .build();
 
@@ -375,6 +377,23 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 Color::BLACK,
             );
         }
+
+        const MAX_MOVES: usize = 12;
+        let mut s = "Moves:\n".to_string();
+        for am in moves.iter().rev().take(MAX_MOVES) {
+            writeln!(s, "{}", to_isl(&am.mov)).unwrap();
+        }
+        if moves.len() > MAX_MOVES {
+            s.push_str("...")
+        }
+
+        d.draw_text(
+            &s,
+            MARGIN + IMAGE_SIZE + MARGIN + IMAGE_SIZE + MARGIN,
+            MARGIN,
+            20,
+            Color::BLACK,
+        );
     }
 }
 
