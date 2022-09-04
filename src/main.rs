@@ -1,5 +1,6 @@
 extern crate derive_more;
 extern crate nalgebra as na;
+extern crate nom;
 
 use std::{ffi::OsString, fs::DirEntry, path::PathBuf};
 
@@ -20,6 +21,7 @@ mod gui;
 mod helpers;
 mod moves;
 mod painting;
+mod parser;
 mod program;
 mod solvers;
 

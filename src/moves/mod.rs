@@ -19,7 +19,7 @@ mod undo;
 pub use cost::*;
 pub use undo::*;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Orientation {
     Horizontal,
     Vertical,
@@ -34,7 +34,7 @@ impl Display for Orientation {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Move {
     LineCut(BlockId, Orientation, u32),
     PointCut(BlockId, u32, u32),
