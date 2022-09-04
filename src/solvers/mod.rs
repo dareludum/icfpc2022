@@ -39,6 +39,7 @@ pub trait Solver {
 
 pub const SOLVERS: &[&str] = &[
     "annealing",
+    "annealing_s4",
     "divide_conquer",
     "no_op",
     "simple",
@@ -49,7 +50,8 @@ pub const SOLVERS: &[&str] = &[
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {
-        "annealing" => Box::new(annealing::Annealing {}),
+        "annealing" => Box::new(annealing::Annealing { step: 10 }),
+        "annealing_s4" => Box::new(annealing::Annealing { step: 4 }),
         "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
         "no_op" => Box::new(no_op::NoOp {}),
         "simple" => Box::new(simple::Simple {

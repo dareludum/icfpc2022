@@ -7,11 +7,19 @@ use crate::{
 
 use super::Solver;
 
-pub struct Annealing;
+pub struct Annealing {
+    pub step: u32,
+}
 
 impl Solver for Annealing {
     fn name(&self) -> &'static str {
-        "annealing"
+        if self.step == 10 {
+            "annealing"
+        } else if self.step == 4 {
+            "annealing_s4"
+        } else {
+            todo!("Implement this")
+        }
     }
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
@@ -132,18 +140,19 @@ impl Annealing {
         moves: &mut Vec<(u32, Move)>,
         undo_count: u32,
     ) {
-        const STEP: usize = 10;
+        let step: u32 = self.step;
+        let xstep = self.step * 2;
 
         let r = b.rect();
         let linear_cut_cost = Move::get_cost(MoveType::LineCut, r.area(), canvas.area);
         if (linear_cut_cost.0 as i64) < budget {
-            for x in (1..r.width() - 1).step_by(STEP) {
+            for x in (step..r.width() - 1).step_by(step as usize) {
                 moves.push((
                     undo_count,
                     Move::LineCut(b.get_id().clone(), Orientation::Vertical, r.x() + x),
                 ));
             }
-            for y in (1..r.height() - 1).step_by(STEP) {
+            for y in (step..r.height() - 1).step_by(step as usize) {
                 moves.push((
                     undo_count,
                     Move::LineCut(b.get_id().clone(), Orientation::Horizontal, r.y() + y),
@@ -152,8 +161,8 @@ impl Annealing {
         }
         let cross_cut_cost = Move::get_cost(MoveType::PointCut, r.area(), canvas.area);
         if (cross_cut_cost.0 as i64) < budget {
-            for x in (1..r.width() - 1).step_by(STEP) {
-                for y in (1..r.height() - 1).step_by(STEP) {
+            for x in (xstep..r.width() - 1).step_by(xstep as usize) {
+                for y in (xstep..r.height() - 1).step_by(xstep as usize) {
                     moves.push((
                         undo_count,
                         Move::PointCut(b.get_id().clone(), r.x() + x, r.y() + y),
