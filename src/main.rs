@@ -1,4 +1,5 @@
 extern crate derive_more;
+extern crate nalgebra as na;
 
 use std::{
     ffi::{OsStr, OsString},
