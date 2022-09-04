@@ -31,7 +31,7 @@ struct Args {
     #[clap(long)]
     batch: bool,
     #[clap(short, long, value_parser)]
-    problem: Option<String>,
+    problem: Option<u8>,
     #[clap(short, long)]
     solver: Option<String>,
     #[clap(subcommand)]
@@ -205,10 +205,10 @@ fn win_indicator_str(old: u64, new: u64) -> String {
     }
 }
 
-fn get_problem_paths(args: &Args) -> Result<Vec<PathBuf>, std::io::Error> {
+fn get_problem_paths(args: &Args, force_batch: bool) -> Result<Vec<PathBuf>, std::io::Error> {
     if let Some(problem) = args.problem.clone() {
-        Ok(vec![PathBuf::from(&problem)])
-    } else if args.batch {
+        Ok(vec![PathBuf::from(format!("./problems/{problem}.png"))])
+    } else if args.batch || force_batch {
         Ok(get_all_problem_paths()?)
     } else {
         Ok(vec![PathBuf::from("./problems/3.png")])
@@ -252,7 +252,7 @@ fn default_command(
     }
 }
 
-fn stats(problems_n: &[&str]) -> Result<(), std::io::Error> {
+fn stats(problems_n: &[&str], solvers: &[String]) -> Result<(), std::io::Error> {
     for n in problems_n {
         let best_fname = format!("./solutions/best/{n}_meta.json");
         let best_path = Path::new(&best_fname);
@@ -260,7 +260,7 @@ fn stats(problems_n: &[&str]) -> Result<(), std::io::Error> {
         let best: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(best_path)?)?;
         let mut current_solved = Vec::with_capacity(problems_n.len());
 
-        for solver in SOLVERS {
+        for solver in solvers {
             let path_s = format!("./solutions/current/{solver}/{n}_meta.json");
             let path = Path::new(&path_s);
             if let Ok(true) = path.try_exists() {
@@ -285,10 +285,11 @@ fn stats(problems_n: &[&str]) -> Result<(), std::io::Error> {
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
+    let solvers = get_solvers(&args);
 
     match &args.command {
         Some(Commands::Stats) => {
-            let problem_paths = get_all_problem_paths()?;
+            let problem_paths = get_problem_paths(&args, true)?;
 
             let mut problems: Vec<&str> = problem_paths
                 .iter()
@@ -297,11 +298,13 @@ fn main() -> std::io::Result<()> {
 
             problems.sort_by_key(|x| x.parse::<u8>().unwrap());
 
-            stats(&problems)
+            stats(
+                &problems,
+                &solvers.unwrap_or_else(|| SOLVERS.iter().map(|x| x.to_string()).collect()),
+            )
         }
         _ => {
-            let problem_paths = get_problem_paths(&args)?;
-            let solvers = get_solvers(&args);
+            let problem_paths = get_problem_paths(&args, false)?;
             default_command(&problem_paths, solvers)
         }
     }
