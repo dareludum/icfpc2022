@@ -266,10 +266,13 @@ fn stats(problems_n: &[&str], solvers: &[String]) -> Result<(), std::io::Error> 
         for solver in solvers {
             let path_s = format!("./solutions/current/{solver}/{n}_meta.json");
             let path = Path::new(&path_s);
-            if let Ok(true) = path.try_exists() {
-                let current: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(path)?)?;
-                current_solved.push(current.clone());
-            }
+            let current = if let Ok(true) = path.try_exists() {
+                serde_json::from_str(&fs::read_to_string(path)?)?
+            } else {
+                SolvedSolutionDto::not_solved()
+            };
+
+            current_solved.push(current);
         }
 
         current_solved.sort_by_key(|x| x.total_score);
@@ -302,10 +305,9 @@ fn main() -> std::io::Result<()> {
                 .collect();
 
             problems.sort_by_key(|x| x.parse::<u8>().unwrap());
-
             stats(
                 &problems,
-                &solvers.unwrap_or_else(|| SOLVERS.iter().map(|x| x.to_string()).collect()),
+                &solvers.unwrap_or_else(|| list_current_solvers()),
             )
         }
         _ => {
@@ -313,4 +315,21 @@ fn main() -> std::io::Result<()> {
             default_command(&problem_paths, solvers)
         }
     }
+}
+
+fn list_current_solvers() -> Vec<String> {
+    let mut current_solvers = vec![];
+    let solvers_dir = std::fs::read_dir(PathBuf::from("./solutions/current"))
+        .expect("Can't list solutions current dir");
+    for s in solvers_dir {
+        if let Ok(dir) = s {
+            if let Ok(file_type) = dir.file_type() {
+                if file_type.is_dir() {
+                    current_solvers.push(dir.file_name().to_str().unwrap().to_string());
+                }
+            }
+        }
+    }
+
+    current_solvers
 }
