@@ -22,13 +22,30 @@ pub struct Canvas {
 
 impl From<CanvasDto> for Canvas {
     fn from(dto: CanvasDto) -> Self {
-        let mut canvas = Canvas::new(dto.width, dto.height);
+        let blocks: Vec<Block> = dto.blocks.iter().map(|bdto| bdto.into()).collect();
 
-        dto.blocks
+        let max_root: Option<u32> = blocks
             .iter()
-            .for_each(|bdto| canvas.put_block(bdto.into()));
+            .filter_map(|block| {
+                let id = &block.get_id().0;
+                let root_id_str = match id.find('.') {
+                    Some(dot_off) => &id.as_str()[0..dot_off],
+                    None => id.as_str(),
+                };
+                // try to parse identifiers as integers, exclude from the max if parsing fails
+                lexical_core::parse(root_id_str.as_bytes()).ok()
+            })
+            .max();
 
-        canvas
+        let initial_root_count = max_root.map_or(0, |max_root| max_root + 1);
+
+        Canvas::from_blocks(
+            dto.width,
+            dto.height,
+            initial_root_count,
+            0,
+            blocks.into_iter(),
+        )
     }
 }
 

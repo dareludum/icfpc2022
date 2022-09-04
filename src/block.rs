@@ -114,7 +114,7 @@ impl Rect {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
-pub struct BlockId(SmartString<LazyCompact>);
+pub struct BlockId(pub SmartString<LazyCompact>);
 
 impl BlockId {
     pub fn new(data: SmartString<LazyCompact>) -> Self {
