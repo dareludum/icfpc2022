@@ -131,6 +131,34 @@ impl Painting {
         worst_block.unwrap()
     }
 
+    pub fn calculate_abs_diff_map(&self, target: &Canvas) -> Vec<f64> {
+        let mut map = vec![];
+        map.resize(self.data.len(), 0.0);
+        for b in target.blocks_iter() {
+            match &b.data {
+                BlockData::Simple(c) => {
+                    for x in b.r.x()..b.r.top_right.x {
+                        for y in b.r.y()..b.r.top_right.y {
+                            map[(x + y * self.width) as usize] =
+                                self.calculate_score_pixel(x, y, *c);
+                        }
+                    }
+                }
+                BlockData::Complex(bs) => {
+                    for b in bs {
+                        for x in b.r.x()..b.r.top_right.x {
+                            for y in b.r.y()..b.r.top_right.y {
+                                map[(x + y * self.width) as usize] =
+                                    self.calculate_score_pixel(x, y, b.c);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        map
+    }
+
     pub fn calculate_score(&self, target: &Painting) -> Cost {
         if target.width() != self.width() || target.height() != self.height() {
             panic!("comparing two images different in size");
@@ -184,16 +212,21 @@ impl Painting {
         let mut block_score = 0.0;
         for x in r.x()..r.top_right.x {
             for y in r.y()..r.top_right.y {
-                let pc = self.get_color(x, y);
-                let mut pixel_score = 0f64;
-                pixel_score += (c.r.abs_diff(pc.r) as f64).powi(2);
-                pixel_score += (c.g.abs_diff(pc.g) as f64).powi(2);
-                pixel_score += (c.b.abs_diff(pc.b) as f64).powi(2);
-                pixel_score += (c.a.abs_diff(pc.a) as f64).powi(2);
-                block_score += pixel_score.sqrt();
+                block_score += self.calculate_score_pixel(x, y, c);
             }
         }
         block_score
+    }
+
+    #[inline(always)]
+    fn calculate_score_pixel(&self, x: u32, y: u32, c: Color) -> f64 {
+        let pc = self.get_color(x, y);
+        let mut pixel_score = 0f64;
+        pixel_score += (c.r.abs_diff(pc.r) as f64).powi(2);
+        pixel_score += (c.g.abs_diff(pc.g) as f64).powi(2);
+        pixel_score += (c.b.abs_diff(pc.b) as f64).powi(2);
+        pixel_score += (c.a.abs_diff(pc.a) as f64).powi(2);
+        pixel_score.sqrt()
     }
 
     pub fn write_to_file(&self, path: &std::path::Path) {

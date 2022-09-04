@@ -1,6 +1,7 @@
 #![allow(clippy::collapsible_if)]
 use std::fmt::Write;
 
+use colorgrad::Gradient;
 use raylib::prelude::*;
 
 use crate::{
@@ -14,6 +15,14 @@ use crate::{
 impl From<crate::color::Color> for raylib::ffi::Color {
     fn from(c: crate::color::Color) -> Self {
         raylib::prelude::Color::new(c.r, c.g, c.b, c.a).into()
+    }
+}
+
+struct GradientColor(colorgrad::Color);
+impl From<GradientColor> for raylib::ffi::Color {
+    fn from(GradientColor(c): GradientColor) -> Self {
+        let c = c.to_rgba8();
+        raylib::prelude::Color::new(c[0], c[1], c[2], c[3]).into()
     }
 }
 
@@ -75,6 +84,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let mut current_painting_score = initial_painting_score;
     let mut current_tool_score = Cost(0);
     let mut current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
+    let mut show_alt_data = false;
 
     let (mut rl, thread) = raylib::init()
         .size(1080, 600)
@@ -91,6 +101,20 @@ pub fn gui_main(problem_path: &std::path::Path) {
         }
     }
     let target_texture = rl.load_texture_from_image(&thread, &target_image).unwrap();
+    let abs_diff_gradient = colorgrad::CustomGradient::new()
+        .colors(&[
+            colorgrad::Color::from_rgba8(255, 255, 255, 255),
+            colorgrad::Color::from_rgba8(255, 0, 0, 255),
+        ])
+        .domain(&[0.0, 500.0])
+        .build()
+        .unwrap();
+    let mut current_abs_diff_texture = rl
+        .load_texture_from_image(
+            &thread,
+            &generate_abs_diff_image(&canvas, &painting, &abs_diff_gradient),
+        )
+        .unwrap();
 
     let mut tool = Tool::CutVert;
     let mut color = crate::color::Color::new(255, 255, 255, 255);
@@ -162,6 +186,12 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         current_painting_score = painting.calculate_score_canvas(&canvas);
                         current_tool_score -= applied_move.cost;
                         current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
+                        current_abs_diff_texture = rl
+                            .load_texture_from_image(
+                                &thread,
+                                &generate_abs_diff_image(&canvas, &painting, &abs_diff_gradient),
+                            )
+                            .unwrap();
                     }
                 }
                 KeyboardKey::KEY_S => {
@@ -171,6 +201,9 @@ pub fn gui_main(problem_path: &std::path::Path) {
                     }
                     program::write_to_file(&std::path::PathBuf::from("./manual.txt"), &result)
                         .expect("Failed to write the manual solution file");
+                }
+                KeyboardKey::KEY_TAB => {
+                    show_alt_data = !show_alt_data;
                 }
                 _ => {}
             },
@@ -211,6 +244,12 @@ pub fn gui_main(problem_path: &std::path::Path) {
                     current_painting_score = painting.calculate_score_canvas(&canvas);
                     current_tool_score += applied_move.cost;
                     current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
+                    current_abs_diff_texture = rl
+                        .load_texture_from_image(
+                            &thread,
+                            &generate_abs_diff_image(&canvas, &painting, &abs_diff_gradient),
+                        )
+                        .unwrap();
                     moves.push(applied_move);
                 } else {
                     // TODO: show a message
@@ -253,7 +292,11 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         // Draw the target
         d.draw_texture(
-            &target_texture,
+            if show_alt_data {
+                &current_abs_diff_texture
+            } else {
+                &target_texture
+            },
             MARGIN + IMAGE_SIZE + MARGIN,
             MARGIN,
             Color::WHITE,
@@ -414,6 +457,21 @@ pub fn gui_main(problem_path: &std::path::Path) {
             Color::BLACK,
         );
     }
+}
+
+fn generate_abs_diff_image(canvas: &Canvas, painting: &Painting, gradient: &Gradient) -> Image {
+    let width = painting.width() as i32;
+    let height = painting.height() as i32;
+    let mut target_image = Image::gen_image_color(width, height, Color::BLACK);
+    let abs_diff_map = painting.calculate_abs_diff_map(canvas);
+    for x in 0..painting.width() {
+        for y in 0..painting.height() {
+            let v = abs_diff_map[(x + (y * painting.width)) as usize];
+            let c = GradientColor(gradient.at(v));
+            target_image.draw_pixel(x as i32, y as i32, c);
+        }
+    }
+    target_image
 }
 
 fn double_draw_rectangle_lines(

@@ -116,6 +116,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
 
 [[package]]
+name = "colorgrad"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a2d16665305bc62a863baa4005b1074f77e7f2f65e0805734b4df6b854cd66e"
+dependencies = [
+ "csscolorparser",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -174,6 +183,12 @@ dependencies = [
  "cfg-if",
  "once_cell",
 ]
+
+[[package]]
+name = "csscolorparser"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb2a7d3066da2de787b7f032c736763eb7ae5d355f81a68bab2675a96008b0bf"
 
 [[package]]
 name = "deflate"
@@ -246,6 +261,7 @@ name = "icfpc2022"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "colorgrad",
  "derive_more",
  "image",
  "lexical-core",
