@@ -1,7 +1,7 @@
 pub use crate::moves::Move;
-use derive_more::{Add, AddAssign, Sub, Sum};
+use derive_more::{Add, AddAssign, Sub, SubAssign, Sum};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Add, AddAssign, Sub, Sum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Add, AddAssign, Sub, SubAssign, Sum)]
 pub struct Cost(pub u64);
 
 fn base_cost(mov: &Move) -> u32 {

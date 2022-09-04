@@ -4,7 +4,7 @@ use raylib::prelude::*;
 use crate::{
     block::{Point, Rect},
     canvas::Canvas,
-    moves::{AppliedMove, Move, Orientation, UndoMove},
+    moves::{AppliedMove, Cost, Move, Orientation, UndoMove},
     painting::Painting,
     program::to_isl,
 };
@@ -45,6 +45,9 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let initial_config_path = problem_path.with_extension("json");
     let mut canvas = Canvas::try_create(initial_config_path, &painting)
         .expect("gui_main: Error while creating Canvas");
+    let initial_painting_score = painting.calculate_score_canvas(&canvas);
+    let mut current_painting_score = initial_painting_score;
+    let mut current_tool_score = Cost(0);
 
     let (mut rl, thread) = raylib::init()
         .size(1000, 600)
@@ -152,6 +155,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         undo.apply(&mut canvas);
                         b_id = None;
                         marked_block = None;
+                        current_painting_score = painting.calculate_score_canvas(&canvas);
+                        current_tool_score -= applied_move.cost;
                     }
                 }
                 _ => {}
@@ -190,6 +195,8 @@ pub fn gui_main(problem_path: &std::path::Path) {
                 if let Ok(applied_move) = mov.apply(&mut canvas) {
                     b_id = None;
                     marked_block = None;
+                    current_painting_score = painting.calculate_score_canvas(&canvas);
+                    current_tool_score += applied_move.cost;
                     moves.push(applied_move);
                 } else {
                     // TODO: show a message
@@ -336,10 +343,25 @@ pub fn gui_main(problem_path: &std::path::Path) {
             COLOR_PREVIEW_SIZE,
             color,
         );
+
+        d.draw_text(
+            &format!(
+                "Score: {} (initial), {} (current, {} + {})",
+                initial_painting_score.0,
+                (current_painting_score.0 + current_tool_score.0),
+                current_painting_score.0,
+                current_tool_score.0
+            ),
+            MARGIN + COLOR_PREVIEW_SIZE + MARGIN,
+            MARGIN + IMAGE_SIZE + MARGIN,
+            20,
+            Color::BLACK,
+        );
+
         d.draw_text(
             &format!("Tool: {}", tool.name()),
             MARGIN + COLOR_PREVIEW_SIZE + MARGIN,
-            MARGIN + IMAGE_SIZE + MARGIN,
+            MARGIN + IMAGE_SIZE + 2 * MARGIN,
             20,
             Color::BLACK,
         );
@@ -348,7 +370,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
             d.draw_text(
                 &format!("Move: {}", to_isl(&mv)),
                 MARGIN + COLOR_PREVIEW_SIZE + MARGIN,
-                MARGIN + IMAGE_SIZE + 2 * MARGIN,
+                MARGIN + IMAGE_SIZE + 3 * MARGIN,
                 20,
                 Color::BLACK,
             );
