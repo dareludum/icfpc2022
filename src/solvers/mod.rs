@@ -1,5 +1,6 @@
 mod annealing;
 mod divide_conquer;
+mod erase;
 mod no_op;
 mod simple;
 mod swapper;
@@ -41,6 +42,7 @@ pub const SOLVERS: &[&str] = &[
     "annealing",
     "annealing_s4",
     "divide_conquer",
+    "erase",
     "no_op",
     "simple",
     "simple_no_x",
@@ -55,6 +57,7 @@ pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
         "annealing" => Box::new(annealing::Annealing { step: 10 }),
         "annealing_s4" => Box::new(annealing::Annealing { step: 4 }),
         "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
+        "erase" => Box::new(erase::Erase {}),
         "no_op" => Box::new(no_op::NoOp {}),
         "simple" => Box::new(simple::Simple {
             allow_cross_cut: true,
