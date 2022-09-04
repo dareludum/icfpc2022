@@ -286,13 +286,10 @@ fn stats(problems_n: &[String], solvers: &[String]) -> Result<(), std::io::Error
         for solver in solvers {
             let path_s = format!("./solutions/current/{solver}/{n}_meta.json");
             let path = Path::new(&path_s);
-            let current = if let Ok(true) = path.try_exists() {
-                serde_json::from_str(&fs::read_to_string(path)?)?
-            } else {
-                SolvedSolutionDto::not_solved()
+            if let Ok(true) = path.try_exists() {
+                let dto: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(path)?)?;
+                current_solved.push(dto);
             };
-
-            current_solved.push(current);
         }
 
         current_solved.sort_by_key(|x| x.total_score);
