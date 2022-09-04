@@ -1,7 +1,7 @@
 use crate::block::{BlockData, BlockId};
 use crate::block::{Point, Rect};
 use crate::canvas::Canvas;
-use crate::moves::{Block, Cost, Move, MoveError, Orientation, SimpleBlock, UndoMove};
+use crate::moves::{Block, Cost, Move, MoveError, Orientation, SubBlock, UndoMove};
 
 struct UndoCutBuilder {
     delete_blocks: Vec<BlockId>,
@@ -64,12 +64,12 @@ pub fn vertical_cut(
     match block.data {
         BlockData::Simple(_) => {
             let (left_r, right_r) = block.r.vertical_cut(cut_offset_x);
-            builder.create(canvas, block.split("0", left_r));
-            builder.create(canvas, block.split("1", right_r));
+            builder.create(canvas, block.split_simple("0", left_r));
+            builder.create(canvas, block.split_simple("1", right_r));
         }
         BlockData::Complex(bs) => {
-            let mut left_blocks: Vec<SimpleBlock> = vec![];
-            let mut right_blocks: Vec<SimpleBlock> = vec![];
+            let mut left_blocks: Vec<SubBlock> = vec![];
+            let mut right_blocks: Vec<SubBlock> = vec![];
             for child in bs {
                 if child.r.bottom_left.x >= cut_offset_x {
                     right_blocks.push(child);
@@ -80,8 +80,8 @@ pub fn vertical_cut(
                     continue;
                 }
                 let (left_r, right_r) = child.r.vertical_cut(cut_offset_x);
-                left_blocks.push(child.complex_split(left_r));
-                right_blocks.push(child.complex_split(right_r));
+                left_blocks.push(SubBlock::new(left_r, child.c));
+                right_blocks.push(SubBlock::new(right_r, child.c));
             }
 
             let (left_r, right_r) = block.r.vertical_cut(cut_offset_x);
@@ -117,12 +117,12 @@ pub fn horizontal_cut(
     match block.data {
         BlockData::Simple(_) => {
             let (bottom_r, top_r) = block.r.horizontal_cut(cut_offset_y);
-            builder.create(canvas, block.split("0", bottom_r));
-            builder.create(canvas, block.split("1", top_r));
+            builder.create(canvas, block.split_simple("0", bottom_r));
+            builder.create(canvas, block.split_simple("1", top_r));
         }
         BlockData::Complex(bs) => {
-            let mut bottom_blocks: Vec<SimpleBlock> = vec![];
-            let mut top_blocks: Vec<SimpleBlock> = vec![];
+            let mut bottom_blocks: Vec<SubBlock> = vec![];
+            let mut top_blocks: Vec<SubBlock> = vec![];
             for child in bs {
                 if child.r.bottom_left.y >= cut_offset_y {
                     top_blocks.push(child);
@@ -133,8 +133,8 @@ pub fn horizontal_cut(
                     continue;
                 }
                 let (bottom_r, top_r) = child.r.horizontal_cut(cut_offset_y);
-                bottom_blocks.push(child.complex_split(bottom_r));
-                top_blocks.push(child.complex_split(top_r));
+                bottom_blocks.push(SubBlock::new(bottom_r, child.c));
+                top_blocks.push(SubBlock::new(top_r, child.c));
             }
 
             let (bottom_r, top_r) = block.r.horizontal_cut(cut_offset_y);
@@ -174,19 +174,19 @@ pub fn point_cut(
         BlockData::Simple(_) => {
             let (bottom_left_bl, bottom_right_bl, top_right_bl, top_left_bl) =
                 block.r.cross_cut(cut_x, cut_y);
-            builder.create(canvas, block.split("0", bottom_left_bl));
-            builder.create(canvas, block.split("1", bottom_right_bl));
-            builder.create(canvas, block.split("2", top_right_bl));
-            builder.create(canvas, block.split("3", top_left_bl));
+            builder.create(canvas, block.split_simple("0", bottom_left_bl));
+            builder.create(canvas, block.split_simple("1", bottom_right_bl));
+            builder.create(canvas, block.split_simple("2", top_right_bl));
+            builder.create(canvas, block.split_simple("3", top_left_bl));
             return Ok((cost, builder.build(canvas)));
         }
         BlockData::Complex(bs) => bs,
     };
 
-    let mut bottom_left_blocks: Vec<SimpleBlock> = vec![];
-    let mut bottom_right_blocks: Vec<SimpleBlock> = vec![];
-    let mut top_right_blocks: Vec<SimpleBlock> = vec![];
-    let mut top_left_blocks: Vec<SimpleBlock> = vec![];
+    let mut bottom_left_blocks: Vec<SubBlock> = vec![];
+    let mut bottom_right_blocks: Vec<SubBlock> = vec![];
+    let mut top_right_blocks: Vec<SubBlock> = vec![];
+    let mut top_left_blocks: Vec<SubBlock> = vec![];
     for child in bs {
         /*
          * __________________________
@@ -223,10 +223,10 @@ pub fn point_cut(
         // Case 5
         if child.r.strictly_contains(cut_x, cut_y) {
             let (bl, br, tr, tl) = child.r.cross_cut(cut_x, cut_y);
-            bottom_left_blocks.push(child.complex_split(bl));
-            bottom_right_blocks.push(child.complex_split(br));
-            top_right_blocks.push(child.complex_split(tr));
-            top_left_blocks.push(child.complex_split(tl));
+            bottom_left_blocks.push(SubBlock::new(bl, child.c));
+            bottom_right_blocks.push(SubBlock::new(br, child.c));
+            top_right_blocks.push(SubBlock::new(tr, child.c));
+            top_left_blocks.push(SubBlock::new(tl, child.c));
             continue;
         }
 
@@ -235,11 +235,11 @@ pub fn point_cut(
             && cut_x <= child.r.top_right.x
             && cut_y <= child.r.bottom_left.y
         {
-            top_left_blocks.push(SimpleBlock::new(
+            top_left_blocks.push(SubBlock::new(
                 Rect::new(child.r.bottom_left, Point::new(cut_x, child.r.top_right.y)),
                 child.c,
             ));
-            top_right_blocks.push(SimpleBlock::new(
+            top_right_blocks.push(SubBlock::new(
                 Rect::new(Point::new(cut_x, child.r.bottom_left.y), child.r.top_right),
                 child.c,
             ));
@@ -250,11 +250,11 @@ pub fn point_cut(
             && cut_x <= child.r.top_right.x
             && cut_y >= child.r.top_right.y
         {
-            bottom_left_blocks.push(SimpleBlock::new(
+            bottom_left_blocks.push(SubBlock::new(
                 Rect::new(child.r.bottom_left, Point::new(cut_x, child.r.top_right.y)),
                 child.c,
             ));
-            bottom_right_blocks.push(SimpleBlock::new(
+            bottom_right_blocks.push(SubBlock::new(
                 Rect::new(Point::new(cut_x, child.r.bottom_left.y), child.r.top_right),
                 child.c,
             ));
@@ -265,11 +265,11 @@ pub fn point_cut(
             && cut_y <= child.r.top_right.y
             && cut_x <= child.r.bottom_left.x
         {
-            bottom_right_blocks.push(SimpleBlock::new(
+            bottom_right_blocks.push(SubBlock::new(
                 Rect::new(child.r.bottom_left, Point::new(child.r.top_right.x, cut_y)),
                 child.c,
             ));
-            top_right_blocks.push(SimpleBlock::new(
+            top_right_blocks.push(SubBlock::new(
                 Rect::new(Point::new(child.r.bottom_left.x, cut_y), child.r.top_right),
                 child.c,
             ));
@@ -280,11 +280,11 @@ pub fn point_cut(
             && cut_y <= child.r.top_right.y
             && cut_x >= child.r.top_right.x
         {
-            bottom_left_blocks.push(SimpleBlock::new(
+            bottom_left_blocks.push(SubBlock::new(
                 Rect::new(child.r.bottom_left, Point::new(child.r.top_right.x, cut_y)),
                 child.c,
             ));
-            top_left_blocks.push(SimpleBlock::new(
+            top_left_blocks.push(SubBlock::new(
                 Rect::new(Point::new(child.r.bottom_left.x, cut_y), child.r.top_right),
                 child.c,
             ));

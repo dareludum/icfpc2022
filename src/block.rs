@@ -154,26 +154,21 @@ impl Display for BlockId {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SimpleBlock {
+pub struct SubBlock {
     pub r: Rect,
     pub c: Color,
 }
 
-impl SimpleBlock {
+impl SubBlock {
     pub fn new(r: Rect, c: Color) -> Self {
-        SimpleBlock { r, c }
-    }
-
-    /// Called when splitting a complex block
-    pub fn complex_split(&self, r: Rect) -> Self {
-        Self::new(r, self.c)
+        SubBlock { r, c }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BlockData {
     Simple(Color),
-    Complex(Vec<SimpleBlock>),
+    Complex(Vec<SubBlock>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -192,7 +187,7 @@ impl Block {
         }
     }
 
-    pub fn new_complex(id: BlockId, r: Rect, bs: Vec<SimpleBlock>) -> Self {
+    pub fn new_complex(id: BlockId, r: Rect, bs: Vec<SubBlock>) -> Self {
         Block {
             id,
             r,
@@ -204,17 +199,17 @@ impl Block {
         self.r.width() * self.r.height()
     }
 
-    pub fn take_children(self) -> Vec<SimpleBlock> {
+    pub fn take_children(self) -> Vec<SubBlock> {
         match self.data {
-            BlockData::Simple(c) => vec![SimpleBlock::new(self.r, c)],
+            BlockData::Simple(c) => vec![SubBlock::new(self.r, c)],
             BlockData::Complex(bs) => bs,
         }
     }
 
-    pub fn split(&self, child_name: &str, r: Rect) -> Self {
+    pub fn split_simple(&self, child_name: &str, r: Rect) -> Self {
         match self.data {
             BlockData::Simple(c) => Self::new_simple(self.id.new_child(child_name), r, c),
-            BlockData::Complex(_) => todo!(),
+            BlockData::Complex(_) => panic!("Can't simple-split a complex block"),
         }
     }
 }

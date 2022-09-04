@@ -2,7 +2,7 @@ use crate::block::Block;
 use crate::block::BlockId;
 use crate::block::Rect;
 use crate::canvas::Canvas;
-use crate::moves::{Cost, Move, MoveError, SimpleBlock, UndoMove};
+use crate::moves::{Cost, Move, MoveError, SubBlock, UndoMove};
 
 pub fn merge(
     mov: &Move,
@@ -34,7 +34,7 @@ pub fn merge(
         };
         let new_id = canvas.next_merge_id();
         let undo = UndoMove::merge(canvas, new_id.clone(), block_a.clone(), block_b.clone());
-        let mut children: Vec<SimpleBlock> = vec![];
+        let mut children: Vec<SubBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());
         canvas.put_block(Block::new_complex(
@@ -57,7 +57,7 @@ pub fn merge(
         };
         let new_id = canvas.next_merge_id();
         let undo = UndoMove::merge(canvas, new_id.clone(), block_a.clone(), block_b.clone());
-        let mut children: Vec<SimpleBlock> = vec![];
+        let mut children: Vec<SubBlock> = vec![];
         children.extend(block_a.take_children().into_iter());
         children.extend(block_b.take_children().into_iter());
         canvas.put_block(Block::new_complex(

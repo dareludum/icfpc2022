@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{
-    block::{Block, BlockId, SimpleBlock},
+    block::{Block, BlockId, SubBlock},
     canvas::Canvas,
     color::Color,
 };
