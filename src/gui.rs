@@ -50,6 +50,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
     let initial_painting_score = painting.calculate_score_canvas(&canvas);
     let mut current_painting_score = initial_painting_score;
     let mut current_tool_score = Cost(0);
+    let mut current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
 
     let (mut rl, thread) = raylib::init()
         .size(1080, 600)
@@ -82,6 +83,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
         a: 32,
         ..Color::GRAY
     };
+    const COLOR_WORST_BLOCK: Color = Color::RED;
 
     const SOLUTION_RECT: Rect = Rect::new(
         Point::new(MARGIN as u32, MARGIN as u32),
@@ -159,6 +161,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         marked_block = None;
                         current_painting_score = painting.calculate_score_canvas(&canvas);
                         current_tool_score -= applied_move.cost;
+                        current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
                     }
                 }
                 _ => {}
@@ -199,6 +202,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
                     marked_block = None;
                     current_painting_score = painting.calculate_score_canvas(&canvas);
                     current_tool_score += applied_move.cost;
+                    current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
                     moves.push(applied_move);
                 } else {
                     // TODO: show a message
@@ -247,6 +251,7 @@ pub fn gui_main(problem_path: &std::path::Path) {
 
         // Draw the in-progress solution
         for b in canvas.blocks_iter() {
+            let id = b.get_id();
             match b {
                 crate::block::Block::Simple(b) => {
                     d.draw_rectangle(
@@ -261,7 +266,11 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         MARGIN + b.r.bottom_left.y as i32,
                         b.r.width() as i32,
                         b.r.height() as i32,
-                        COLOR_BLOCK_BORDER,
+                        if id == &current_worst_block_id {
+                            COLOR_WORST_BLOCK
+                        } else {
+                            COLOR_BLOCK_BORDER
+                        },
                     );
                 }
                 crate::block::Block::Complex(b) => {
@@ -279,7 +288,11 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         MARGIN + b.r.bottom_left.y as i32,
                         b.r.width() as i32,
                         b.r.height() as i32,
-                        COLOR_BLOCK_BORDER,
+                        if id == &current_worst_block_id {
+                            COLOR_WORST_BLOCK
+                        } else {
+                            COLOR_BLOCK_BORDER
+                        },
                     );
                 }
             }

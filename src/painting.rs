@@ -1,4 +1,4 @@
-use crate::block::{Rect, SimpleBlock};
+use crate::block::{Block, BlockId, Rect, SimpleBlock};
 use crate::canvas::Canvas;
 use crate::color::Color;
 use crate::moves::Cost;
@@ -116,6 +116,21 @@ impl Painting {
             b: (b / total_pixels) as u8,
             a: (a / total_pixels) as u8,
         }
+    }
+
+    pub fn find_worst_block_id<'a>(&self, canvas: &'a Canvas) -> &'a BlockId {
+        let mut worst_block = None;
+        let mut worst_score = 0.0;
+        for b in canvas.blocks_iter() {
+            if let Block::Simple(b) = b {
+                let score = self.calculate_score_block(b);
+                if score > worst_score {
+                    worst_score = score;
+                    worst_block = Some(&b.id);
+                }
+            }
+        }
+        worst_block.unwrap()
     }
 
     pub fn calculate_score(&self, target: &Painting) -> Cost {

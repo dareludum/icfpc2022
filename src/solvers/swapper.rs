@@ -1,5 +1,5 @@
 use crate::{
-    block::{Block, BlockId},
+    block::Block,
     canvas::Canvas,
     moves::{AppliedMove, Move},
     painting::Painting,
@@ -19,7 +19,7 @@ impl Solver for Swapper {
         loop {
             let mut best_painting_score = painting.calculate_score_canvas(canvas);
             let mut best_move = None;
-            let b0_id = self.find_worst_block_id(canvas, painting);
+            let b0_id = painting.find_worst_block_id(canvas);
             let b0 = canvas.get_block(b0_id).unwrap();
             for b1 in canvas.blocks_iter() {
                 if b0.get_id() == b1.get_id() {
@@ -51,22 +51,5 @@ impl Solver for Swapper {
             }
         }
         applied_moves
-    }
-}
-
-impl Swapper {
-    fn find_worst_block_id<'a>(&self, canvas: &'a Canvas, painting: &Painting) -> &'a BlockId {
-        let mut worst_block = None;
-        let mut worst_score = 0.0;
-        for b in canvas.blocks_iter() {
-            if let Block::Simple(b) = b {
-                let score = painting.calculate_score_block(b);
-                if score > worst_score {
-                    worst_score = score;
-                    worst_block = Some(&b.id);
-                }
-            }
-        }
-        worst_block.unwrap()
     }
 }
