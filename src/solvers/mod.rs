@@ -41,6 +41,16 @@ pub trait Solver {
     }
 }
 
+pub trait Processor {
+    fn name(&self) -> &str;
+    fn process(
+        &self,
+        applied_moves: &mut Vec<AppliedMove>,
+        canvas: &mut Canvas,
+        painting: &Painting,
+    );
+}
+
 pub const SOLVERS: &[&str] = &[
     "annealing",
     "annealing_s4",
@@ -57,12 +67,24 @@ pub const SOLVERS: &[&str] = &[
 ];
 
 pub fn create_solver(solver_name: &str) -> Box<dyn Solver> {
-    if solver_name.contains('+') {
+    if solver_name.contains(&['+', '!']) {
+        let (solver_name, processor_name) = if solver_name.contains('!') {
+            let parts = solver_name.split_at(solver_name.find('!').unwrap());
+            (parts.0, Some(parts.1))
+        } else {
+            (solver_name, None)
+        };
         let mut solvers = vec![];
         for name in solver_name.split('+') {
             solvers.push(create_individual_solver(name))
         }
-        Box::new(Chain::new(solvers))
+        let mut processors = vec![];
+        if let Some(processor_name) = processor_name {
+            for name in processor_name.split('+') {
+                processors.push(create_processor(name))
+            }
+        }
+        Box::new(Chain::new(solvers, processors))
     } else {
         create_individual_solver(solver_name)
     }
@@ -95,5 +117,11 @@ fn create_individual_solver(solver_name: &str) -> Box<dyn Solver> {
         "swapper" => Box::new(swapper::Swapper {}),
         "top_color" => Box::new(top_color::TopColor { use_avg: false }),
         n => panic!("Unknown solver `{}`", n),
+    }
+}
+
+fn create_processor(processor_name: &str) -> Box<dyn Processor> {
+    match processor_name {
+        n => panic!("Unknown procesor `{}`", n),
     }
 }
