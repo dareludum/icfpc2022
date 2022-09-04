@@ -1,7 +1,7 @@
 use std::fmt::Write as _;
 use std::{fs, path::Path};
 
-use crate::{color::Color, moves::Move};
+use crate::moves::Move;
 
 pub fn to_isl(mov: &Move) -> String {
     match mov {
@@ -9,8 +9,14 @@ pub fn to_isl(mov: &Move) -> String {
             format!("cut[{bid}][{orientation}][{lnum}]")
         }
         Move::PointCut(bid, x, y) => format!("cut[{bid}][{x},{y}]"),
-        Move::Color(bid, Color { r, g, b, a }) => {
-            format!("color[{bid}][{r},{g},{b},{a}]")
+        Move::Color(bid, color) => {
+            format!(
+                "color[{bid}][{},{},{},{}]",
+                color.r(),
+                color.g(),
+                color.b(),
+                color.a()
+            )
         }
         Move::Swap(bid1, bid2) => format!("swap[{bid1}][{bid2}]"),
         Move::Merge(bid1, bid2) => format!("merge[{bid1}][{bid2}]"),
@@ -44,15 +50,7 @@ mod tests {
             Move::LineCut("0".into(), Orientation::Vertical, 12),
             Move::PointCut("1".into(), 44, 44),
             Move::LineCut("2".into(), Orientation::Horizontal, 1),
-            Move::Color(
-                "1.1".into(),
-                Color {
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                    a: 0,
-                },
-            ),
+            Move::Color("1.1".into(), Color::new(255, 255, 255, 0)),
             Move::Merge("1".into(), "2".into()),
             Move::Swap("3.0.0".into(), "0.0.1".into()),
         ];

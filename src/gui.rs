@@ -14,7 +14,7 @@ use crate::{
 
 impl From<crate::color::Color> for raylib::ffi::Color {
     fn from(c: crate::color::Color) -> Self {
-        raylib::prelude::Color::new(c.r, c.g, c.b, c.a).into()
+        raylib::prelude::Color::new(c.r(), c.g(), c.b(), c.a()).into()
     }
 }
 

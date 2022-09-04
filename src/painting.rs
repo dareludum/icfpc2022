@@ -9,18 +9,13 @@ use std::io::BufReader;
 
 impl From<Color> for Rgba<u8> {
     fn from(c: Color) -> Self {
-        Rgba([c.r, c.g, c.b, c.a])
+        Rgba([c.r(), c.g(), c.b(), c.a()])
     }
 }
 
 impl From<&Rgba<u8>> for Color {
     fn from(src: &Rgba<u8>) -> Self {
-        Color {
-            r: src[0],
-            g: src[1],
-            b: src[2],
-            a: src[3],
-        }
+        Color::new(src[0], src[1], src[2], src[3])
     }
 }
 
@@ -104,18 +99,18 @@ impl Painting {
         for x in rect.x()..rect.top_right.x {
             for y in rect.y()..rect.top_right.y {
                 let c = self.get_color(x, y);
-                r += c.r as u64;
-                g += c.g as u64;
-                b += c.b as u64;
-                a += c.a as u64;
+                r += c.r() as u64;
+                g += c.g() as u64;
+                b += c.b() as u64;
+                a += c.a() as u64;
             }
         }
-        Color {
-            r: (r / total_pixels) as u8,
-            g: (g / total_pixels) as u8,
-            b: (b / total_pixels) as u8,
-            a: (a / total_pixels) as u8,
-        }
+        Color::new(
+            (r / total_pixels) as u8,
+            (g / total_pixels) as u8,
+            (b / total_pixels) as u8,
+            (a / total_pixels) as u8,
+        )
     }
 
     pub fn find_worst_block_id<'a>(&self, canvas: &'a Canvas) -> &'a BlockId {
@@ -171,10 +166,10 @@ impl Painting {
             .zip(target.data.iter())
             .map(|(c0, c1)| {
                 let mut pixel_score = 0f64;
-                pixel_score += (c0.r.abs_diff(c1.r) as f64).powi(2);
-                pixel_score += (c0.g.abs_diff(c1.g) as f64).powi(2);
-                pixel_score += (c0.b.abs_diff(c1.b) as f64).powi(2);
-                pixel_score += (c0.a.abs_diff(c1.a) as f64).powi(2);
+                pixel_score += (c0.r().abs_diff(c1.r()) as f64).powi(2);
+                pixel_score += (c0.g().abs_diff(c1.g()) as f64).powi(2);
+                pixel_score += (c0.b().abs_diff(c1.b()) as f64).powi(2);
+                pixel_score += (c0.a().abs_diff(c1.a()) as f64).powi(2);
                 pixel_score.sqrt()
             })
             .sum::<f64>();
@@ -222,10 +217,10 @@ impl Painting {
     fn calculate_score_pixel(&self, x: u32, y: u32, c: Color) -> f64 {
         let pc = self.get_color(x, y);
         let mut pixel_score = 0f64;
-        pixel_score += (c.r.abs_diff(pc.r) as f64).powi(2);
-        pixel_score += (c.g.abs_diff(pc.g) as f64).powi(2);
-        pixel_score += (c.b.abs_diff(pc.b) as f64).powi(2);
-        pixel_score += (c.a.abs_diff(pc.a) as f64).powi(2);
+        pixel_score += (c.r().abs_diff(pc.r()) as f64).powi(2);
+        pixel_score += (c.g().abs_diff(pc.g()) as f64).powi(2);
+        pixel_score += (c.b().abs_diff(pc.b()) as f64).powi(2);
+        pixel_score += (c.a().abs_diff(pc.a()) as f64).powi(2);
         pixel_score.sqrt()
     }
 
