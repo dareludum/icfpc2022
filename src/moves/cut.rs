@@ -80,8 +80,8 @@ pub fn vertical_cut(
                     continue;
                 }
                 let (left_r, right_r) = child.r.vertical_cut(cut_offset_x);
-                left_blocks.push(child.complex_split("left", left_r));
-                right_blocks.push(child.complex_split("right", right_r));
+                left_blocks.push(child.complex_split(left_r));
+                right_blocks.push(child.complex_split(right_r));
             }
 
             let (left_r, right_r) = block.r.vertical_cut(cut_offset_x);
@@ -133,8 +133,8 @@ pub fn horizontal_cut(
                     continue;
                 }
                 let (bottom_r, top_r) = child.r.horizontal_cut(cut_offset_y);
-                bottom_blocks.push(child.complex_split("bottom", bottom_r));
-                top_blocks.push(child.complex_split("top", top_r));
+                bottom_blocks.push(child.complex_split(bottom_r));
+                top_blocks.push(child.complex_split(top_r));
             }
 
             let (bottom_r, top_r) = block.r.horizontal_cut(cut_offset_y);
@@ -223,10 +223,10 @@ pub fn point_cut(
         // Case 5
         if child.r.strictly_contains(cut_x, cut_y) {
             let (bl, br, tr, tl) = child.r.cross_cut(cut_x, cut_y);
-            bottom_left_blocks.push(child.complex_split("bl_child", bl));
-            bottom_right_blocks.push(child.complex_split("br_child", br));
-            top_right_blocks.push(child.complex_split("tr_child", tr));
-            top_left_blocks.push(child.complex_split("tl_child", tl));
+            bottom_left_blocks.push(child.complex_split(bl));
+            bottom_right_blocks.push(child.complex_split(br));
+            top_right_blocks.push(child.complex_split(tr));
+            top_left_blocks.push(child.complex_split(tl));
             continue;
         }
 
@@ -236,12 +236,10 @@ pub fn point_cut(
             && cut_y <= child.r.bottom_left.y
         {
             top_left_blocks.push(SimpleBlock::new(
-                "case2_tl_child".into(),
                 Rect::new(child.r.bottom_left, Point::new(cut_x, child.r.top_right.y)),
                 child.c,
             ));
             top_right_blocks.push(SimpleBlock::new(
-                "case2_tr_child".into(),
                 Rect::new(Point::new(cut_x, child.r.bottom_left.y), child.r.top_right),
                 child.c,
             ));
@@ -253,12 +251,10 @@ pub fn point_cut(
             && cut_y >= child.r.top_right.y
         {
             bottom_left_blocks.push(SimpleBlock::new(
-                "case8_bl_child".into(),
                 Rect::new(child.r.bottom_left, Point::new(cut_x, child.r.top_right.y)),
                 child.c,
             ));
             bottom_right_blocks.push(SimpleBlock::new(
-                "case8_br_child".into(),
                 Rect::new(Point::new(cut_x, child.r.bottom_left.y), child.r.top_right),
                 child.c,
             ));
@@ -270,12 +266,10 @@ pub fn point_cut(
             && cut_x <= child.r.bottom_left.x
         {
             bottom_right_blocks.push(SimpleBlock::new(
-                "case4_br_child".into(),
                 Rect::new(child.r.bottom_left, Point::new(child.r.top_right.x, cut_y)),
                 child.c,
             ));
             top_right_blocks.push(SimpleBlock::new(
-                "case4_tr_child".into(),
                 Rect::new(Point::new(child.r.bottom_left.x, cut_y), child.r.top_right),
                 child.c,
             ));
@@ -287,12 +281,10 @@ pub fn point_cut(
             && cut_x >= child.r.top_right.x
         {
             bottom_left_blocks.push(SimpleBlock::new(
-                "case6_bl_child".into(),
                 Rect::new(child.r.bottom_left, Point::new(child.r.top_right.x, cut_y)),
                 child.c,
             ));
             top_left_blocks.push(SimpleBlock::new(
-                "case6_br_child".into(),
                 Rect::new(Point::new(child.r.bottom_left.x, cut_y), child.r.top_right),
                 child.c,
             ));

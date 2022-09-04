@@ -155,19 +155,18 @@ impl Display for BlockId {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SimpleBlock {
-    pub id: BlockId,
     pub r: Rect,
     pub c: Color,
 }
 
 impl SimpleBlock {
-    pub fn new(id: BlockId, r: Rect, c: Color) -> Self {
-        SimpleBlock { id, r, c }
+    pub fn new(r: Rect, c: Color) -> Self {
+        SimpleBlock { r, c }
     }
 
     /// Called when splitting a complex block
-    pub fn complex_split(&self, name: &'static str, r: Rect) -> Self {
-        Self::new(name.into(), r, self.c)
+    pub fn complex_split(&self, r: Rect) -> Self {
+        Self::new(r, self.c)
     }
 }
 
@@ -201,6 +200,17 @@ impl Block {
         }
     }
 
+    pub fn size(&self) -> u32 {
+        self.r.width() * self.r.height()
+    }
+
+    pub fn take_children(self) -> Vec<SimpleBlock> {
+        match self.data {
+            BlockData::Simple(c) => vec![SimpleBlock::new(self.r, c)],
+            BlockData::Complex(bs) => bs,
+        }
+    }
+
     pub fn split(&self, child_name: &str, r: Rect) -> Self {
         match self.data {
             BlockData::Simple(c) => Self::new_simple(self.id.new_child(child_name), r, c),
@@ -223,18 +233,5 @@ impl From<&BlockDto> for Block {
             Rect::from_coords([*bl_x, *bl_y, *tr_x, *tr_y]),
             Color::new(*r, *g, *b, *a),
         )
-    }
-}
-
-impl Block {
-    pub fn size(&self) -> u32 {
-        self.r.width() * self.r.height()
-    }
-
-    pub fn take_children(self) -> Vec<SimpleBlock> {
-        match self.data {
-            BlockData::Simple(c) => vec![SimpleBlock::new(self.id, self.r, c)],
-            BlockData::Complex(bs) => bs,
-        }
     }
 }
