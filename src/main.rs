@@ -258,9 +258,25 @@ fn stats(problems_n: &[&str]) -> Result<(), std::io::Error> {
         let best_path = Path::new(&best_fname);
 
         let best: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(best_path)?)?;
+        let mut current_solved = Vec::with_capacity(problems_n.len());
+
+        for solver in SOLVERS {
+            let path_s = format!("./solutions/current/{solver}/{n}_meta.json");
+            let path = Path::new(&path_s);
+            if let Ok(true) = path.try_exists() {
+                let current: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(path)?)?;
+                current_solved.push(current.clone());
+            }
+        }
+
+        current_solved.sort_by_key(|x| x.total_score);
+
         println!("Problem {n}");
         println!("------------------------------------");
         println!("best: {} score={}", best.solver_name, best.total_score);
+        current_solved
+            .iter()
+            .for_each(|x| println!("{} score={}", x.solver_name, x.total_score));
         println!("------------------------------------");
     }
 
