@@ -86,12 +86,12 @@ impl From<Point4<f32>> for Color {
 }
 
 /// taken from https://github.com/liborty/rstats
-fn gmedian(colors: &Vec<Color>, eps: f32) -> Color {
+fn gmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Color {
     let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
 
     let mut g = find_centroid(colors);
     let mut recsum = 0f32;
-    loop {
+    for _ in 0..max_iterations {
         let mut nextg = Vector4::<f32>::zeros();
         let mut nextrecsum = 0_f32;
         for v in fcolors.iter() {
@@ -105,15 +105,16 @@ fn gmedian(colors: &Vec<Color>, eps: f32) -> Color {
         }
         nextg /= nextrecsum;
         if nextrecsum - recsum < eps {
-            return Point4::from(nextg).into();
+            break;
         }
         g = Point4::from(nextg);
         recsum = nextrecsum;
     }
+    g.into()
 }
 
 /// taken from https://github.com/liborty/rstats
-fn pmedian(colors: &Vec<Color>, eps: f32) -> Color {
+fn pmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Color {
     let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
     let mut g = find_centroid(colors);
     // running global sum of reciprocals
@@ -143,7 +144,7 @@ fn pmedian(colors: &Vec<Color>, eps: f32) -> Color {
 
     // first iteration done, update g
     g = Point4::from(vsum / recsum);
-    loop {
+    for _ in 0..max_iterations {
         // vector iteration till accuracy eps is exceeded
         for (p, rec) in fcolors.iter().zip(&mut precs) {
             let magsq = (p - g).norm_squared();
@@ -166,8 +167,9 @@ fn pmedian(colors: &Vec<Color>, eps: f32) -> Color {
             };
         }
         if terminate {
-            return g.into();
+            break;
         }; // termination reached
         terminate = true
     }
+    g.into()
 }
