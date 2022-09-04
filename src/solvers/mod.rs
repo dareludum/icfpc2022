@@ -44,6 +44,7 @@ pub trait Solver {
 pub const SOLVERS: &[&str] = &[
     "annealing",
     "annealing_s4",
+    "avg_color",
     "divide_conquer",
     "erase",
     "no_op",
@@ -71,6 +72,7 @@ fn create_individual_solver(solver_name: &str) -> Box<dyn Solver> {
     match solver_name {
         "annealing" => Box::new(annealing::Annealing { step: 10 }),
         "annealing_s4" => Box::new(annealing::Annealing { step: 4 }),
+        "avg_color" => Box::new(top_color::TopColor { use_avg: true }),
         "divide_conquer" => Box::new(divide_conquer::DivideConquerSolver {}),
         "erase" => Box::new(erase::Erase {}),
         "no_op" => Box::new(no_op::NoOp {}),
@@ -91,7 +93,7 @@ fn create_individual_solver(solver_name: &str) -> Box<dyn Solver> {
             step_1: true,
         }),
         "swapper" => Box::new(swapper::Swapper {}),
-        "top_color" => Box::new(top_color::TopColor {}),
+        "top_color" => Box::new(top_color::TopColor { use_avg: false }),
         n => panic!("Unknown solver `{}`", n),
     }
 }

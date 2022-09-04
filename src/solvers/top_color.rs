@@ -7,7 +7,9 @@ use crate::{
 
 use super::Solver;
 
-pub struct TopColor {}
+pub struct TopColor {
+    pub use_avg: bool,
+}
 
 fn apply_batch(moves: Vec<Move>, canvas: &mut Canvas) -> Result<Vec<AppliedMove>, MoveError> {
     moves.into_iter().map(|mov| mov.apply(canvas)).collect()
@@ -23,7 +25,11 @@ impl Solver for TopColor {
 
         for block in canvas.blocks_iter() {
             let colors = painting.count_colors(&block.r);
-            let top_color = Color::find_most_common(&colors);
+            let top_color = if self.use_avg {
+                Color::find_average(&colors)
+            } else {
+                Color::find_most_common(&colors)
+            };
 
             let mov = Move::Color(block.id.clone(), top_color);
 
