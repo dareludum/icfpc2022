@@ -8,7 +8,7 @@ use crate::{
     canvas::Canvas,
     moves::{AppliedMove, Cost, Move, Orientation, UndoMove},
     painting::Painting,
-    program::to_isl,
+    program::{self, to_isl},
 };
 
 impl From<crate::color::Color> for raylib::ffi::Color {
@@ -163,6 +163,14 @@ pub fn gui_main(problem_path: &std::path::Path) {
                         current_tool_score -= applied_move.cost;
                         current_worst_block_id = painting.find_worst_block_id(&canvas).clone();
                     }
+                }
+                KeyboardKey::KEY_S => {
+                    let mut result = vec![];
+                    for am in &moves {
+                        result.push(am.mov.clone());
+                    }
+                    program::write_to_file(&std::path::PathBuf::from("./manual.txt"), &result)
+                        .expect("Failed to write the manual solution file");
                 }
                 _ => {}
             },
