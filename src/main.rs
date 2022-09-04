@@ -206,7 +206,7 @@ fn win_indicator_str(old: u64, new: u64) -> String {
 }
 
 fn get_problem_paths(args: &Args, force_batch: bool) -> Result<Vec<PathBuf>, std::io::Error> {
-    if let Some(problem) = args.problem.clone() {
+    if let Some(problem) = args.problem {
         Ok(vec![PathBuf::from(format!("./problems/{problem}.png"))])
     } else if args.batch || force_batch {
         Ok(get_all_problem_paths()?)
