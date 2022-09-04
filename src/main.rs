@@ -253,11 +253,14 @@ fn default_command(
 }
 
 fn stats(problems_n: &[&str], solvers: &[String]) -> Result<(), std::io::Error> {
+    let mut sum_best: u64 = 0;
+
     for n in problems_n {
         let best_fname = format!("./solutions/best/{n}_meta.json");
         let best_path = Path::new(&best_fname);
 
         let best: SolvedSolutionDto = serde_json::from_str(&fs::read_to_string(best_path)?)?;
+        sum_best += best.total_score;
         let mut current_solved = Vec::with_capacity(problems_n.len());
 
         for solver in solvers {
@@ -279,6 +282,8 @@ fn stats(problems_n: &[&str], solvers: &[String]) -> Result<(), std::io::Error> 
             .for_each(|x| println!("{} score={}", x.solver_name, x.total_score));
         println!("------------------------------------");
     }
+    println!("------------------------------------");
+    println!("Sum of all best: {sum_best}");
 
     Ok(())
 }
