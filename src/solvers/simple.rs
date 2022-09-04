@@ -92,7 +92,7 @@ impl Simple {
         painting: &Painting,
         budget: i64,
     ) -> Option<(Move, i64)> {
-        const STEP: u32 = 4;
+        const STEP: u32 = 2;
         const XSTEP: u32 = 20;
 
         let mut best_move = None;
