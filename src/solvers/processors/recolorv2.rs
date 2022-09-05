@@ -79,8 +79,8 @@ impl ColorCluster {
     }
 
     fn new(region: Rect, pixels: Vec<Color>, canvas: &Canvas, painting: &Painting) -> Self {
-        const EPS: f32 = 0.2;
-        const MAX_ITERATIONS: u32 = 1000;
+        const EPS: f32 = 0.001;
+        const MAX_ITERATIONS: u32 = 100000;
         let color_options = [
             Color::gmedian(&pixels, EPS, MAX_ITERATIONS),
             Color::pmedian(&pixels, EPS, MAX_ITERATIONS),

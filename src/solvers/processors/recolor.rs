@@ -34,8 +34,8 @@ impl Processor for Recolor {
                                 colors.push(*c);
                             }
                         }
-                        const EPS: f32 = 0.2;
-                        const MAX_ITERATIONS: u32 = 1000;
+                        const EPS: f32 = 0.001;
+                        const MAX_ITERATIONS: u32 = 100000;
                         let color_options = &[
                             Color::find_average(&counts),
                             Color::find_most_common(&counts),
