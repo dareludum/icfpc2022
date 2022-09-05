@@ -399,7 +399,7 @@ fn optimize_forest(forest: &mut ColorForest, canvas: &Canvas, painting: &Paintin
 
 impl Processor for Recolorv2 {
     fn name(&self) -> &str {
-        "recolor"
+        "recolorv2"
     }
 
     fn process(
