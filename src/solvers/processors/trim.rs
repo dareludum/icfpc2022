@@ -14,8 +14,9 @@ impl Processor for Trim {
         canvas: &mut Canvas,
         _painting: &Painting,
     ) {
+        // This code doesn't seem to properly trim :/
         if !applied_moves.is_empty() {
-        for i in (0..applied_moves.len() - 1).rev() {
+            for i in (0..applied_moves.len() - 1).rev() {
                 let am = &mut applied_moves[i];
                 match am.mov {
                     Move::Color(_, _) | Move::Swap(_, _) => break,
