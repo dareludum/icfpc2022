@@ -208,6 +208,7 @@ fn create_processor(processor_name: &str) -> Box<dyn Processor> {
         "recolor" => Box::new(processors::recolor::Recolor {}),
         "recolorv2" => Box::new(processors::recolorv2::Recolorv2 {}),
         "shake" => Box::new(processors::shake::Shake {}),
+        "trim" => Box::new(processors::trim::Trim {}),
         n => panic!("Unknown procesor `{}`", n),
     }
 }
