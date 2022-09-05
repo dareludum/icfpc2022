@@ -6,6 +6,7 @@ use crate::{
 
 use super::{Processor, Solver};
 
+#[derive(Clone)]
 pub struct Chain {
     input_moves: Option<Vec<Move>>,
     name: String,

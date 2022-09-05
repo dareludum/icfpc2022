@@ -7,6 +7,7 @@ use crate::{
 
 use super::Solver;
 
+#[derive(Clone)]
 pub struct Swapper;
 
 impl Solver for Swapper {

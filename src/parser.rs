@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+
 use crate::block::BlockId;
 use crate::color::Color;
 use crate::moves::{Move, Orientation};
@@ -106,6 +110,25 @@ fn parse_move(input: &str) -> IResult<&str, Move> {
 
 pub fn parse_move_line(input: &str) -> IResult<&str, Move> {
     terminated(parse_move, opt(line_ending))(input)
+}
+
+pub fn parse_moves_from_file<P: AsRef<Path>>(file_path: P) -> std::io::Result<Vec<Move>> {
+    let file = File::open(file_path)?;
+    let reader = BufReader::new(file);
+
+    let mut moves = vec![];
+    for line_res in reader.lines() {
+        let line = line_res?;
+        let res = parse_move_line(line.as_str());
+        match res {
+            Ok(("", mov)) => moves.push(mov),
+            Ok((remainder, _)) => {
+                panic!("parser finished before the end of the line: {line}, {remainder}")
+            }
+            Err(err) => panic!("failed to parse line {line:?}: {err}"),
+        }
+    }
+    Ok(moves)
 }
 
 #[test]

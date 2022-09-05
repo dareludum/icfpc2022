@@ -4,10 +4,80 @@ use std::{
 };
 
 use crate::{
-    canvas::Canvas, dto::SolvedSolutionDto, gui::gui_main, helpers::*, moves::Move,
-    painting::Painting, program, solvers::create_solver,
+    dto::SolvedSolutionDto,
+    gui::gui_main,
+    moves::Move,
+    solvers::Problem,
+    solvers::{create_solver, Solution, Solver},
 };
 use rayon::prelude::*;
+
+fn solve_problem(
+    solvers: &Vec<Box<dyn Solver>>,
+    base_solution_dir: &PathBuf,
+    problem_path: &PathBuf,
+) -> std::io::Result<()> {
+    let problem = Problem::load(problem_path)?;
+
+    for solver in solvers {
+        let full_solver_name = solver.name();
+        let mut canvas = problem.initial_canvas.clone();
+        let cur_solver_dir = &base_solution_dir.join("current").join(full_solver_name);
+        let best_dir = &base_solution_dir.join("best");
+        std::fs::create_dir_all(cur_solver_dir)?;
+
+        // solve
+        let solution = solver.solve(&mut canvas, &problem.reference_painting);
+
+        // write the solution
+        let solution_meta = solution.save(full_solver_name.into(), &problem, cur_solver_dir)?;
+
+        // compare with the best solution
+        let best_sol = match Solution::load(best_dir, &problem) {
+            Ok(sol) => Some(sol),
+            Err(ref e) if e.kind() == std::io::ErrorKind::NotFound => None,
+            Err(e) => return Err(e),
+        };
+
+        let new_best_sol = match &best_sol {
+            Some((_, best_sol)) if solution_meta.total_score < best_sol.total_score => true,
+            None => true,
+            _ => false,
+        };
+
+        if new_best_sol {
+            solution.save(full_solver_name.into(), &problem, best_dir)?;
+        }
+
+        print!(
+            "{:15}{}: {} ",
+            format!("[problem {}]", problem.id),
+            solver.name(),
+            solution_meta.summarize()
+        );
+
+        match (&best_sol, &new_best_sol) {
+            // new best
+            (Some((_, best_sol)), true) => {
+                let improvement = best_sol.total_score - solution_meta.total_score;
+                println!(
+                    "!!! WE ARE WINNING SON !!!, improvement of {}! previous best: {}",
+                    improvement,
+                    best_sol.summarize()
+                );
+            }
+            // nothing special, no new best
+            (Some((_, best_sol)), false) => {
+                println!("lower than best: {}", best_sol.summarize());
+            }
+            // first solution ever
+            (None, _) => {
+                println!("!!! FIRST BLOOD !!!");
+            }
+        }
+    }
+    Ok(())
+}
 
 fn solve(
     input_moves: Option<Vec<Move>>,
@@ -16,71 +86,14 @@ fn solve(
 ) -> std::io::Result<()> {
     let base_solution_dir = PathBuf::from("./solutions/");
 
+    let solvers: Vec<_> = solvers
+        .iter()
+        .map(|solver_name| create_solver(input_moves.clone(), solver_name))
+        .collect();
+
     problem_paths
         .par_iter()
-        .map(|problem_path| {
-            let problem_num = os_str_to_str(problem_path.file_stem());
-            let painting = Painting::load(problem_path);
-            let SolvedSolutionDto {
-                total_score: current_best_total,
-                solver_name: current_best_solver,
-                ..
-            } = read_current_best(&base_solution_dir, &problem_num)?
-                .unwrap_or_else(SolvedSolutionDto::not_solved);
-
-            for solver_name in solvers {
-                let solver = create_solver(input_moves.clone(), solver_name);
-
-                let current_solution_dir = &base_solution_dir.join("current").join(solver.name());
-                std::fs::create_dir_all(current_solution_dir)?;
-
-                let initial_config_path = problem_path.with_extension("json");
-                let mut canvas = Canvas::try_create(initial_config_path, &painting)?;
-                let solution = solver.solve(&mut canvas, &painting);
-                let isl_path = current_solution_dir
-                    .join(&problem_num)
-                    .with_extension("txt");
-
-                program::write_to_file(&isl_path, &solution.moves)?;
-                solution.result.write_to_file(
-                    &current_solution_dir
-                        .join(&problem_num)
-                        .with_extension("png"),
-                );
-
-                let score = painting.calculate_score(&solution.result);
-                let total = score + solution.cost;
-
-                let solution_meta = SolvedSolutionDto {
-                    solver_name: solver.name().to_string(),
-                    score: score.0,
-                    total_score: total.0,
-                    solution_cost: solution.cost.0,
-                };
-
-                let solution_meta_json = serde_json::to_string_pretty(&solution_meta)?;
-                std::fs::write(
-                    isl_path.with_file_name(format!("{problem_num}_meta.json")),
-                    solution_meta_json,
-                )?;
-
-                write_best(&base_solution_dir, &problem_num, &solution_meta)?;
-
-                println!(
-                    "{:15}{}: {} ({} + {}); best: {} {} {}",
-                    format!("[problem {}]", problem_num),
-                    solver.name(),
-                    total.0,
-                    score.0,
-                    solution.cost.0,
-                    current_best_solver,
-                    current_best_total,
-                    win_indicator_str(current_best_total, solution_meta.total_score)
-                );
-            }
-
-            Ok(())
-        })
+        .map(|problem_path| solve_problem(&solvers, &base_solution_dir, problem_path))
         .collect::<std::io::Result<()>>()
 }
 

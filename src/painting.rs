@@ -6,6 +6,7 @@ use image::{Rgba, RgbaImage};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 
 impl From<Color> for Rgba<u8> {
     fn from(c: Color) -> Self {
@@ -52,7 +53,7 @@ impl Painting {
         }
     }
 
-    pub fn load(path: &std::path::Path) -> Self {
+    pub fn load<P: AsRef<Path> + std::fmt::Debug>(path: P) -> Self {
         let file = match File::open(&path) {
             Err(why) => panic!("couldn't open {:?}: {}", path, why),
             Ok(file) => file,

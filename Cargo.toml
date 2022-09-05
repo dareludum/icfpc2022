@@ -21,6 +21,7 @@ nalgebra = "^0.31"
 nom = "7"
 nabo = "0.2.1"
 derivative = "2.2.0"
+dyn-clone = "1.0.9"
 
 [features]
 wayland = ["raylib/wayland"]

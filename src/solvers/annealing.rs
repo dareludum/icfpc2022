@@ -7,6 +7,7 @@ use crate::{
 
 use super::Solver;
 
+#[derive(Clone)]
 pub struct Annealing {
     pub step: u32,
 }
@@ -24,7 +25,6 @@ impl Solver for Annealing {
 
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove> {
         // If default coloring is needed, use top_color+
-
         let mut applied_moves = vec![];
         let mut current_move_cost = Cost(0);
         let mut current_painting_score = painting.calculate_score_canvas(canvas);

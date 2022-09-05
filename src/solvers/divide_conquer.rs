@@ -8,6 +8,7 @@ use crate::{
 
 use super::{Solution, Solver};
 
+#[derive(Clone)]
 pub struct DivideConquerSolver {}
 
 struct Params {

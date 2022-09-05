@@ -18,6 +18,7 @@ use crate::{
     solvers::Processor,
 };
 
+#[derive(Clone)]
 pub struct Recolorv2;
 
 fn recolor(

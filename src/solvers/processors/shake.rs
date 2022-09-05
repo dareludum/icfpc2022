@@ -5,6 +5,7 @@ use crate::{
     solvers::Processor,
 };
 
+#[derive(Clone)]
 pub struct Shake;
 
 impl Processor for Shake {

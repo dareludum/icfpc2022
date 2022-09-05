@@ -2,6 +2,7 @@ use crate::{canvas::Canvas, moves::AppliedMove, painting::Painting};
 
 use super::Solver;
 
+#[derive(Clone)]
 pub struct NoOp {}
 
 impl Solver for NoOp {

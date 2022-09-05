@@ -7,6 +7,7 @@ use crate::{
 
 use super::Solver;
 
+#[derive(Clone)]
 pub struct TopColor {
     pub use_avg: bool,
 }

@@ -7,6 +7,7 @@ use crate::{
     solvers::Processor,
 };
 
+#[derive(Clone)]
 pub struct Recolor;
 
 impl Processor for Recolor {

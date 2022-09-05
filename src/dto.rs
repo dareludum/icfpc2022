@@ -32,6 +32,13 @@ pub struct SolvedSolutionDto {
 }
 
 impl SolvedSolutionDto {
+    pub fn summarize(&self) -> String {
+        format!(
+            "total {} = (delta {} + moves {})",
+            self.total_score, self.score, self.solution_cost
+        )
+    }
+
     pub fn not_solved() -> Self {
         SolvedSolutionDto {
             solver_name: "err_not_solved".to_string(),

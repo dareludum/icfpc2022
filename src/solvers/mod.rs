@@ -8,13 +8,40 @@ mod simple;
 mod swapper;
 mod top_color;
 
+use std::path::PathBuf;
+
+use dyn_clone::DynClone;
+
 use crate::{
     canvas::Canvas,
+    dto::SolvedSolutionDto,
+    helpers::os_str_to_str,
     moves::{AppliedMove, Cost, Move},
     painting::Painting,
+    program,
 };
 
 use self::chain::Chain;
+
+pub struct Problem {
+    pub id: String,
+    pub reference_painting: Painting,
+    pub initial_canvas: Canvas,
+}
+
+impl Problem {
+    pub fn load(problem_path: &PathBuf) -> std::io::Result<Self> {
+        let id = os_str_to_str(problem_path.file_stem());
+        let reference_painting = Painting::load(problem_path);
+        let initial_canvas =
+            Canvas::try_create(problem_path.with_extension("json"), &reference_painting)?;
+        Ok(Problem {
+            id,
+            reference_painting,
+            initial_canvas,
+        })
+    }
+}
 
 pub struct Solution {
     pub result: Painting,
@@ -22,7 +49,56 @@ pub struct Solution {
     pub cost: Cost,
 }
 
-pub trait Solver {
+impl Solution {
+    pub fn load(dir: &PathBuf, problem: &Problem) -> std::io::Result<(Self, SolvedSolutionDto)> {
+        let problem_base = dir.join(&problem.id);
+        let isl_path = problem_base.with_extension("txt");
+        let img_path = problem_base.with_extension("png");
+        let meta_path = problem_base.with_file_name(format!("{}_meta.json", problem.id));
+
+        let moves = crate::parser::parse_moves_from_file(&isl_path)?;
+        let result = Painting::load(&img_path);
+
+        let current_best_json: String = std::fs::read_to_string(meta_path)?.into();
+        let metadata: SolvedSolutionDto =
+            serde_json::from_str(&current_best_json).expect("Deserialization error");
+        let solution = Solution {
+            result,
+            moves,
+            cost: Cost(metadata.solution_cost),
+        };
+        Ok((solution, metadata))
+    }
+
+    pub fn save(
+        &self,
+        solver_name: String,
+        problem: &Problem,
+        dir: &PathBuf,
+    ) -> std::io::Result<SolvedSolutionDto> {
+        let problem_base = dir.join(&problem.id);
+        let isl_path = problem_base.with_extension("txt");
+        let img_path = problem_base.with_extension("png");
+        let meta_path = problem_base.with_file_name(format!("{}_meta.json", problem.id));
+
+        program::write_to_file(&isl_path, &self.moves)?;
+        self.result.write_to_file(&img_path);
+
+        let score = problem.reference_painting.calculate_score(&self.result);
+        let total = score + self.cost;
+        let solution_meta = SolvedSolutionDto {
+            solver_name: solver_name,
+            score: score.0,
+            total_score: total.0,
+            solution_cost: self.cost.0,
+        };
+        let solution_meta_json = serde_json::to_string_pretty(&solution_meta)?;
+        std::fs::write(meta_path, solution_meta_json)?;
+        Ok(solution_meta)
+    }
+}
+
+pub trait Solver: DynClone + Sync + Send {
     fn name(&self) -> &str;
     fn solve_core(&self, canvas: &mut Canvas, painting: &Painting) -> Vec<AppliedMove>;
 
@@ -42,7 +118,9 @@ pub trait Solver {
     }
 }
 
-pub trait Processor {
+dyn_clone::clone_trait_object!(Solver);
+
+pub trait Processor: DynClone + Sync + Send {
     fn name(&self) -> &str;
     fn process(
         &self,
@@ -51,6 +129,8 @@ pub trait Processor {
         painting: &Painting,
     );
 }
+
+dyn_clone::clone_trait_object!(Processor);
 
 pub const SOLVERS: &[&str] = &[
     "annealing",

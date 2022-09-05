@@ -9,6 +9,7 @@ use crate::{
 
 use super::Solver;
 
+#[derive(Clone)]
 pub struct Simple {
     pub allow_cross_cut: bool,
     pub step_1: bool,
