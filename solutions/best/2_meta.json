@@ -1,6 +1,6 @@
 {
-  "solver_name": "simple_s1",
-  "total_score": 21588,
-  "score": 13513,
-  "solution_cost": 8075
+  "solver_name": "erase+top_color+simple_s1%recolor+shake+recolor+shake+recolor",
+  "total_score": 20344,
+  "score": 12265,
+  "solution_cost": 8079
 }

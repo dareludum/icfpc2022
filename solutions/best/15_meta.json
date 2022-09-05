@@ -1,6 +1,6 @@
 {
-  "solver_name": "erase+top_color+annealing_s4%recolor+shake+recolor+shake+recolor",
-  "total_score": 35345,
-  "score": 32535,
-  "solution_cost": 2810
+  "solver_name": "erase+top_color+simple%recolor+shake+recolor",
+  "total_score": 36505,
+  "score": 32627,
+  "solution_cost": 3878
 }
