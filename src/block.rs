@@ -33,8 +33,8 @@ impl Rect {
     }
 
     pub const fn new(bottom_left: Point, top_right: Point) -> Self {
-        assert!(bottom_left.x < top_right.x);
-        assert!(bottom_left.y < top_right.y);
+        assert!(bottom_left.x <= top_right.x);
+        assert!(bottom_left.y <= top_right.y);
         Rect {
             bottom_left,
             top_right,

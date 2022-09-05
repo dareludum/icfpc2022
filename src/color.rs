@@ -38,11 +38,16 @@ impl Color {
     }
 
     pub fn find_most_common(counts: &HashMap<Color, u32>) -> Self {
-        *counts.iter().max_by_key(|(_, v)| *v).unwrap().0
+        match counts.iter().max_by_key(|(_, v)| *v) {
+            Some((c, _)) => *c,
+            None => Color::new(255, 255, 255, 255),
+        }
     }
 
     pub fn find_average(counts: &HashMap<Color, u32>) -> Self {
-        assert!(!counts.is_empty());
+        if counts.is_empty() {
+            return Color::new(255, 255, 255, 255);
+        }
         let total_pixels = counts.iter().map(|(_, v)| *v as u64).sum::<u64>();
         let mut r = 0u64;
         let mut g = 0u64;
@@ -64,6 +69,10 @@ impl Color {
 
     /// taken from https://github.com/liborty/rstats
     pub fn gmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Self {
+        if colors.is_empty() {
+            return Color::new(255, 255, 255, 255);
+        }
+
         let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
 
         let mut g = find_centroid(colors);
@@ -92,6 +101,10 @@ impl Color {
 
     /// taken from https://github.com/liborty/rstats
     pub fn pmedian(colors: &Vec<Color>, eps: f32, max_iterations: u32) -> Self {
+        if colors.is_empty() {
+            return Color::new(255, 255, 255, 255);
+        }
+
         let fcolors: Vec<Point4<f32>> = colors.iter().map(|v| na::convert(v.0)).collect();
         let mut g = find_centroid(colors);
         // running global sum of reciprocals
