@@ -3,7 +3,7 @@ use std::fmt::Display;
 use rand::random;
 
 use crate::{
-    block::Block,
+    block::{Block, Rect},
     canvas::Canvas,
     color::Color,
     moves::{AppliedMove, Move, Orientation},
@@ -101,9 +101,11 @@ fn generate_individual(state: &mut Canvas, id: usize, painting: &Painting) -> In
 
     for mov in moves {
         if let Some(mov) = mov {
-            let applied = mov.apply(state).expect("Can't apply move");
-            // println!("applied {:?}", applied);
-            applied_moves.push(applied);
+            if let Ok(applied) = mov.apply(state) {
+                //.expect("Can't apply move");
+                // println!("applied {:?}", applied);
+                applied_moves.push(applied);
+            }
         }
     }
 
@@ -117,7 +119,7 @@ fn generate_individual(state: &mut Canvas, id: usize, painting: &Painting) -> In
 }
 
 fn get_move_for_block(state: &Canvas, block: &Block) -> Option<Move> {
-    let selector = random::<u32>() % 5;
+    let selector = random::<u32>() % 6;
     match selector {
         0 => {
             let r = random::<u8>();
@@ -170,17 +172,46 @@ fn get_move_for_block(state: &Canvas, block: &Block) -> Option<Move> {
             } else {
                 None
             }
-
-            // let b_i = (random::<u32>() % state.blocks_count() as u32);
-            // let b = state
-            //     .blocks_iter()
-            //     .nth(b_i as usize)
-            //     .expect("can't get block");
-
-            // Some(Move::Swap(block.id.clone(), b.id.clone()))
         }
+        4 => state
+            .blocks_iter()
+            .find(|bl| bl.area() == block.area())
+            .map(|bl| Move::Swap(block.id.clone(), bl.id.clone())),
+        5 => state
+            .blocks_iter()
+            .find(|bl| is_mergeable(bl, block))
+            .map(|bl| Move::Merge(block.id.clone(), bl.id.clone())),
         _ => panic!("move selector is not yet implemented"),
     }
+}
+
+fn is_mergeable(a: &Block, b: &Block) -> bool {
+    let Block {
+        r:
+            Rect {
+                bottom_left: a_bottom_left,
+                top_right: a_top_right,
+            },
+        ..
+    } = a;
+    let Block {
+        r:
+            Rect {
+                bottom_left: b_bottom_left,
+                top_right: b_top_right,
+            },
+        ..
+    } = b;
+
+    let vertical = (a_bottom_left.y == b_top_right.y || a_top_right.y == b_bottom_left.y)
+        && a_bottom_left.x == b_bottom_left.x
+        && a_top_right.x == b_top_right.x;
+
+    let horizontal = (b_top_right.x == a_bottom_left.x || a_top_right.x == b_bottom_left.x)
+        && a_bottom_left.y == b_bottom_left.y
+        && a_top_right.y == b_top_right.y;
+
+    vertical || horizontal
 }
 
 impl Solver for Genetic {
@@ -194,7 +225,7 @@ impl Solver for Genetic {
 
         let mut best = population[0].clone();
 
-        for _ in 0..10 {
+        for _ in 0..20 {
             let (current_best, new_population) = breed(&mut population);
             population = new_population;
 
