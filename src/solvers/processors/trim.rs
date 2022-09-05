@@ -14,13 +14,14 @@ impl Processor for Trim {
         canvas: &mut Canvas,
         _painting: &Painting,
     ) {
-        for i in 0..applied_moves.len() {
-            let len = applied_moves.len();
-            let am = &mut applied_moves[len - i - 1];
-            match am.mov {
-                Move::Color(_, _) | Move::Swap(_, _) => break,
-                Move::LineCut(_, _, _) | Move::PointCut(_, _, _) | Move::Merge(_, _) => {
-                    applied_moves.pop().unwrap().undo(canvas);
+        if !applied_moves.is_empty() {
+        for i in (0..applied_moves.len() - 1).rev() {
+                let am = &mut applied_moves[i];
+                match am.mov {
+                    Move::Color(_, _) | Move::Swap(_, _) => break,
+                    Move::LineCut(_, _, _) | Move::PointCut(_, _, _) | Move::Merge(_, _) => {
+                        applied_moves.pop().unwrap().undo(canvas);
+                    }
                 }
             }
         }
