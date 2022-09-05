@@ -1,6 +1,6 @@
 {
-  "solver_name": "erase+top_color+simple%recolor+shake+recolor",
-  "total_score": 27925,
+  "solver_name": "%hand_trim",
+  "total_score": 27921,
   "score": 24320,
-  "solution_cost": 3605
+  "solution_cost": 3601
 }
