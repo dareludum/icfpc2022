@@ -1,3 +1,5 @@
+#![feature(get_mut_unchecked)]
+
 extern crate derive_more;
 extern crate nalgebra as na;
 extern crate nom;

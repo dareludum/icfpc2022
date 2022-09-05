@@ -140,8 +140,8 @@ impl BlockId {
         BlockId(new_id)
     }
 
-    pub fn rev_parents(&self) -> BlockIdParentIterator<'_> {
-        BlockIdParentIterator::new(self)
+    pub fn rev_parents(&self, include_self: bool) -> BlockIdParentIterator<'_> {
+        BlockIdParentIterator::new(self, include_self)
     }
 }
 
@@ -160,13 +160,15 @@ impl Display for BlockId {
 pub struct BlockIdParentIterator<'id> {
     last_cursor: usize,
     id: &'id [u8],
+    include_self: bool,
 }
 
 impl<'id> BlockIdParentIterator<'id> {
-    fn new(id: &'id BlockId) -> BlockIdParentIterator<'id> {
+    fn new(id: &'id BlockId, include_self: bool) -> BlockIdParentIterator<'id> {
         BlockIdParentIterator {
             last_cursor: 0,
             id: id.0.as_bytes(),
+            include_self,
         }
     }
 }
@@ -191,6 +193,10 @@ impl<'id> Iterator for BlockIdParentIterator<'id> {
         let slice = &self.id[0..cursor];
         self.last_cursor = cursor;
 
+        if cursor == self.id.len() && !self.include_self {
+            return None;
+        }
+
         Some(unsafe { std::str::from_utf8_unchecked(slice) }.into())
     }
 }
@@ -198,8 +204,14 @@ impl<'id> Iterator for BlockIdParentIterator<'id> {
 #[test]
 fn test_block_parent_iterator() {
     let test_id = BlockId::initial_root().new_child("1").new_child("2");
-    let parents: Vec<BlockId> = test_id.rev_parents().collect();
+    let parents: Vec<BlockId> = test_id.rev_parents(true).collect();
     assert_eq!(parents, vec!["0".into(), "0.1".into(), "0.1.2".into()]);
+
+    let parents: Vec<BlockId> = test_id.rev_parents(false).collect();
+    assert_eq!(parents, vec!["0".into(), "0.1".into()]);
+
+    let parents: Vec<BlockId> = BlockId::initial_root().rev_parents(false).collect();
+    assert_eq!(parents, vec![]);
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

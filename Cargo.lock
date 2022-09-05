@@ -209,6 +209,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derivative"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcc3dd5e9e9c0b295d6e1e4d811fb6f157d5ffd784b8d202fc62eac8035a770b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -271,9 +282,11 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "colorgrad",
+ "derivative",
  "derive_more",
  "image",
  "lexical-core",
+ "nabo",
  "nalgebra",
  "nom",
  "rand",
@@ -406,6 +419,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nabo"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a53a64d5ad1c7fd145983a27895ec1f6ebabb89a577b6c3cc58426cb75483a7c"
+dependencies = [
+ "num-traits",
+ "ordered-float",
+ "partition",
+ "rand",
+]
+
+[[package]]
 name = "nalgebra"
 version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -498,10 +523,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f7254b99e31cad77da24b08ebf628882739a608578bb1bcdfc1f9c21260d7c0"
 
 [[package]]
+name = "ordered-float"
+version = "2.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7940cf2ca942593318d07fcf2596cdca60a85c9e7fab408a5e21a4f9dcd40d87"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "os_str_bytes"
 version = "6.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ff7415e9ae3fff1225851df9e0d9e4e5479f947619774677a63572e55e80eff"
+
+[[package]]
+name = "partition"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "947f833aaa585cf12b8ec7c0476c98784c49f33b861376ffc84ed92adebf2aba"
 
 [[package]]
 name = "paste"

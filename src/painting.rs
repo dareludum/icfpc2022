@@ -183,7 +183,7 @@ impl Painting {
                 pixel_score.sqrt()
             })
             .sum::<f64>();
-        Cost((image_score * 0.005).round() as u64)
+        Cost::from_block_cost(image_score)
     }
 
     pub fn calculate_score_canvas(&self, target: &Canvas) -> Cost {
@@ -195,7 +195,7 @@ impl Painting {
         for b in target.blocks_iter() {
             image_score += self.calculate_score_block(b);
         }
-        Cost((image_score * 0.005).round() as u64)
+        Cost::from_block_cost(image_score)
     }
 
     pub fn calculate_score_block(&self, b: &Block) -> f64 {

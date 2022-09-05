@@ -57,6 +57,10 @@ impl From<CanvasDto> for Canvas {
 }
 
 impl Canvas {
+    pub fn get_roots_count(&self) -> u32 {
+        self.roots_count
+    }
+
     pub fn next_merge_id(&mut self) -> BlockId {
         let res = self.roots_count;
         self.roots_count += 1;

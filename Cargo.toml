@@ -19,6 +19,8 @@ serde_json = "1.0.85"
 lexical-core = { version = "^0.8", default-features = false, features = ["write-integers", "parse-integers"] }
 nalgebra = "^0.31"
 nom = "7"
+nabo = "0.2.1"
+derivative = "2.2.0"
 
 [features]
 wayland = ["raylib/wayland"]

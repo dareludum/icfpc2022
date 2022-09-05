@@ -16,6 +16,18 @@ impl From<Point4<f32>> for Color {
     }
 }
 
+impl Into<Point4<f32>> for Color {
+    fn into(self) -> Point4<f32> {
+        [
+            self.0[0] as f32,
+            self.0[1] as f32,
+            self.0[2] as f32,
+            self.0[3] as f32,
+        ]
+        .into()
+    }
+}
+
 impl Color {
     pub fn r(&self) -> u8 {
         self.0[0]
