@@ -76,8 +76,10 @@ pub fn create_solver(input_moves: Option<Vec<Move>>, solver_name: &str) -> Box<d
             (solver_name, None)
         };
         let mut solvers = vec![];
-        for name in solver_name.split('+') {
-            solvers.push(create_individual_solver(name))
+        if !solver_name.is_empty() {
+            for name in solver_name.split('+') {
+                solvers.push(create_individual_solver(name))
+            }
         }
         let mut processors = vec![];
         if let Some(processor_name) = processor_name {
