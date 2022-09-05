@@ -139,6 +139,10 @@ impl BlockId {
         new_id.push_str(child_name);
         BlockId(new_id)
     }
+
+    pub fn rev_parents(&self) -> BlockIdParentIterator<'_> {
+        BlockIdParentIterator::new(self)
+    }
 }
 
 impl From<&str> for BlockId {
@@ -151,6 +155,51 @@ impl Display for BlockId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
+}
+
+pub struct BlockIdParentIterator<'id> {
+    last_cursor: usize,
+    id: &'id [u8],
+}
+
+impl<'id> BlockIdParentIterator<'id> {
+    fn new(id: &'id BlockId) -> BlockIdParentIterator<'id> {
+        BlockIdParentIterator {
+            last_cursor: 0,
+            id: id.0.as_bytes(),
+        }
+    }
+}
+
+impl<'id> Iterator for BlockIdParentIterator<'id> {
+    type Item = BlockId;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.last_cursor == self.id.len() {
+            return None;
+        }
+
+        let mut cursor = self.last_cursor + 1;
+        while cursor < self.id.len() {
+            // ascii dot
+            if self.id[cursor] == 0x2E {
+                break;
+            }
+            cursor += 1;
+        }
+
+        let slice = &self.id[0..cursor];
+        self.last_cursor = cursor;
+
+        Some(unsafe { std::str::from_utf8_unchecked(slice) }.into())
+    }
+}
+
+#[test]
+fn test_block_parent_iterator() {
+    let test_id = BlockId::initial_root().new_child("1").new_child("2");
+    let parents: Vec<BlockId> = test_id.rev_parents().collect();
+    assert_eq!(parents, vec!["0".into(), "0.1".into(), "0.1.2".into()]);
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

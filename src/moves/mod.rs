@@ -141,4 +141,18 @@ impl AppliedMove {
         self.undo.apply(canvas);
         self.mov
     }
+
+    pub fn created_blocks(&self) -> Vec<BlockId> {
+        match &self.undo.operation {
+            UndoMoveOp::Cut {
+                delete_block_ids, ..
+            } => delete_block_ids.clone(),
+            UndoMoveOp::Merge {
+                merged_block_id, ..
+            } => vec![merged_block_id.clone()],
+            UndoMoveOp::SimpleColor { .. } => vec![],
+            UndoMoveOp::ComplexColor { .. } => vec![],
+            UndoMoveOp::Swap { .. } => vec![],
+        }
+    }
 }

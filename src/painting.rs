@@ -90,6 +90,16 @@ impl Painting {
         counts
     }
 
+    pub fn get_pixels(&self, r: &Rect) -> Vec<Color> {
+        let mut res = Vec::with_capacity(r.area() as usize);
+        for x in r.x()..r.top_right.x {
+            for y in r.y()..r.top_right.y {
+                res.push(self.get_color(x, y));
+            }
+        }
+        res
+    }
+
     pub fn calculate_average_color(&self, rect: &Rect) -> Color {
         let total_pixels = rect.area() as u64;
         let mut r = 0u64;
